@@ -731,9 +731,9 @@ class DomainEventFactory:
                  common_ca_params_kw_base["gross_amount_foreign_currency"] = gross_amount_ca
                  common_ca_params_kw = {k: v for k, v in common_ca_params_kw_base.items() if v is not None}
 
-                 fallback_event_type = FinancialEventType.CORP_ACTION_STOCK_DIVIDEND
-                 if ca_type_from_file == "RS": fallback_event_type = FinancialEventType.CORP_ACTION_SPLIT_FORWARD
-                 elif ca_type_from_file == "TC": fallback_event_type = FinancialEventType.CORP_ACTION_MERGER_CASH
+                 fallback_event_type = FinancialEventType.CORP_STOCK_DIVIDEND
+                 if ca_type_from_file == "RS": fallback_event_type = FinancialEventType.CORP_SPLIT_FORWARD
+                 elif ca_type_from_file == "TC": fallback_event_type = FinancialEventType.CORP_MERGER_CASH
 
                  generic_event = CorporateActionEvent(
                      asset_internal_id=affected_asset.internal_asset_id,
