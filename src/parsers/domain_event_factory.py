@@ -712,16 +712,26 @@ class DomainEventFactory:
                      logger.warning(f"CA Record {idx+1} (SD): Stock Dividend CA {rca.action_id_ibkr}: Invalid or missing quantity ({new_shares_qty}). Cannot create event.")
                  logger.debug(f"CA Record {idx+1} (SD): Calculated fmv_per_share: {fmv_per_share}")
 
+                 # Check if this is a receivable asset that should be skipped for stock dividends
+                 is_receivable_asset = (
+                     ".REC" in (rca.symbol or "") or 
+                     "RECEIVABLE" in (rca.description or "").upper() or
+                     "RECEIVABLE" in (affected_asset.description or "").upper()
+                 )
+                 
                  if new_shares_qty is not None and new_shares_qty > 0 and fmv_per_share is not None:
-                    common_ca_params_kw_base["gross_amount_foreign_currency"] = total_fmv
-                    common_ca_params_kw = {k: v for k, v in common_ca_params_kw_base.items() if v is not None}
-                    logger.debug(f"CA Record {idx+1} (SD): Creating CorpActionStockDividend. New Shares: {new_shares_qty}, FMV/Share: {fmv_per_share}, Gross: {total_fmv}")
-                    domain_ca_event_instance = CorpActionStockDividend(
-                        asset_internal_id=affected_asset.internal_asset_id, event_date=event_date_str,
-                        quantity_new_shares_received=new_shares_qty,
-                        fmv_per_new_share_foreign_currency=fmv_per_share,
-                        **common_ca_params_kw
-                    )
+                    if is_receivable_asset:
+                        logger.info(f"CA Record {idx+1} (SD): Skipping stock dividend for receivable asset {affected_asset.get_classification_key()}. Receivables are temporary and should not receive permanent stock dividends.")
+                    else:
+                        common_ca_params_kw_base["gross_amount_foreign_currency"] = total_fmv
+                        common_ca_params_kw = {k: v for k, v in common_ca_params_kw_base.items() if v is not None}
+                        logger.debug(f"CA Record {idx+1} (SD): Creating CorpActionStockDividend. New Shares: {new_shares_qty}, FMV/Share: {fmv_per_share}, Gross: {total_fmv}")
+                        domain_ca_event_instance = CorpActionStockDividend(
+                            asset_internal_id=affected_asset.internal_asset_id, event_date=event_date_str,
+                            quantity_new_shares_received=new_shares_qty,
+                            fmv_per_new_share_foreign_currency=fmv_per_share,
+                            **common_ca_params_kw
+                        )
 
             if domain_ca_event_instance:
                 logger.info(f"CA Record {idx+1}: Successfully created {type(domain_ca_event_instance).__name__} (Type: {domain_ca_event_instance.event_type.name}) for asset {affected_asset.get_classification_key()} from CA ID {rca.action_id_ibkr}, Gross Amt: {common_ca_params_kw_base.get('gross_amount_foreign_currency')} {common_ca_params_kw_base.get('local_currency')}")
