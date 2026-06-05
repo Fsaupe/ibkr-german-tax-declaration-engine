@@ -57,9 +57,9 @@ Gains from derivatives/forward transactions.
 **Engine mapping:** `OPTION_TRADE_CLOSE_LONG/SHORT`, `OPTION_EXPIRED_LONG`, `OPTION_CASH_SETTLED_LONG/SHORT` -> `ANLAGE_KAP_TERMIN_GEWINN` (<=2024) or `ANLAGE_KAP_AUSLAENDISCHE_KAPITALERTRAEGE_GESAMT` (>=2025)
 
 ### Satz 1 Nr. 7 -- Gains from capital claims
-Gains from redemption/sale of capital claims (Kapitalforderungen jeder Art).
+Gains from redemption/sale of capital claims (Kapitalforderungen jeder Art). Redemption at maturity (Einlösung) is explicitly treated as a disposal (Veräußerung) per Abs. 2 Satz 2.
 
-**Engine mapping:** Bond sales, FX gains on interest-bearing accounts
+**Engine mapping:** Bond sales; bond maturities (IBKR corporate action `Type="BM"`, mapped to a synthetic `TRADE_SELL_LONG` so it reuses the bond FIFO/FX path); FX gains on interest-bearing accounts. Positive G/L -> Anlage KAP Zeile 19, negative -> Zeile 22.
 
 ---
 
