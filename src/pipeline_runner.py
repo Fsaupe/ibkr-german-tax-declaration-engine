@@ -15,6 +15,10 @@ from src.domain.results import RealizedGainLoss, VorabpauschaleData
 from src.parsers.parsing_orchestrator import ParsingOrchestrator
 from src.classification.asset_classifier import AssetClassifier
 from src.processing.enrichment import enrich_financial_events
+from src.processing.vp_nav_resolution import resolve_year_start_navs
+from src.processing.declared_vp_resolution import resolve_declared_vp
+from src.identification.fund_soy_nav_provider import FundSoyNavProvider
+from src.identification.declared_vp_provider import DeclaredVpProvider
 from src.utils.currency_converter import CurrencyConverter
 from src.utils.exchange_rate_provider import ECBExchangeRateProvider, ExchangeRateProvider # Added base for custom provider
 from src.engine.calculation_engine import run_main_calculations
@@ -32,13 +36,15 @@ class ProcessingOutput:
                  processed_income_events: List[FinancialEvent], # Assuming this is the third item from run_main_calculations
                  all_financial_events_enriched: List[FinancialEvent],
                  asset_resolver: AssetResolver,
-                 eoy_mismatch_error_count: int):
+                 eoy_mismatch_error_count: int,
+                 vorabpauschale_gaps: Optional[List[Any]] = None):
         self.realized_gains_losses = realized_gains_losses
         self.vorabpauschale_items = vorabpauschale_items
         self.processed_income_events = processed_income_events
         self.all_financial_events_enriched = all_financial_events_enriched
         self.asset_resolver = asset_resolver
         self.eoy_mismatch_error_count = eoy_mismatch_error_count
+        self.vorabpauschale_gaps = vorabpauschale_gaps or []
         # For EOY state checks in tests, final assets can be fetched from asset_resolver
         self.final_assets_by_id: Dict[Any, Asset] = asset_resolver.assets_by_internal_id
 
@@ -53,7 +59,8 @@ def run_core_processing_pipeline(
     tax_year_to_process: int = config.TAX_YEAR, # Allow override for testing
     custom_rate_provider: Optional[ExchangeRateProvider] = None, # For testing ECB mock
     cash_balance_file_path: Optional[str] = None,  # For currency FIFO processing
-    options_eae_file_path: Optional[str] = None  # For cash-settled option processing
+    options_eae_file_path: Optional[str] = None,  # For cash-settled option processing
+    positions_prior_start_file_path: Optional[str] = None  # Prior-year SoY for Vorabpauschale
 ) -> ProcessingOutput:
     """
     Runs the core data processing pipeline: parsing, enrichment, and calculations.
@@ -121,6 +128,32 @@ def run_core_processing_pipeline(
     )
     logger.info(f"Enrichment completed. {len(financial_events_enriched)} events processed.")
 
+    # Resolve start-of-year NAVs for the §18 InvStG Vorabpauschale: the current year
+    # (preview of next year's return) and the prior year (the VP that flows into and is
+    # declared on this year's return, §18 Abs. 3). Warn-only — gaps become a report callout.
+    prior_year_soy_positions = _load_prior_year_soy_positions(positions_prior_start_file_path)
+    fund_nav_provider = FundSoyNavProvider(cache_file_path=config.FUND_SOY_NAV_CACHE_FILE_PATH)
+    vorabpauschale_gaps = resolve_year_start_navs(
+        asset_resolver=orchestrator.asset_resolver,
+        events=financial_events_enriched,
+        tax_year=tax_year_to_process,
+        interactive=interactive_classification_mode,
+        provider=fund_nav_provider,
+        prior_year_soy_positions=prior_year_soy_positions,
+    )
+
+    # §19 Abs. 1 S. 3 InvStG: for funds disposed this year, resolve the VP declared in prior
+    # years (interactive, cached) so the disposal gain is reduced by the held-period VP.
+    declared_vp_provider = DeclaredVpProvider(cache_file_path=config.DECLARED_VP_CACHE_FILE_PATH)
+    vorabpauschale_gaps += resolve_declared_vp(
+        asset_resolver=orchestrator.asset_resolver,
+        events=financial_events_enriched,
+        tax_year=tax_year_to_process,
+        interactive=interactive_classification_mode,
+        provider=declared_vp_provider,
+        currency_converter=currency_converter,
+    )
+
     logger.info(f"Running calculation engine for tax year {tax_year_to_process}...")
     eoy_mismatch_error_count_calc = 0
     try:
@@ -149,5 +182,27 @@ def run_core_processing_pipeline(
         processed_income_events=processed_income_events,
         all_financial_events_enriched=financial_events_enriched,
         asset_resolver=orchestrator.asset_resolver,
-        eoy_mismatch_error_count=eoy_mismatch_error_count_calc
+        eoy_mismatch_error_count=eoy_mismatch_error_count_calc,
+        vorabpauschale_gaps=vorabpauschale_gaps,
     )
+
+
+def _load_prior_year_soy_positions(path: Optional[str]):
+    """Parse a prior-year SoY positions export into {ISIN: (nav_per_unit, currency)}.
+
+    Returns None if no file was provided (so the resolver knows the bulk export is
+    absent and warns accordingly); an empty/partial dict otherwise.
+    """
+    if not path:
+        return None
+    from src.parsers.positions_parser import parse_positions_csv
+    try:
+        records = parse_positions_csv(path)
+    except Exception as e:
+        logger.warning(f"Could not parse prior-year SoY positions '{path}': {e}")
+        return None
+    out: Dict[str, Any] = {}
+    for r in records:
+        if r.isin and r.mark_price is not None:
+            out[r.isin] = (r.mark_price, r.currency_primary)
+    return out

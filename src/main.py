@@ -91,7 +91,8 @@ def main_application():
             interactive_classification_mode=args.interactive,
             tax_year_to_process=tax_year,
             cash_balance_file_path=data_paths.get("cash_balance", ""),
-            options_eae_file_path=data_paths.get("options_eae", "") or None
+            options_eae_file_path=data_paths.get("options_eae", "") or None,
+            positions_prior_start_file_path=data_paths.get("positions_prior_start", "") or None,
         )
     except Exception as e:
         logger.critical(f"Core processing pipeline failed: {e}. Exiting.", exc_info=True)
@@ -149,7 +150,8 @@ def main_application():
                 asset_resolver=asset_resolver,
                 tax_year=tax_year,
                 eoy_mismatch_count=processing_results.eoy_mismatch_error_count,
-                loss_offsetting_summary=loss_offsetting_summary
+                loss_offsetting_summary=loss_offsetting_summary,
+                vorabpauschale_gaps=processing_results.vorabpauschale_gaps,
             )
         else:
             logger.error("Console tax declaration report cannot be generated because loss offsetting calculation failed or was skipped.")
