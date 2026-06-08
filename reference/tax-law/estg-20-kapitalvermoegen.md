@@ -76,6 +76,21 @@ Key principle: FIFO method applies per asset per depot unless specific identific
 
 **Engine implementation:** `FifoManager` with lot-level tracking.
 
+**Known limitation — account-agnostic (merged) FIFO.** The engine keys FIFO ledgers by security
+(and by currency for FX), *merging across the person's accounts*, rather than running a separate
+FIFO per depot. This is correct for single-account holdings and for inter-account transfers (the
+merged queue carries cost basis/acquisition date across a move). It is imprecise only when the
+**same security, or the same foreign currency, is co-held in two accounts simultaneously and
+disposed from one** — the merged queue may match the disposal to a lot acquired in the other
+account, yielding a different gain than the strict per-Depot computation.
+- Securities: rare; the parser emits a per-security WARNING when it detects co-holding in a
+  position snapshot (`parsing_orchestrator._warn_if_co_held`).
+- Currencies: structural and often the normal state (e.g. USD held in two accounts); surfaced once
+  as a summary WARNING. The per-account-vs-aggregated question for foreign-currency gains
+  (§23/§20, Fremdwährungskonten) is itself legally unsettled, so the merge is a documented,
+  defensible simplification. A full per-Depot FIFO (per-account ledgers + transfer modelling) is a
+  deferred larger change.
+
 ### Abs. 4a -- Corporate Actions (Kapitalmasnahmen)
 
 **Satz 1-2: Stock-for-stock mergers/exchanges**
