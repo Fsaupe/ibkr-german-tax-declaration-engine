@@ -114,6 +114,8 @@ tax_report_202?.pdf
 cache/
 data/
 data_import/
+exchange/
+backup/
 ibkr_token
 all_cash_trans.csv
 
