@@ -12,7 +12,7 @@ from src.domain.events import (
     CorpActionExpireDividendRights, OptionExerciseEvent, OptionAssignmentEvent,
     OptionExpirationWorthlessEvent, OptionCashSettlementEvent,
     OptionLifecycleEvent, CashFlowEvent, FeeEvent,
-    WithholdingTaxEvent, CurrencyConversionEvent
+    WithholdingTaxEvent, CurrencyConversionEvent, InternalTransferEvent
 )
 from src.domain.assets import Asset, Stock, Bond, AssetCategory, Option, InvestmentFund, CashBalance
 from src.identification.asset_resolver import AssetResolver
@@ -21,7 +21,63 @@ from src.domain.enums import FinancialEventType, InvestmentFundType
 from src.utils.sorting_utils import get_event_sort_key
 from src.domain.exceptions import ProcessingError
 from src.utils.type_utils import parse_ibkr_date
+from src.utils.account_utils import account_key, DEFAULT_ACCOUNT
 from src.processing.vp_disposal_deduction import year_end_quantities
+
+
+class _AccountAssetView:
+    """Read-only proxy over an Asset that overrides the per-Depot position fields with the
+    values for one custody account, delegating everything else to the real Asset.
+
+    Lets FifoLedger.reconcile_with_soy_position (which reads asset.soy_*/eoy_*) operate per
+    (account, asset) without changing its signature. The aggregated values stay on the real Asset
+    for VP / EoY validation / reporting.
+    """
+    _OVERRIDES = (
+        "soy_quantity", "soy_cost_basis_amount", "soy_cost_basis_currency",
+        "soy_market_price", "soy_position_value", "soy_mark_price_currency",
+        "eoy_quantity", "eoy_market_price", "eoy_position_value", "eoy_mark_price_currency",
+    )
+
+    def __init__(self, asset, pos: Optional[Dict[str, Any]]):
+        object.__setattr__(self, "_asset", asset)
+        pos = pos or {}
+        ccy = pos.get("soy_currency") or asset.currency
+        eoy_ccy = pos.get("eoy_currency") or asset.currency
+        vals = {
+            # No per-account position row for this (account, asset) means the account simply did
+            # not hold it at SoY -> 0 (the account-agnostic baseline set the aggregate SoY to 0 the
+            # same way). Passing 0 rather than None avoids a spurious "SOY quantity is None" warning
+            # for every account that doesn't hold a given security; behaviour is identical.
+            "soy_quantity": pos.get("soy_quantity") if pos.get("soy_quantity") is not None else Decimal("0"),
+            "soy_cost_basis_amount": pos.get("soy_cost_basis_amount"),
+            "soy_cost_basis_currency": ccy,
+            "soy_market_price": pos.get("soy_market_price"),
+            "soy_position_value": pos.get("soy_position_value"),
+            "soy_mark_price_currency": ccy,
+            "eoy_quantity": pos.get("eoy_quantity"),
+            "eoy_market_price": pos.get("eoy_market_price"),
+            "eoy_position_value": pos.get("eoy_position_value"),
+            "eoy_mark_price_currency": eoy_ccy,
+        }
+        object.__setattr__(self, "_overrides", vals)
+
+    @property
+    def __class__(self):
+        # Make isinstance(view, Stock/InvestmentFund/CashBalance/...) reflect the real asset.
+        return type(object.__getattribute__(self, "_asset"))
+
+    def __getattr__(self, name):
+        ov = object.__getattribute__(self, "_overrides")
+        if name in ov:
+            return ov[name]
+        return getattr(object.__getattribute__(self, "_asset"), name)
+
+    def __setattr__(self, name, value):
+        if name in _AccountAssetView._OVERRIDES:
+            object.__getattribute__(self, "_overrides")[name] = value
+        else:
+            setattr(object.__getattribute__(self, "_asset"), name, value)
 
 from .fifo_manager import FifoLedger
 from src.utils.currency_converter import CurrencyConverter
@@ -129,6 +185,47 @@ def _format_asset_info(asset_obj) -> str:
     symbol = asset_obj.ibkr_symbol or "N/A"
     return f"'{desc}' (Symbol: {symbol})"
 
+
+def _order_current_year_events_for_merger_deps(events: List[FinancialEvent]) -> List[FinancialEvent]:
+    """Resolve a same-day ordering dependency between an internal transfer and a stock merger.
+
+    A merger event carries the account it happens in. If a security is transferred A->B and then
+    merges in B on the SAME day, the merger consumes the just-transferred lots, so the transfer MUST
+    run before the merger. The default intra-day sort places corporate actions (mergers) before
+    trades/transfers, which would run the merger against an empty target ledger. Because the merger's
+    account unambiguously identifies where the merge happens, detect a transfer whose
+    (target account, source asset) matches the merger's (account, source asset) on the same date and
+    move it to immediately before that merger. Other cases (e.g. transferring the merger OUTPUT) are
+    unaffected — the merger correctly precedes them.
+    """
+    if not (any(isinstance(e, CorpActionMergerStock) for e in events)
+            and any(isinstance(e, InternalTransferEvent) for e in events)):
+        return events
+    ordered = list(events)
+    for _ in range(len(ordered)):  # bounded passes; handles multiple dependencies
+        moved = False
+        for mi, m in enumerate(ordered):
+            if not isinstance(m, CorpActionMergerStock):
+                continue
+            m_acct = account_key(m.account_id)
+            for ti in range(mi + 1, len(ordered)):
+                t = ordered[ti]
+                if (isinstance(t, InternalTransferEvent)
+                        and t.event_date == m.event_date
+                        and t.asset_internal_id == m.asset_internal_id
+                        and account_key(t.target_account_id) == m_acct):
+                    ordered.insert(mi, ordered.pop(ti))  # move transfer to just before its merger
+                    logger.info(f"Ordering: moved same-day internal transfer {t.event_id} before "
+                                f"dependent merger {m.event_id} (transfer delivers the merged asset "
+                                f"into account {m_acct}).")
+                    moved = True
+                    break
+            if moved:
+                break
+        if not moved:
+            break
+    return ordered
+
 def run_main_calculations(
     financial_events: List[FinancialEvent],
     asset_resolver: AssetResolver,
@@ -153,9 +250,12 @@ def run_main_calculations(
     realized_gains_losses: List[RealizedGainLoss] = []
     vorabpauschale_data_items: List[VorabpauschaleData] = []
 
-    historical_events_by_asset: DefaultDict[uuid.UUID, List[FinancialEvent]] = defaultdict(list)
+    # Per-Depot FIFO: historical events grouped by (account_key, asset_id).
+    historical_events_by_asset: DefaultDict[Any, List[FinancialEvent]] = defaultdict(list)
     historical_merger_events: List[CorpActionMergerStock] = []
     historical_currency_events: DefaultDict[str, List[FinancialEvent]] = defaultdict(list)
+    historical_transfer_events: List[InternalTransferEvent] = []
+    all_transfer_events: List[InternalTransferEvent] = []  # historical + current (for ledger combos)
     current_year_events: List[FinancialEvent] = []
 
     pending_option_adjustments: Dict[uuid.UUID, Tuple[Decimal, uuid.UUID, str]] = {}
@@ -182,26 +282,40 @@ def run_main_calculations(
             logger.error(f"Event {event.event_id} has invalid date or identifier ({e}). Cannot process.")
             continue 
 
+        if isinstance(event, InternalTransferEvent):
+            # Internal Depotübertragung: tax-neutral lot move. Historical ones are replayed during
+            # SoY reconstruction (Pass 2b); current-year ones in the main loop. Either way they
+            # define (account, asset) ledger combos that must exist on both sides.
+            all_transfer_events.append(event)
+            if event_date_obj < tax_year_start_date_obj:
+                historical_transfer_events.append(event)
+            elif event_date_obj <= tax_year_end_date_obj:
+                current_year_events.append(event)
+            else:
+                filtered_events_count += 1
+            continue
+
         if event_date_obj < tax_year_start_date_obj:
             if isinstance(event, CorpActionMergerStock):
                 historical_merger_events.append(event)
             elif isinstance(event, (TradeEvent, CorpActionSplitForward, CorpActionStockDividend)):
-                historical_events_by_asset[event.asset_internal_id].append(event)
+                historical_events_by_asset[(account_key(event.account_id), event.asset_internal_id)].append(event)
             elif isinstance(event, CurrencyConversionEvent):
                 # CurrencyConversionEvents need to be associated with the non-EUR currency's asset ID
-                # (or both currencies for cross-currency trades like USD→GBP)
+                # (or both currencies for cross-currency trades like USD→GBP), per account.
+                acct = account_key(event.account_id)
                 from_is_non_eur = event.from_currency.upper() != "EUR"
                 to_is_non_eur = event.to_currency.upper() != "EUR"
 
                 if from_is_non_eur:
                     from_asset = asset_resolver.get_cash_balance_asset(event.from_currency)
                     if from_asset:
-                        historical_events_by_asset[from_asset.internal_asset_id].append(event)
+                        historical_events_by_asset[(acct, from_asset.internal_asset_id)].append(event)
 
                 if to_is_non_eur:
                     to_asset = asset_resolver.get_cash_balance_asset(event.to_currency)
                     if to_asset:
-                        historical_events_by_asset[to_asset.internal_asset_id].append(event)
+                        historical_events_by_asset[(acct, to_asset.internal_asset_id)].append(event)
             # Collect ALL currency-impacting historical events for comprehensive FIFO replay
             _collect_historical_currency_event(event, historical_currency_events)
         elif event_date_obj <= tax_year_end_date_obj:
@@ -216,55 +330,152 @@ def run_main_calculations(
     logger.info(f"Separated events: {sum(len(v) for v in historical_events_by_asset.values())} relevant historical events for SOY FIFO reconstruction, "
                 f"{len(current_year_events)} current tax year events.")
 
-    fifo_ledgers: Dict[uuid.UUID, FifoLedger] = {}
-    currency_fifo_ledgers: Dict[uuid.UUID, FifoLedger] = {}  # Separate dict for currency ledgers
+    fifo_ledgers: Dict[Any, FifoLedger] = {}           # keyed by (account_key, asset_id)
+    currency_fifo_ledgers: Dict[Any, FifoLedger] = {}  # keyed by (account_key, currency_asset_id)
 
-    # === Three-pass SOY initialization ===
-    # Pass 1: Create ledgers and simulate historical events (trades, splits, stock dividends)
-    logger.info("Pass 1: Creating FIFO ledgers and simulating historical events...")
-    for asset_id, asset_obj in asset_resolver.assets_by_internal_id.items():
-        if asset_obj.asset_category != AssetCategory.CASH_BALANCE:
-            asset_multiplier_val: Optional[Decimal] = None
-            asset_fund_type: Optional[InvestmentFundType] = None
+    positions_by_account: Dict[Any, Dict[str, Any]] = getattr(asset_resolver, "positions_by_account", {}) or {}
 
-            if isinstance(asset_obj, Option):
-                asset_multiplier_val = asset_obj.multiplier
-            elif isinstance(asset_obj, InvestmentFund):
-                asset_fund_type = asset_obj.fund_type
+    def _build_security_ledger(asset_obj):
+        mult = asset_obj.multiplier if isinstance(asset_obj, Option) else None
+        ftype = asset_obj.fund_type if isinstance(asset_obj, InvestmentFund) else None
+        return FifoLedger(
+            asset_internal_id=asset_obj.internal_asset_id, asset_category=asset_obj.asset_category,
+            asset_multiplier_from_asset=mult,
+            currency_converter=currency_converter, exchange_rate_provider=exchange_rate_provider,
+            internal_working_precision=internal_calculation_precision,
+            decimal_rounding_mode=decimal_rounding_mode, fund_type=ftype,
+        )
 
-            ledger = FifoLedger(
-                asset_internal_id=asset_id, asset_category=asset_obj.asset_category,
-                asset_multiplier_from_asset=asset_multiplier_val,
-                currency_converter=currency_converter, exchange_rate_provider=exchange_rate_provider,
-                internal_working_precision=internal_calculation_precision,
-                decimal_rounding_mode=decimal_rounding_mode,
-                fund_type=asset_fund_type
-            )
+    def _apply_internal_transfer(event: InternalTransferEvent) -> None:
+        """Move FIFO lots from the source account ledger to the target account ledger for an
+        internal Depotübertragung — tax-neutral, basis and acquisition date preserved. Used for
+        both historical (SoY reconstruction) and current-year transfers."""
+        src = account_key(event.account_id)
+        tgt = account_key(event.target_account_id)
+        asset_id = event.asset_internal_id
+        asset_obj = asset_resolver.get_asset_by_id(asset_id)
 
-            asset_historical_events_for_soy_init = []
-            if asset_id in historical_events_by_asset:
-                try:
-                    sort_key_func = lambda e: get_event_sort_key(e, asset_resolver)
-                    asset_historical_events_for_soy_init = sorted(
-                        historical_events_by_asset[asset_id], key=sort_key_func
-                    )
-                except ValueError as e:
-                    logger.critical(f"Fatal error sorting historical events for asset {asset_obj.get_classification_key()} (ID: {asset_id}): {e}. Cannot guarantee deterministic order for FIFO init. Aborting.")
-                    raise e
+        src_ledger = fifo_ledgers.get((src, asset_id))
+        src_long = sum((l.quantity for l in src_ledger.lots), Decimal(0)) if src_ledger else Decimal(0)
+        src_short = sum((l.quantity_shorted for l in src_ledger.short_lots), Decimal(0)) if src_ledger else Decimal(0)
+        if src_ledger is None or (src_long <= Decimal("1e-9") and src_short <= Decimal("1e-9")):
+            logger.warning(f"Internal transfer {event.event_id}: source ledger ({src}) for "
+                           f"{asset_obj.get_classification_key() if asset_obj else asset_id} is "
+                           f"empty/missing; nothing to move.")
+            return
 
-            try:
-                ledger.simulate_historical_events(
-                    asset=asset_obj,
-                    all_historical_events_for_asset=asset_historical_events_for_soy_init,
-                    tax_year=tax_year
-                )
-            except ValueError as e:
-                logger.critical(f"Fatal error simulating historical events for asset {asset_obj.get_classification_key()} (ID: {asset_id}): {e}. Aborting.")
-                raise e
+        # A position is either net long or net short. Move whichever the source holds (a transferred
+        # short position carries its open-short proceeds + opening date, same Fußstapfentheorie).
+        try:
+            if src_short > Decimal("1e-9") and src_long <= Decimal("1e-9"):
+                is_short = True
+                drained = src_ledger.transfer_out_short_lots(event.quantity, str(event.event_id))
+            else:
+                is_short = False
+                drained = src_ledger.transfer_out_long_lots(event.quantity, str(event.event_id))
+        except ValueError as e:
+            logger.error(f"Internal transfer {event.event_id}: {e}")
+            return
+        if not drained:
+            return
 
-            fifo_ledgers[asset_id] = ledger
+        tgt_ledger = fifo_ledgers.get((tgt, asset_id))
+        if tgt_ledger is None:
+            if isinstance(asset_obj, CashBalance) and asset_obj.currency:
+                _ensure_currency_ledger_exists(
+                    asset_obj.currency, asset_resolver, currency_fifo_ledgers, fifo_ledgers,
+                    currency_converter, exchange_rate_provider,
+                    internal_calculation_precision, decimal_rounding_mode,
+                    f"Transfer target {event.event_id}", account=tgt)
+                tgt_ledger = fifo_ledgers.get((tgt, asset_id))
+            elif asset_obj is not None:
+                tgt_ledger = _build_security_ledger(asset_obj)
+                fifo_ledgers[(tgt, asset_id)] = tgt_ledger
+        if tgt_ledger is None:
+            logger.error(f"Internal transfer {event.event_id}: could not obtain target ledger "
+                         f"({tgt}); transferred lots dropped.")
+            return
 
-    # Pass 2: Replay historical mergers in chronological order
+        if is_short:
+            tgt_ledger.receive_transferred_short_lots(drained)
+            moved = sum((l.quantity_shorted for l in drained), Decimal(0))
+        else:
+            tgt_ledger.receive_transferred_lots(drained)
+            moved = sum((l.quantity for l in drained), Decimal(0))
+        logger.info(f"Internal transfer {event.event_id}: moved {moved} {'SHORT' if is_short else 'long'} of "
+                    f"{asset_obj.get_classification_key() if asset_obj else asset_id} from {src} "
+                    f"to {tgt} (proceeds/cost basis and date preserved, tax-neutral).")
+
+    # === Three-pass SOY initialization, per (account, asset) ===
+    # The (account, asset) combos needing a security ledger: any with a recorded position, with
+    # historical security events, touched by a current-year event, or a merger source/target.
+    combos: set = set()
+    for combo in positions_by_account.keys():
+        combos.add(combo)
+    for combo in historical_events_by_asset.keys():
+        combos.add(combo)
+    for event in current_year_events:
+        combos.add((account_key(event.account_id), event.asset_internal_id))
+    for merger_event in historical_merger_events + [e for e in current_year_events if isinstance(e, CorpActionMergerStock)]:
+        acct_m = account_key(merger_event.account_id)
+        combos.add((acct_m, merger_event.asset_internal_id))
+        combos.add((acct_m, merger_event.new_asset_internal_id))
+    # Internal transfers: both the source and target account need a ledger for the moved asset.
+    for transfer_event in all_transfer_events:
+        combos.add((account_key(transfer_event.account_id), transfer_event.asset_internal_id))
+        combos.add((account_key(transfer_event.target_account_id), transfer_event.asset_internal_id))
+
+    # Pass A: create the per-(account, asset) ledgers, then replay ALL historical (pre-tax-year)
+    # trade / split / stock-dividend events AND inter-account security transfers in a single
+    # chronological stream. Replaying per-account trades and the cross-account moves in true date
+    # order means a security bought, transferred between Depots, and (partly) sold all within the
+    # historical window is reconstructed lot-exactly (carried basis + acquisition date), instead of
+    # each account's trades being simulated before the transfer delivers the lots (which produced
+    # "insufficient lots" warnings and a SoY-fallback basis). Historical stock mergers run in their
+    # own pass (Pass 2) AFTER this — Pass A delivers any transferred lots first, so a transfer that
+    # feeds a historical merger is already ordered correctly; the analogous current-year same-day
+    # transfer->merger dependency is resolved before the main event loop
+    # (_order_current_year_events_for_merger_deps). Cash transfers are excluded here (currency
+    # ledgers don't exist yet — the post-transfer SoY cash balances are authoritative).
+    logger.info("Pass A: Creating per-(account, asset) FIFO ledgers...")
+    for (acct, asset_id) in combos:
+        asset_obj = asset_resolver.get_asset_by_id(asset_id)
+        if asset_obj is None or asset_obj.asset_category == AssetCategory.CASH_BALANCE:
+            continue
+        ledger = _build_security_ledger(asset_obj)
+        if ledger.asset_category == AssetCategory.INVESTMENT_FUND:
+            # Carry the fund type from the asset onto the ledger before replay, so fund logic has it.
+            ft = getattr(asset_obj, "fund_type", None)
+            if isinstance(ft, InvestmentFundType) and ft != InvestmentFundType.NONE:
+                ledger.fund_type = ft
+            elif ledger.fund_type is None:
+                ledger.fund_type = InvestmentFundType.NONE
+        fifo_ledgers[(acct, asset_id)] = ledger
+
+    logger.info("Pass A: Replaying historical trade/transfer events chronologically...")
+    historical_stream: List[Tuple[Any, str, Any, FinancialEvent]] = []
+    for (acct, asset_id), evlist in historical_events_by_asset.items():
+        for ev in evlist:
+            historical_stream.append((get_event_sort_key(ev, asset_resolver), "trade", (acct, asset_id), ev))
+    for transfer_event in historical_transfer_events:
+        t_asset = asset_resolver.get_asset_by_id(transfer_event.asset_internal_id)
+        if isinstance(t_asset, CashBalance):
+            continue  # cash transfers handled via post-transfer SoY balances (currency-init)
+        historical_stream.append((get_event_sort_key(transfer_event, asset_resolver), "transfer", None, transfer_event))
+    try:
+        historical_stream.sort(key=lambda item: item[0])
+    except (ValueError, TypeError) as e:
+        logger.critical(f"Fatal error sorting historical event stream: {e}. Aborting.")
+        raise
+    for _sort_key, kind, ledger_key, ev in historical_stream:
+        if kind == "trade":
+            ledger = fifo_ledgers.get(ledger_key)
+            if ledger is not None:
+                ledger.apply_historical_event(ev, tax_year)
+        else:  # security transfer
+            _apply_internal_transfer(ev)
+
+    # Pass 2: Replay historical mergers in chronological order (within each account)
     if historical_merger_events:
         logger.info(f"Pass 2: Replaying {len(historical_merger_events)} historical stock merger(s)...")
         try:
@@ -274,14 +485,15 @@ def run_main_calculations(
             raise e
 
         for merger_event in sorted_mergers:
-            source_ledger = fifo_ledgers.get(merger_event.asset_internal_id)
-            target_ledger = fifo_ledgers.get(merger_event.new_asset_internal_id)
+            acct_m = account_key(merger_event.account_id)
+            source_ledger = fifo_ledgers.get((acct_m, merger_event.asset_internal_id))
+            target_ledger = fifo_ledgers.get((acct_m, merger_event.new_asset_internal_id))
 
             if source_ledger is None:
-                logger.warning(f"Historical merger {merger_event.event_id}: No source ledger for {merger_event.asset_internal_id}. Skipping.")
+                logger.warning(f"Historical merger {merger_event.event_id}: No source ledger for {merger_event.asset_internal_id} acct {acct_m}. Skipping.")
                 continue
             if target_ledger is None:
-                logger.error(f"Historical merger {merger_event.event_id}: No target ledger for {merger_event.new_asset_internal_id}. Cannot transfer lots.")
+                logger.error(f"Historical merger {merger_event.event_id}: No target ledger for {merger_event.new_asset_internal_id} acct {acct_m}. Cannot transfer lots.")
                 raise ValueError(f"Target ledger missing for historical merger {merger_event.event_id}")
 
             source_long_lots = source_ledger.drain_all_long_lots()
@@ -313,15 +525,16 @@ def run_main_calculations(
     else:
         logger.info("Pass 2: No historical stock mergers to replay.")
 
-    # Pass 3: Reconcile all ledgers against SoY positions (after merger lots are in place)
-    logger.info("Pass 3: Reconciling ledgers with SoY positions...")
-    for asset_id, ledger in fifo_ledgers.items():
+    # Pass 3: Reconcile each (account, asset) ledger against that account's SoY position
+    logger.info("Pass 3: Reconciling per-(account, asset) ledgers with SoY positions...")
+    for (acct, asset_id), ledger in fifo_ledgers.items():
         asset_obj = asset_resolver.get_asset_by_id(asset_id)
         if asset_obj:
+            view = _AccountAssetView(asset_obj, positions_by_account.get((acct, asset_id)))
             try:
-                ledger.reconcile_with_soy_position(asset_obj, tax_year)
+                ledger.reconcile_with_soy_position(view, tax_year)
             except ValueError as e:
-                logger.critical(f"Fatal error reconciling SOY for asset {asset_obj.get_classification_key()} (ID: {asset_id}): {e}. Aborting.")
+                logger.critical(f"Fatal error reconciling SOY for {asset_obj.get_classification_key()} acct {acct}: {e}. Aborting.")
                 raise e
 
     logger.info(f"Initialized {len(fifo_ledgers)} FIFO ledgers (three-pass).")
@@ -329,67 +542,134 @@ def run_main_calculations(
     # §19 Abs. 1 S. 3 InvStG: hand each fund ledger the VP-deduction context (declared VP
     # per year — resolved by the pre-pass and attached to the asset — and the year-end
     # quantities used as the per-unit denominator), so fund disposals reduce the gain.
-    for asset_id, ledger in fifo_ledgers.items():
+    for (acct, asset_id), ledger in fifo_ledgers.items():
         if ledger.asset_category != AssetCategory.INVESTMENT_FUND:
             continue
         asset_obj = asset_resolver.get_asset_by_id(asset_id)
         declared = getattr(asset_obj, "vp_declared_by_year", None) if asset_obj else None
         if declared:
             ledger.vp_declared_by_year = declared
+            # VP is per person (fund-level), so the per-unit denominator is the fund's total
+            # year-end quantity across accounts.
             ledger.vp_qty_eoy_by_year = year_end_quantities(financial_events, asset_id, tax_year)
 
-    # Initialize currency FIFO ledgers with comprehensive historical replay
+    # Initialize currency FIFO ledgers with comprehensive historical replay, per (account, currency).
     logger.info("Initializing currency FIFO ledgers for foreign currency positions...")
 
-    # Collect currencies that need FIFO ledgers (only from known CashBalance assets,
-    # not from historical events alone - avoids creating spurious currency tracking
-    # when no cash_balance CSV was provided)
-    currencies_to_init: set = set()
-    for asset_id, asset_obj in asset_resolver.assets_by_internal_id.items():
-        if isinstance(asset_obj, CashBalance) and asset_obj.currency:
-            ccy = asset_obj.currency.upper()
-            if ccy != "EUR":
-                currencies_to_init.add(ccy)
+    # Per-account SoY/EoY cash balances (from the parsing orchestrator). Keyed by
+    # (account_key, currency_asset_id) -> {"soy","eoy","currency"}. Absent for older
+    # single-account exports, in which case currencies collapse to the DEFAULT account.
+    cash_by_account: Dict[Any, Dict[str, Any]] = getattr(asset_resolver, "cash_by_account", {}) or {}
 
-    for currency_code in sorted(currencies_to_init):
-        # Ensure CashBalance asset and ledger exist
+    # How many distinct accounts hold each currency asset (used to decide whether the aggregated
+    # SoY cost basis on the CashBalance asset may be attributed to a single account's ledger).
+    accounts_per_currency: DefaultDict[Any, int] = defaultdict(int)
+    for (acct, cur_asset_id) in cash_by_account.keys():
+        accounts_per_currency[cur_asset_id] += 1
+
+    # (account, currency_code) combos needing a currency ledger. Seed from KNOWN cash balances
+    # (per-account rows, or — for single-account/older exports — the CashBalance assets). A currency
+    # is "tracked" once it has a per-account cash balance; for such currencies we ALSO create a
+    # ledger in every account that merely TOUCHES the currency via a trade/conversion/cashflow, so a
+    # disposal from an account that had no opening balance still realises per Depot (instead of the
+    # processor finding no ledger and silently skipping the FX event). We do NOT create tracking for
+    # currencies that have no cash balance at all (avoids spurious FX when no cash CSV was provided).
+    currency_combos: set = set()
+    tracked_ccys: set = set()
+    for (acct, cur_asset_id), state in cash_by_account.items():
+        ccy = (state.get("currency") or "").upper()
+        if ccy and ccy != "EUR":
+            currency_combos.add((acct, ccy))
+            tracked_ccys.add(ccy)
+    # Fallback: if no per-account cash data is available, init each known CashBalance asset's
+    # currency on the DEFAULT account (preserves single-account behaviour).
+    if not cash_by_account:
+        for asset_id, asset_obj in asset_resolver.assets_by_internal_id.items():
+            if isinstance(asset_obj, CashBalance) and asset_obj.currency:
+                ccy = asset_obj.currency.upper()
+                if ccy != "EUR":
+                    currency_combos.add((DEFAULT_ACCOUNT, ccy))
+    else:
+        # Real multi-account path: create a per-account ledger for every (account, currency) that
+        # appears in ANY currency-affecting event, so FX consumption realises against that account's
+        # own lots (a currency disposed from an account that had no opening balance — e.g. CHF/HKD
+        # acquired and spent intra-year — must still be tracked per Depot, not silently skipped).
+        # This is gated on cash_by_account being present, so the single-account path (no cash CSV)
+        # is unaffected and does not spuriously start tracking currencies.
+        current_currency_events: DefaultDict[Any, List[FinancialEvent]] = defaultdict(list)
+        for ev in current_year_events:
+            _collect_historical_currency_event(ev, current_currency_events)
+        for (acct, ccy) in list(historical_currency_events.keys()) + list(current_currency_events.keys()):
+            if ccy and ccy.upper() != "EUR":
+                currency_combos.add((acct, ccy.upper()))
+    # Cash internal transfers: ensure both source and target accounts have a currency ledger.
+    for transfer_event in all_transfer_events:
+        t_asset = asset_resolver.get_asset_by_id(transfer_event.asset_internal_id)
+        if isinstance(t_asset, CashBalance) and t_asset.currency and t_asset.currency.upper() != "EUR":
+            ccy = t_asset.currency.upper()
+            currency_combos.add((account_key(transfer_event.account_id), ccy))
+            currency_combos.add((account_key(transfer_event.target_account_id), ccy))
+
+    for (acct, currency_code) in sorted(currency_combos):
+        # Ensure CashBalance asset and per-account ledger exist
         _ensure_currency_ledger_exists(
             currency_code, asset_resolver, currency_fifo_ledgers, fifo_ledgers,
             currency_converter, exchange_rate_provider,
             internal_calculation_precision, decimal_rounding_mode,
-            f"Currency init {currency_code}"
+            f"Currency init {currency_code} acct {acct}", account=acct,
         )
 
         currency_asset = asset_resolver.get_cash_balance_asset(currency_code)
         if not currency_asset:
             continue
 
-        currency_ledger = currency_fifo_ledgers.get(currency_asset.internal_asset_id)
+        ckey = (acct, currency_asset.internal_asset_id)
+        currency_ledger = currency_fifo_ledgers.get(ckey)
         if not currency_ledger:
             continue
 
-        # Replay ALL historical events to build FIFO lots with correct acquisition dates
-        hist_events = historical_currency_events.get(currency_code, [])
+        # Replay this account's historical events to build FIFO lots with correct acquisition dates
+        hist_events = historical_currency_events.get((acct, currency_code), [])
         if hist_events:
             try:
                 sort_key_func = lambda e: get_event_sort_key(e, asset_resolver)
                 sorted_hist = sorted(hist_events, key=sort_key_func)
             except ValueError as e:
-                logger.error(f"Could not sort historical events for {currency_code}: {e}")
+                logger.error(f"Could not sort historical events for {currency_code} acct {acct}: {e}")
                 sorted_hist = hist_events
 
             replayed = _replay_historical_currency_events(
                 sorted_hist, currency_ledger, currency_code,
                 currency_converter, ctx
             )
-            logger.info(f"Currency {currency_code}: Replayed {replayed}/{len(hist_events)} historical events")
+            logger.info(f"Currency {currency_code} acct {acct}: Replayed {replayed}/{len(hist_events)} historical events")
 
-        # SOY quantity is authoritative - always reconcile to match it.
-        # Historical replay provides accurate lot-level cost basis,
-        # but the total quantity MUST match the reported SOY balance.
-        if isinstance(currency_asset, CashBalance):
+        # SOY quantity is authoritative - reconcile to match it. Use the per-account SoY balance
+        # (via a view) when this account has one. An account that only TOUCHES the currency via
+        # events (no opening balance) must NOT be reconciled to the aggregate — that would create a
+        # spurious full-balance lot in every such account (double counting); leave it empty so its
+        # lots are built purely from this account's events.
+        cash_state = cash_by_account.get(ckey)
+        recon_asset = None
+        if cash_state is not None:
+            # When this currency is held in a single account, the per-account SoY equals the
+            # aggregate, so the aggregated SoY cost basis (if any) legitimately belongs to this
+            # ledger. With multiple accounts we have no per-account cost basis (the cash-balance
+            # export carries none), so null it and let the ECB-rate fallback apply per account.
+            single_account = accounts_per_currency.get(currency_asset.internal_asset_id, 0) <= 1
+            recon_asset = _AccountAssetView(currency_asset, {
+                "soy_quantity": cash_state.get("soy"),
+                "soy_currency": currency_code,
+                "soy_cost_basis_amount": currency_asset.soy_cost_basis_amount if single_account else None,
+                "eoy_quantity": cash_state.get("eoy"),
+                "eoy_currency": currency_code,
+            })
+        elif not cash_by_account:
+            # Single-account / older export fallback: the DEFAULT ledger reconciles to the aggregate.
+            recon_asset = currency_asset
+        if recon_asset is not None and isinstance(recon_asset, CashBalance):
             _reconcile_currency_soy(
-                currency_ledger, currency_asset, tax_year,
+                currency_ledger, recon_asset, tax_year,
                 exchange_rate_provider, ctx
             )
 
@@ -431,13 +711,24 @@ def run_main_calculations(
         FinancialEventType.OPTION_CASH_SETTLEMENT: option_cash_settlement_processor,
     }
 
+    # Resolve the same-day transfer->merger dependency (a transfer that delivers a security into the
+    # account where it then merges must precede that merger; the merger's account disambiguates).
+    current_year_events = _order_current_year_events_for_merger_deps(current_year_events)
+
     logger.info(f"Processing {len(current_year_events)} current tax year events using dispatch table...")
     for event_idx, event in enumerate(current_year_events):
+        # Internal Depotübertragung: tax-neutral lot move between the person's own accounts.
+        # Handled directly (no processor, no RGL) — drain source ledger, receive into target.
+        if isinstance(event, InternalTransferEvent):
+            _apply_internal_transfer(event)
+            continue
+
         asset_object = asset_resolver.get_asset_by_id(event.asset_internal_id)
         if not asset_object:
             raise ProcessingError(f"Event {event.event_id} ({event.event_type.name}) references unknown asset {event.asset_internal_id}. Asset resolution failure.")
 
-        ledger = fifo_ledgers.get(asset_object.internal_asset_id)
+        event_acct = account_key(event.account_id)
+        ledger = fifo_ledgers.get((event_acct, asset_object.internal_asset_id))
         processor = event_processor_map.get(event.event_type)
 
         if not processor and isinstance(event, CorporateActionEvent):
@@ -457,6 +748,7 @@ def run_main_calculations(
                 context: Dict[str, Any] = {
                     'asset_resolver': asset_resolver,
                     'fifo_ledgers': fifo_ledgers,
+                    'account': event_acct,
                     'pending_option_adjustments': pending_option_adjustments,
                     'currency_converter': currency_converter,
                     # Phase 5a: Pass currency infrastructure for implicit FX from security trades
@@ -559,7 +851,7 @@ def run_main_calculations(
                         fx_currency_code, asset_resolver, currency_fifo_ledgers, fifo_ledgers,
                         currency_converter, exchange_rate_provider,
                         internal_calculation_precision, decimal_rounding_mode,
-                        f"FX trade {event.event_id}"
+                        f"FX trade {event.event_id}", account=event_acct,
                     )
                 fx_rgls = currency_conversion_processor.process(event, fifo_ledgers, asset_resolver)
                 if fx_rgls:
@@ -596,16 +888,22 @@ def run_main_calculations(
 
 
     logger.info("Performing End-of-Year (EOY) quantity validation...")
-    eoy_mismatch_errors = 0 
+    # Per-Depot: a security can have one ledger per account; the reported EoY quantity on the
+    # Asset is aggregated across accounts, so compare against the sum of the per-account ledgers.
+    ledgers_by_asset: DefaultDict[Any, List[FifoLedger]] = defaultdict(list)
+    for (lk_acct, lk_asset_id), lk_ledger in fifo_ledgers.items():
+        ledgers_by_asset[lk_asset_id].append(lk_ledger)
+
+    eoy_mismatch_errors = 0
     for asset_id, asset_obj in asset_resolver.assets_by_internal_id.items():
         if asset_obj.asset_category == AssetCategory.CASH_BALANCE:
             continue
 
-        ledger = fifo_ledgers.get(asset_id)
+        asset_ledgers = ledgers_by_asset.get(asset_id, [])
         calculated_eoy_qty: Decimal
 
-        if ledger:
-            calculated_eoy_qty = ledger.get_current_position_quantity()
+        if asset_ledgers:
+            calculated_eoy_qty = sum((l.get_current_position_quantity() for l in asset_ledgers), Decimal(0))
         else:
             calculated_eoy_qty = Decimal(0)
             if asset_obj.soy_quantity is not None and asset_obj.soy_quantity != Decimal(0): # Renamed
@@ -654,10 +952,11 @@ def run_main_calculations(
         if reported_eoy is None:
             continue
 
-        ledger = currency_fifo_ledgers.get(asset_id)
-        if ledger:
-            long_qty = sum(lot.quantity for lot in ledger.lots)
-            short_qty = sum(lot.quantity_shorted for lot in ledger.short_lots)
+        # Sum this currency's per-account ledgers against the aggregated reported balance.
+        currency_ledgers = [l for (cl_acct, cl_asset_id), l in currency_fifo_ledgers.items() if cl_asset_id == asset_id]
+        if currency_ledgers:
+            long_qty = sum((lot.quantity for l in currency_ledgers for lot in l.lots), Decimal("0"))
+            short_qty = sum((lot.quantity_shorted for l in currency_ledgers for lot in l.short_lots), Decimal("0"))
             calculated_eoy = long_qty - short_qty
         else:
             calculated_eoy = Decimal("0")
@@ -739,11 +1038,19 @@ def _vp_partial_year_factor(
     """
     twelve = Decimal("12")
     if use_ledger:
-        ledger = fifo_ledgers.get(asset_obj.internal_asset_id) if fifo_ledgers else None
-        if ledger is not None and getattr(ledger, "lots", None):
+        # VP is per person: aggregate the fund's lots across all accounts (Depots). Ledger keys
+        # are normally (account, asset_id) tuples, but tolerate bare asset_id keys (used by some
+        # unit tests that exercise this factor directly).
+        lots = []
+        if fifo_ledgers:
+            for key, ledger in fifo_ledgers.items():
+                key_asset_id = key[1] if isinstance(key, tuple) else key
+                if key_asset_id == asset_obj.internal_asset_id and getattr(ledger, "lots", None):
+                    lots.extend(ledger.lots)
+        if lots:
             total_q = Decimal("0")
             weighted = Decimal("0")
-            for lot in ledger.lots:
+            for lot in lots:
                 acq = parse_ibkr_date(lot.acquisition_date)
                 if acq is not None and acq.year == target_year:
                     factor = ctx.divide(Decimal(13 - acq.month), twelve)
@@ -1012,50 +1319,38 @@ def _create_excess_dividend_event(original_event, excess_amount, asset_object, c
 def _ensure_currency_ledger_exists(
     currency_code: str,
     asset_resolver: AssetResolver,
-    currency_fifo_ledgers: Dict[uuid.UUID, 'FifoLedger'],
-    fifo_ledgers: Dict[uuid.UUID, 'FifoLedger'],
+    currency_fifo_ledgers: Dict[Any, 'FifoLedger'],
+    fifo_ledgers: Dict[Any, 'FifoLedger'],
     currency_converter: CurrencyConverter,
     exchange_rate_provider: ECBExchangeRateProvider,
     internal_calculation_precision: int,
     decimal_rounding_mode: str,
     context_label: str = "",
+    account: str = DEFAULT_ACCOUNT,
 ) -> None:
     """
-    Ensure a CashBalance asset and FIFO ledger exist for the given currency.
-    Creates both on-the-fly if they don't exist yet.
-    This makes event processing robust against any CSV/event ordering.
+    Ensure a CashBalance asset and a per-(account, currency) FIFO ledger exist.
+    Creates both on-the-fly if they don't exist yet, so event processing is robust against
+    any CSV/event ordering.
     """
     if currency_code.upper() == "EUR":
         return
 
-    existing_asset = asset_resolver.get_cash_balance_asset(currency_code.upper())
-    if existing_asset:
-        # Asset exists; ensure ledger also exists
-        if existing_asset.internal_asset_id not in fifo_ledgers:
-            new_ledger = FifoLedger(
-                asset_internal_id=existing_asset.internal_asset_id,
-                asset_category=AssetCategory.CASH_BALANCE,
-                asset_multiplier_from_asset=None,
-                currency_converter=currency_converter,
-                exchange_rate_provider=exchange_rate_provider,
-                internal_working_precision=internal_calculation_precision,
-                decimal_rounding_mode=decimal_rounding_mode,
-            )
-            currency_fifo_ledgers[existing_asset.internal_asset_id] = new_ledger
-            fifo_ledgers[existing_asset.internal_asset_id] = new_ledger
-            logger.info(f"{context_label}: Created currency ledger for existing {currency_code} asset")
+    asset = asset_resolver.get_cash_balance_asset(currency_code.upper())
+    if asset is None:
+        asset = asset_resolver.get_or_create_asset(
+            raw_isin=None, raw_conid=None, raw_symbol=currency_code.upper(),
+            raw_currency=currency_code.upper(), raw_ibkr_asset_class="CASH",
+            raw_description=f"Cash Balance {currency_code.upper()}",
+            description_source_type="on_the_fly"
+        )
+    if asset is None:
         return
 
-    # Create CashBalance asset on-the-fly
-    new_asset = asset_resolver.get_or_create_asset(
-        raw_isin=None, raw_conid=None, raw_symbol=currency_code.upper(),
-        raw_currency=currency_code.upper(), raw_ibkr_asset_class="CASH",
-        raw_description=f"Cash Balance {currency_code.upper()}",
-        description_source_type="on_the_fly"
-    )
-    if new_asset:
+    key = (account, asset.internal_asset_id)
+    if key not in currency_fifo_ledgers:
         new_ledger = FifoLedger(
-            asset_internal_id=new_asset.internal_asset_id,
+            asset_internal_id=asset.internal_asset_id,
             asset_category=AssetCategory.CASH_BALANCE,
             asset_multiplier_from_asset=None,
             currency_converter=currency_converter,
@@ -1063,9 +1358,9 @@ def _ensure_currency_ledger_exists(
             internal_working_precision=internal_calculation_precision,
             decimal_rounding_mode=decimal_rounding_mode,
         )
-        currency_fifo_ledgers[new_asset.internal_asset_id] = new_ledger
-        fifo_ledgers[new_asset.internal_asset_id] = new_ledger
-        logger.info(f"{context_label}: Created CashBalance asset and ledger for {currency_code}")
+        currency_fifo_ledgers[key] = new_ledger
+        fifo_ledgers[key] = new_ledger
+        logger.info(f"{context_label}: Created currency ledger for {currency_code} acct {account}")
 
 
 def _process_cashflow_currency_impact(
@@ -1128,9 +1423,11 @@ def _process_cashflow_currency_impact(
             logger.debug(f"Cashflow {event.event_id}: Could not create CashBalance asset for {cash_currency}")
             return results
 
-    currency_ledger = currency_fifo_ledgers.get(currency_asset.internal_asset_id)
+    acct = account_key(event.account_id)
+    ckey = (acct, currency_asset.internal_asset_id)
+    currency_ledger = currency_fifo_ledgers.get(ckey)
     if not currency_ledger:
-        # Create ledger on-the-fly (no prior balance, first cash flow in this currency)
+        # Create ledger on-the-fly (no prior balance, first cash flow in this currency/account)
         ledger_kwargs = dict(
             asset_internal_id=currency_asset.internal_asset_id,
             asset_category=AssetCategory.CASH_BALANCE,
@@ -1141,10 +1438,10 @@ def _process_cashflow_currency_impact(
             decimal_rounding_mode=decimal_rounding_mode,
         )
         currency_ledger = FifoLedger(**ledger_kwargs)
-        currency_fifo_ledgers[currency_asset.internal_asset_id] = currency_ledger
+        currency_fifo_ledgers[ckey] = currency_ledger
         if fifo_ledgers is not None:
-            fifo_ledgers[currency_asset.internal_asset_id] = currency_ledger
-        logger.info(f"Cashflow {event.event_id}: Created currency ledger for {cash_currency} (first cash flow)")
+            fifo_ledgers[ckey] = currency_ledger
+        logger.info(f"Cashflow {event.event_id}: Created currency ledger for {cash_currency} acct {acct} (first cash flow)")
 
     eur_per_unit = eur_amount / foreign_amount
 
@@ -1229,10 +1526,10 @@ def _process_cashflow_currency_impact(
 
 def _collect_historical_currency_event(
     event: FinancialEvent,
-    historical_currency_events: DefaultDict[str, List[FinancialEvent]]
+    historical_currency_events: DefaultDict[Any, List[FinancialEvent]]
 ) -> None:
     """
-    Collect a historical event into currency-specific lists for FIFO replay.
+    Collect a historical event into per-(account, currency) lists for FIFO replay.
 
     Captures ALL events that affect foreign currency cash balances:
     - Trades (buy/sell securities in foreign currency, plus commissions)
@@ -1240,24 +1537,25 @@ def _collect_historical_currency_event(
     - Cash flows (dividends, interest, distributions)
     - Expenses (WHT, fees, Stueckzinsen)
     """
+    acct = account_key(event.account_id)
     if isinstance(event, CurrencyConversionEvent):
         if event.from_currency.upper() != "EUR":
-            historical_currency_events[event.from_currency.upper()].append(event)
+            historical_currency_events[(acct, event.from_currency.upper())].append(event)
         if event.to_currency.upper() != "EUR":
-            historical_currency_events[event.to_currency.upper()].append(event)
+            historical_currency_events[(acct, event.to_currency.upper())].append(event)
         return
 
     if isinstance(event, TradeEvent):
         ccy = (event.local_currency or "").upper()
         if ccy and ccy != "EUR":
-            historical_currency_events[ccy].append(event)
+            historical_currency_events[(acct, ccy)].append(event)
         return
 
     # Cash merger: acquisition proceeds create foreign currency cash
     if isinstance(event, CorpActionMergerCash):
         ccy = (event.local_currency or "").upper()
         if ccy and ccy != "EUR" and event.gross_amount_foreign_currency:
-            historical_currency_events[ccy].append(event)
+            historical_currency_events[(acct, ccy)].append(event)
         return
 
     # Cash flow events: dividends, interest, WHT, fees, etc.
@@ -1273,7 +1571,7 @@ def _collect_historical_currency_event(
             FinancialEventType.FEE_TRANSACTION,
             FinancialEventType.CAPITAL_REPAYMENT,
         ]:
-            historical_currency_events[ccy].append(event)
+            historical_currency_events[(acct, ccy)].append(event)
 
 
 def _replay_historical_currency_events(

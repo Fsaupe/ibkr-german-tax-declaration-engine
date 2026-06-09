@@ -20,7 +20,7 @@ import src.config as global_config
 
 from .raw_models import (
     RawTradeRecord, RawCashTransactionRecord, RawPositionRecord, RawCorporateActionRecord,
-    RawCashBalanceRecord, RawOptionsEAERecord
+    RawCashBalanceRecord, RawOptionsEAERecord, RawTransferRecord
 )
 from .trades_parser import parse_trades_csv
 from .cash_transactions_parser import parse_cash_transactions_csv
@@ -28,6 +28,7 @@ from .positions_parser import parse_positions_csv
 from .corporate_actions_parser import parse_corporate_actions_csv
 from .cash_balance_parser import parse_cash_balance_csv
 from .options_eae_parser import parse_options_eae_csv
+from .transfers_parser import parse_transfers_csv
 from .domain_event_factory import DomainEventFactory
 # NEW IMPORTS
 from src.processing.option_trade_linker import perform_option_trade_linking
@@ -49,6 +50,7 @@ class ParsingOrchestrator:
         self.raw_corporate_actions: List[RawCorporateActionRecord] = []
         self.raw_cash_balances: List[RawCashBalanceRecord] = []
         self.raw_options_eae: List[RawOptionsEAERecord] = []
+        self.raw_transfers: List[RawTransferRecord] = []
 
         self.domain_financial_events: List[FinancialEvent] = []
         # NEW: Store collections for linking
@@ -65,7 +67,8 @@ class ParsingOrchestrator:
                            positions_end_file: Optional[str] = None,
                            corporate_actions_file: Optional[str] = None,
                            cash_balance_file: Optional[str] = None,
-                           options_eae_file: Optional[str] = None):
+                           options_eae_file: Optional[str] = None,
+                           transfers_file: Optional[str] = None):
         # ... (implementation is the same)
         if trades_file:
             self.raw_trades = parse_trades_csv(trades_file)
@@ -88,6 +91,9 @@ class ParsingOrchestrator:
         if options_eae_file:
             self.raw_options_eae = parse_options_eae_csv(options_eae_file)
             logger.info(f"Loaded {len(self.raw_options_eae)} raw OptionEAE records.")
+        if transfers_file:
+            self.raw_transfers = parse_transfers_csv(transfers_file)
+            logger.info(f"Loaded {len(self.raw_transfers)} raw transfer records.")
 
     def process_positions(self):
         # IBKR emits one position row per account. Assets are resolved account-agnostically
@@ -103,7 +109,6 @@ class ParsingOrchestrator:
             asset.soy_market_price = agg["price"]
             asset.soy_position_value = agg["value"] if agg["value_seen"] else None
             asset.soy_mark_price_currency = agg["currency"]
-            self._warn_if_co_held(asset, agg, "SoY")
             logger.debug(f"Asset {asset.get_classification_key()} SOY: Qty={asset.soy_quantity}, Cost={asset.soy_cost_basis_amount} {asset.soy_cost_basis_currency}")
 
         logger.info("Processing end-of-year positions...")
@@ -112,7 +117,6 @@ class ParsingOrchestrator:
             asset.eoy_market_price = agg["price"]
             asset.eoy_position_value = agg["value"] if agg["value_seen"] else None
             asset.eoy_mark_price_currency = agg["currency"]
-            self._warn_if_co_held(asset, agg, "EoY")
             logger.debug(f"Asset {asset.get_classification_key()} EOY: Qty={asset.eoy_quantity}, Val={asset.eoy_position_value} {asset.currency}")
 
         # Per-Depot FIFO: also record positions per (account, asset) for per-account ledgers.
@@ -152,20 +156,6 @@ class ParsingOrchestrator:
         fill(self.raw_positions_end, "eoy")
         self.asset_resolver.positions_by_account = pba
         logger.info(f"Recorded per-account positions for {len(pba)} (account, asset) pair(s).")
-
-    def _warn_if_co_held(self, asset, agg, snapshot_label):
-        """German FIFO is per-Depot, but this engine merges accounts into one FIFO queue per
-        security. If a security is held with a non-zero quantity in more than one account in the
-        same snapshot, a sale from one account may pick the wrong lot vs. a per-account
-        computation. Warn (rare; not a transfer, which shows in only one account per snapshot)."""
-        accounts = agg.get("accounts") or set()
-        if len(accounts) > 1:
-            logger.warning(
-                f"Security {asset.get_classification_key()} is held in multiple accounts "
-                f"({', '.join(sorted(accounts))}) in the {snapshot_label} snapshot. FIFO is "
-                f"computed account-agnostically (merged across accounts), so a gain realised on a "
-                f"sale from one account may differ from the per-Depot (per-account) computation."
-            )
 
     def _aggregate_positions(self, raw_positions):
         """Resolve each raw position row to its account-agnostic asset and sum quantity,
@@ -541,19 +531,27 @@ class ParsingOrchestrator:
 
         logger.info(f"Processed {balances_processed} cash balance positions, skipped {balances_skipped}")
 
-        # Per-Depot FIFO limitation (currencies): a foreign currency held across multiple accounts
-        # is FIFO'd on one merged per-currency ledger, so FX gains may differ from a per-account
-        # computation. This is structural and (unlike securities) often the normal state, so it is
-        # surfaced once as a summary rather than a per-currency warning.
-        multi_account_currencies = sorted(
-            c for c, v in summed_by_currency.items() if len(v[3]) > 1
-        )
-        if multi_account_currencies:
-            logger.warning(
-                f"Foreign currencies held across multiple accounts: {', '.join(multi_account_currencies)}. "
-                f"FX gains use a per-currency FIFO merged across accounts; the per-Depot (per-account) "
-                f"FX result is not modelled (documented limitation)."
-            )
+        # Per-Depot FIFO: record cash balances per (account, currency) so currency ledgers can be
+        # seeded per Depot. The aggregated values above stay on the CashBalance asset for the
+        # account-agnostic paths (EoY validation, reporting totals).
+        from src.utils.account_utils import account_key
+        cash_by_account: dict = {}
+        for raw_balance in self.raw_cash_balances:
+            ccy = (raw_balance.currency_primary or "").upper()
+            if not ccy or ccy in ("EUR", "BASE_SUMMARY"):
+                continue
+            # Only record per-account cash for currencies that passed the dust threshold above
+            # (i.e. already have a CashBalance asset). Don't create assets here, or sub-threshold
+            # currencies the aggregate loop dropped would reappear.
+            cash_asset = self.asset_resolver.get_cash_balance_asset(ccy)
+            if cash_asset is None:
+                continue
+            key = (account_key(raw_balance.client_account_id), cash_asset.internal_asset_id)
+            st = cash_by_account.setdefault(key, {"soy": Decimal("0"), "eoy": Decimal("0"), "currency": ccy})
+            st["soy"] += raw_balance.starting_cash
+            st["eoy"] += raw_balance.ending_cash
+        self.asset_resolver.cash_by_account = cash_by_account
+        logger.info(f"Recorded per-account cash for {len(cash_by_account)} (account, currency) pair(s).")
 
     def _ensure_soy_quantities_are_set(self):
         # ... (implementation is the same)
@@ -601,6 +599,7 @@ class ParsingOrchestrator:
         cash_events = event_factory.create_events_from_cash_transactions(self.raw_cash_transactions)
         ca_events = event_factory.create_events_from_corporate_actions(self.raw_corporate_actions)
         options_eae_events = event_factory.create_events_from_options_eae(self.raw_options_eae) if self.raw_options_eae else []
+        transfer_events = event_factory.create_events_from_transfers(self.raw_transfers) if self.raw_transfers else []
 
         # Populate the main list of events
         self.domain_financial_events.clear() # Clear if run multiple times (though not typical)
@@ -608,6 +607,7 @@ class ParsingOrchestrator:
         self.domain_financial_events.extend(cash_events)
         self.domain_financial_events.extend(ca_events)
         self.domain_financial_events.extend(options_eae_events)
+        self.domain_financial_events.extend(transfer_events)
 
         logger.info(f"DomainEventFactory created {len(self.domain_financial_events)} total financial events initially.")
         logger.info(f"Collected {len(self.candidate_option_lifecycle_events)} candidate option lifecycle events for linking.")
@@ -683,6 +683,7 @@ class ParsingOrchestrator:
                              corporate_actions_file: Optional[str] = None,
                              cash_balance_file: Optional[str] = None,
                              options_eae_file: Optional[str] = None,
+                             transfers_file: Optional[str] = None,
                              tax_year: Optional[int] = None
                              ) -> List[FinancialEvent]:
         logger.info("Starting parsing pipeline...")
@@ -694,7 +695,8 @@ class ParsingOrchestrator:
                 positions_end_file=positions_end_file,
                 corporate_actions_file=corporate_actions_file,
                 cash_balance_file=cash_balance_file,
-                options_eae_file=options_eae_file
+                options_eae_file=options_eae_file,
+                transfers_file=transfers_file
             )
             self.process_positions()
             self._process_cash_balance_positions(tax_year=tax_year)

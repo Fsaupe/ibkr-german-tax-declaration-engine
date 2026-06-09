@@ -17,6 +17,7 @@ from src.identification.asset_resolver import AssetResolver
 from .base_processor import EventProcessor
 import src.config as global_config # For precisions if needed
 from src.utils.type_utils import parse_ibkr_date # For holding period calculation
+from src.utils.account_utils import account_key
 
 logger = logging.getLogger(__name__)
 
@@ -456,7 +457,7 @@ class OptionCashSettlementProcessor(EventProcessor):
         if not currency_asset:
             return results
 
-        currency_ledger = currency_fifo_ledgers.get(currency_asset.internal_asset_id)
+        currency_ledger = currency_fifo_ledgers.get((account_key(event.account_id), currency_asset.internal_asset_id))
         if not currency_ledger:
             return results
 

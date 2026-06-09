@@ -12,6 +12,7 @@ from src.domain.results import RealizedGainLoss
 from src.engine.fifo_manager import FifoLedger
 from .base_processor import EventProcessor
 from src.domain.enums import FinancialEventType
+from src.utils.account_utils import account_key
 
 logger = logging.getLogger(__name__)
 
@@ -102,7 +103,7 @@ class MergerCashProcessor(EventProcessor):
         if not currency_asset:
             return results
 
-        currency_ledger = currency_fifo_ledgers.get(currency_asset.internal_asset_id)
+        currency_ledger = currency_fifo_ledgers.get((account_key(event.account_id), currency_asset.internal_asset_id))
         if not currency_ledger:
             return results
 
@@ -174,9 +175,12 @@ class MergerStockProcessor(EventProcessor):
             logger.error(f"MergerStockProcessor received event with type {event.event_type} but expected CORP_MERGER_STOCK. ID: {event.event_id}")
             return []
 
-        # 1. Get target ledger
+        # 1. Get target ledger (same account as the source). Keys are normally
+        # (account, asset_id) tuples; tolerate bare asset_id keys (used by some unit tests).
         fifo_ledgers = context.get('fifo_ledgers', {})
-        target_ledger = fifo_ledgers.get(event.new_asset_internal_id)
+        target_ledger = fifo_ledgers.get((account_key(event.account_id), event.new_asset_internal_id))
+        if target_ledger is None:
+            target_ledger = fifo_ledgers.get(event.new_asset_internal_id)
         if target_ledger is None:
             logger.error(f"No FIFO ledger for target asset {event.new_asset_internal_id}. "
                          f"Cannot transfer lots for merger event {event.event_id}.")

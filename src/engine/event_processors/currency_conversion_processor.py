@@ -21,6 +21,7 @@ from src.domain.enums import AssetCategory, TaxReportingCategory, RealizationTyp
 from src.engine.fifo_manager import FifoLedger, FifoLot, ShortFifoLot
 from src.identification.asset_resolver import AssetResolver
 from src.utils.currency_converter import CurrencyConverter
+from src.utils.account_utils import account_key
 import src.config as global_config
 
 logger = logging.getLogger(__name__)
@@ -80,11 +81,13 @@ class CurrencyConversionProcessor:
                 f"(neither is EUR). Processing both sides with EUR bridge valuation."
             )
 
+        acct = account_key(event.account_id)
+
         # Selling non-EUR currency
         if event.from_currency.upper() != "EUR":
             from_asset = asset_resolver.get_cash_balance_asset(event.from_currency)
             if from_asset:
-                ledger = fifo_ledgers.get(from_asset.internal_asset_id)
+                ledger = fifo_ledgers.get((acct, from_asset.internal_asset_id))
                 if not ledger:
                     logger.warning(f"No ledger for currency {event.from_currency}, skipping FX event {event.event_id}")
                 else:
@@ -99,7 +102,7 @@ class CurrencyConversionProcessor:
         if event.to_currency.upper() != "EUR":
             to_asset = asset_resolver.get_cash_balance_asset(event.to_currency)
             if to_asset:
-                ledger = fifo_ledgers.get(to_asset.internal_asset_id)
+                ledger = fifo_ledgers.get((acct, to_asset.internal_asset_id))
                 if not ledger:
                     logger.warning(f"No ledger for currency {event.to_currency}, skipping FX event {event.event_id}")
                 else:

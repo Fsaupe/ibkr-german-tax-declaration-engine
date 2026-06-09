@@ -218,71 +218,46 @@ class FifoLedger:
         self.vp_qty_eoy_by_year: Dict[int, Decimal] = {}
 
 
-    def initialize_lots_from_soy(self,
-                                 asset: Asset,
-                                 all_historical_events_for_asset: List[FinancialEvent],
-                                 tax_year: int):
-        """Convenience method: simulate + reconcile in one call (used when no mergers)."""
-        self.simulate_historical_events(asset, all_historical_events_for_asset, tax_year)
-        self.reconcile_with_soy_position(asset, tax_year)
+    def apply_historical_event(self, hist_event: FinancialEvent, tax_year: int) -> None:
+        """Replay one historical (pre-tax-year) trade / split / stock-dividend into this ledger's
+        lot state. The engine (run_main_calculations, "Pass A") drives this across all per-(account,
+        asset) ledgers in a single chronological stream, interleaving inter-account transfers at
+        their real dates, so a security bought, transferred between Depots, and sold all within the
+        historical window reconstructs lot-exactly. Does NOT reconcile against the SoY position
+        (that is a later pass). Ledgers start empty and fund_type is set at creation, so this method
+        only appends/consumes lots."""
+        event_date_obj = parse_ibkr_date(hist_event.event_date)
+        if not event_date_obj or event_date_obj >= date_obj(tax_year, 1, 1):
+            logger.warning(f"Historical event {hist_event.event_id} for asset {self.asset_internal_id} "
+                           f"has date {hist_event.event_date} which is not before tax year {tax_year}. Skipping for SOY init.")
+            return
 
-    def simulate_historical_events(self,
-                                    asset: Asset,
-                                    all_historical_events_for_asset: List[FinancialEvent],
-                                    tax_year: int):
-        """Pass 1: Replay trades, splits, stock dividends to build lot state.
-        Does NOT reconcile against SoY position yet."""
+        try:
+            if isinstance(hist_event, TradeEvent):
+                # Split position flip events (C;O / O;C) using current ledger state
+                if hist_event.is_position_flip:
+                    avail_long = sum(lot.quantity for lot in self.lots) if self.lots else Decimal(0)
+                    avail_short = sum(lot.quantity_shorted for lot in self.short_lots) if self.short_lots else Decimal(0)
+                    sub_events = split_position_flip_event(hist_event, avail_long, avail_short)
+                else:
+                    sub_events = [hist_event]
 
-        if self.asset_category == AssetCategory.INVESTMENT_FUND:
-            asset_fund_type = getattr(asset, 'fund_type', None)
-            if isinstance(asset_fund_type, InvestmentFundType) and asset_fund_type != InvestmentFundType.NONE:
-                 if self.fund_type == InvestmentFundType.NONE:
-                     logger.info(f"Updating FifoLedger fund_type for {self.asset_internal_id} from SOY asset object to {asset_fund_type}.")
-                     self.fund_type = asset_fund_type
-            elif self.fund_type is None:
-                 logger.warning(f"FifoLedger for Investment Fund {self.asset_internal_id} still has no specific fund_type after asset load for SOY. Using InvestmentFundType.NONE.")
-                 self.fund_type = InvestmentFundType.NONE
-
-        self.lots.clear()
-        self.short_lots.clear()
-        self._historical_simulation_inconsistent = False
-
-        logger.info(f"Asset {asset.get_classification_key()} (ID: {asset.internal_asset_id}): Simulating "
-                    f"{len(all_historical_events_for_asset)} historical events.")
-
-        for hist_event in all_historical_events_for_asset:
-            event_date_obj = parse_ibkr_date(hist_event.event_date)
-            if not event_date_obj or event_date_obj >= date_obj(tax_year, 1, 1):
-                logger.warning(f"Historical event {hist_event.event_id} for asset {asset.internal_asset_id} "
-                               f"has date {hist_event.event_date} which is not before tax year {tax_year}. Skipping for SOY init.")
-                continue
-
-            try:
-                if isinstance(hist_event, TradeEvent):
-                    # Split position flip events (C;O / O;C) using current ledger state
-                    if hist_event.is_position_flip:
-                        avail_long = sum(lot.quantity for lot in self.lots) if self.lots else Decimal(0)
-                        avail_short = sum(lot.quantity_shorted for lot in self.short_lots) if self.short_lots else Decimal(0)
-                        sub_events = split_position_flip_event(hist_event, avail_long, avail_short)
-                    else:
-                        sub_events = [hist_event]
-
-                    for sub in sub_events:
-                        if sub.event_type == FinancialEventType.TRADE_BUY_LONG:
-                            self.add_long_lot(sub)
-                        elif sub.event_type == FinancialEventType.TRADE_SELL_LONG:
-                            self.consume_long_lots_for_sale(sub, is_historical_simulation=True)
-                        elif sub.event_type == FinancialEventType.TRADE_SELL_SHORT_OPEN:
-                            self.add_short_lot(sub)
-                        elif sub.event_type == FinancialEventType.TRADE_BUY_SHORT_COVER:
-                            self.consume_short_lots_for_cover(sub, is_historical_simulation=True)
-                elif isinstance(hist_event, CorpActionSplitForward):
-                    self.adjust_lots_for_split(hist_event)
-                elif isinstance(hist_event, CorpActionStockDividend):
-                     self.add_lot_for_stock_dividend(hist_event)
-            except UserWarning as uw:
-                logger.warning(f"Historical simulation warning for asset {asset.internal_asset_id} processing event {hist_event.event_id}: {uw}")
-                self._historical_simulation_inconsistent = True
+                for sub in sub_events:
+                    if sub.event_type == FinancialEventType.TRADE_BUY_LONG:
+                        self.add_long_lot(sub)
+                    elif sub.event_type == FinancialEventType.TRADE_SELL_LONG:
+                        self.consume_long_lots_for_sale(sub, is_historical_simulation=True)
+                    elif sub.event_type == FinancialEventType.TRADE_SELL_SHORT_OPEN:
+                        self.add_short_lot(sub)
+                    elif sub.event_type == FinancialEventType.TRADE_BUY_SHORT_COVER:
+                        self.consume_short_lots_for_cover(sub, is_historical_simulation=True)
+            elif isinstance(hist_event, CorpActionSplitForward):
+                self.adjust_lots_for_split(hist_event)
+            elif isinstance(hist_event, CorpActionStockDividend):
+                self.add_lot_for_stock_dividend(hist_event)
+        except UserWarning as uw:
+            logger.warning(f"Historical simulation warning for asset {self.asset_internal_id} processing event {hist_event.event_id}: {uw}")
+            self._historical_simulation_inconsistent = True
 
     def reconcile_with_soy_position(self, asset: Asset, tax_year: int):
         """Pass 3: Compare reconstructed lots against SoY position and apply fallback if needed."""
@@ -358,6 +333,19 @@ class FifoLedger:
             else:
                  use_fallback = True
 
+        # Surface ANY divergence between the reconstruction and the reported SoY snapshot. The
+        # fallback path below already warns for under-reconstruction / inconsistency; this covers the
+        # remaining case — OVER-reconstruction, where the replay built more than the snapshot reports
+        # (a disposal is evidently missing from the input trades). We keep the more-accurate historical
+        # lots (trimmed to the reported quantity, figures unchanged) but no longer do so silently.
+        if not use_fallback and abs(reconstructed_net_qty - reported_soy_qty) > Decimal('1e-8'):
+            soy_qty_diff = self.ctx.subtract(reconstructed_net_qty, reported_soy_qty)
+            logger.warning(
+                f"Asset {asset.get_classification_key()}: Historical FIFO reconstruction (net "
+                f"{reconstructed_net_qty}) does not match reported SOY Qty ({reported_soy_qty}) "
+                f"(reconstructed - reported = {soy_qty_diff}); a disposal is likely missing from the "
+                f"input trades. Keeping the reconstructed FIFO lots trimmed to the reported quantity."
+            )
 
         if use_fallback:
             self.lots.clear()
@@ -506,6 +494,102 @@ class FifoLedger:
         self.lots.extend(prepared_long_lots)
         self.lots.sort(key=lambda l: (parse_ibkr_date(l.acquisition_date) or datetime.min.date(), l.source_transaction_id))
         self.short_lots.extend(prepared_short_lots)
+        self.short_lots.sort(key=lambda l: (parse_ibkr_date(l.opening_date) or datetime.min.date(), l.source_transaction_id))
+
+    def transfer_out_long_lots(self, quantity: Decimal, transfer_event_id: str) -> List[FifoLot]:
+        """Drain `quantity` units of long lots in FIFO order for an internal Depotübertragung.
+
+        Splits the boundary lot if needed. Returns the drained lots (preserving each lot's
+        acquisition_date and unit/total EUR cost basis) so the target account ledger can receive
+        them unchanged — tax-neutral, no gain realised (§43 Abs. 1 S. 5 / Fußstapfentheorie).
+        Raises ValueError if the source has insufficient long quantity.
+        """
+        if quantity <= Decimal(0):
+            return []
+        available = sum((l.quantity for l in self.lots), Decimal(0))
+        tolerance = Decimal("1e-6")
+        if quantity - available > tolerance:
+            raise ValueError(
+                f"Internal transfer {transfer_event_id}: source ledger for {self.asset_internal_id} "
+                f"has insufficient long quantity ({available}) to transfer {quantity}."
+            )
+
+        drained: List[FifoLot] = []
+        remaining = quantity
+        while remaining > tolerance and self.lots:
+            lot = self.lots[0]
+            if lot.quantity <= remaining + tolerance:
+                # Move the whole lot.
+                drained.append(lot)
+                remaining = self.ctx.subtract(remaining, lot.quantity)
+                self.lots.pop(0)
+            else:
+                # Split: move `remaining`, keep the rest in place.
+                moved_total = self.ctx.multiply(remaining, lot.unit_cost_basis_eur)
+                drained.append(FifoLot(
+                    acquisition_date=lot.acquisition_date,
+                    quantity=remaining,
+                    unit_cost_basis_eur=lot.unit_cost_basis_eur,
+                    total_cost_basis_eur=moved_total,
+                    source_transaction_id=lot.source_transaction_id,
+                ))
+                lot.quantity = self.ctx.subtract(lot.quantity, remaining)
+                lot.total_cost_basis_eur = self.ctx.multiply(lot.quantity, lot.unit_cost_basis_eur)
+                remaining = Decimal(0)
+        return drained
+
+    def receive_transferred_lots(self, lots: List[FifoLot]) -> None:
+        """Append lots received from an internal transfer and re-sort by acquisition date.
+        The lots keep their original acquisition date and EUR cost basis (Fußstapfentheorie)."""
+        if not lots:
+            return
+        self.lots.extend(lots)
+        self.lots.sort(key=lambda l: (parse_ibkr_date(l.acquisition_date) or datetime.min.date(), l.source_transaction_id))
+
+    def transfer_out_short_lots(self, quantity: Decimal, transfer_event_id: str) -> List['ShortFifoLot']:
+        """Drain `quantity` units of SHORT lots in FIFO order for an internal Depotübertragung of a
+        short position (the security was sold-to-open in this Depot and the open short is moved to
+        another of the owner's Depots). Tax-neutral — the open short's sale proceeds and opening
+        date carry over, so covering it in the target Depot realises the correct gain. Splits the
+        boundary lot if needed. Raises ValueError if the source has insufficient short quantity."""
+        if quantity <= Decimal(0):
+            return []
+        available = sum((l.quantity_shorted for l in self.short_lots), Decimal(0))
+        tolerance = Decimal("1e-6")
+        if quantity - available > tolerance:
+            raise ValueError(
+                f"Internal transfer {transfer_event_id}: source ledger for {self.asset_internal_id} "
+                f"has insufficient short quantity ({available}) to transfer {quantity}."
+            )
+
+        drained: List['ShortFifoLot'] = []
+        remaining = quantity
+        while remaining > tolerance and self.short_lots:
+            lot = self.short_lots[0]
+            if lot.quantity_shorted <= remaining + tolerance:
+                drained.append(lot)
+                remaining = self.ctx.subtract(remaining, lot.quantity_shorted)
+                self.short_lots.pop(0)
+            else:
+                moved_total = self.ctx.multiply(remaining, lot.unit_sale_proceeds_eur)
+                drained.append(ShortFifoLot(
+                    opening_date=lot.opening_date,
+                    quantity_shorted=remaining,
+                    unit_sale_proceeds_eur=lot.unit_sale_proceeds_eur,
+                    total_sale_proceeds_eur=moved_total,
+                    source_transaction_id=lot.source_transaction_id,
+                ))
+                lot.quantity_shorted = self.ctx.subtract(lot.quantity_shorted, remaining)
+                lot.total_sale_proceeds_eur = self.ctx.multiply(lot.quantity_shorted, lot.unit_sale_proceeds_eur)
+                remaining = Decimal(0)
+        return drained
+
+    def receive_transferred_short_lots(self, lots: List['ShortFifoLot']) -> None:
+        """Append short lots received from an internal transfer and re-sort by opening date.
+        The lots keep their original opening date and EUR sale proceeds (Fußstapfentheorie)."""
+        if not lots:
+            return
+        self.short_lots.extend(lots)
         self.short_lots.sort(key=lambda l: (parse_ibkr_date(l.opening_date) or datetime.min.date(), l.source_transaction_id))
 
     def add_long_lot(self, trade_event: TradeEvent):
