@@ -834,3 +834,21 @@ movement, not output-neutral — base cannot declare these years and the merged 
 the maintainer's to approve, named to VZ 2023, VZ 2024 and VZ 2025. That no non-grant figure moved
 is not shown by a real-data figure diff (base produces no declaration to diff); it rests on the
 merged tree differing from main by exactly the grant change and on the green clean-clone suite.
+
+## 2026-09-20 — PR #90 maintainer-review rework, real-data parity
+
+Re-measured after the rework answering the maintainer's review (award provenance through transfers;
+awarded acquisitions in the same-day transfer dependencies; the reversal-ordering warning keyed by
+account; the § 22 Nr. 3 classification re-grounded on § 20 Abs. 1 Nr. 7's charging element and BMF
+Rz. 129b; Q16 recorded as the taxpayer's Reading A; the BFH VI R 37/09 Randnummern corrected to
+Rn. 12 and Rn. 15). Head = the reworked tree; base = the reviewed head before the rework. Contributor
+exports, VZ 2023–2025, `scripts/parity_check.sh`; same-tree control identical (console/log/PDF), so
+the comparison is reliable.
+
+**base vs head is byte-identical in all three years** — console (normalized), log (normalized) and
+metadata-stripped PDF. The rework moves no declared figure: the changed award-lot identity, the
+same-day ordering dependency and the account-keyed warning are all output-neutral on this data, which
+carries one grant, no cross-account award collision, no same-day grant-and-transfer of the awarded
+security, and no award reversal in a result year. This is the compatibility/parity gate for the
+rework itself; it does not restate the separate Band A feature approval owed for the grant feature
+(above, 2026-09-19), which the maintainer approves named to VZ 2023/2024/2025.

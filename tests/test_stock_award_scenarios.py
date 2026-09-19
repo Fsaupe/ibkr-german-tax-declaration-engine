@@ -374,13 +374,15 @@ def test_a_same_day_reversal_and_sale_apply_reversal_first_and_warn():
     from src.engine.calculation_engine import (
         _report_reversal_ordering_assumption, STOCK_AWARD_REVERSAL_ORDER_ASSUMED)
 
-    def ev(kind, day, asset="A1"):
-        return SimpleNamespace(event_type=kind, event_date=day, asset_internal_id=asset)
+    def ev(kind, day, asset="A1", account="U_ONE"):
+        return SimpleNamespace(event_type=kind, event_date=day, asset_internal_id=asset,
+                               account_id=account)
 
     resolver = SimpleNamespace(get_asset_by_id=lambda _id: None)
     tax_year_end = date(2023, 12, 31)
 
-    # Collision: a reversal and a sale of the same security on one day -> one WARNING.
+    # Collision: a reversal and a sale of the same security in one account on one day -> one
+    # WARNING.
     collector = DataGapCollector()
     _report_reversal_ordering_assumption(
         [ev(T.STOCK_AWARD_REVERSED, "2023-06-01"),
@@ -390,6 +392,16 @@ def test_a_same_day_reversal_and_sale_apply_reversal_first_and_warn():
     assert len(gaps) == 1, "the collision must reach the report"
     assert gaps[0].severity is GapSeverity.WARNING
     assert "2023-06-01" in gaps[0].subject
+
+    # No collision across accounts: a reversal in one account and a sale in another cannot
+    # order against each other -- per-Depot FIFO ([GT-ESTG20-013]) keeps their ledgers apart.
+    cross = DataGapCollector()
+    _report_reversal_ordering_assumption(
+        [ev(T.STOCK_AWARD_REVERSED, "2023-06-01", account="U_A"),
+         ev(T.TRADE_SELL_LONG, "2023-06-01", account="U_B")],
+        resolver, cross, tax_year_end)
+    assert not [g for g in cross.gaps if g.code == STOCK_AWARD_REVERSAL_ORDER_ASSUMED], \
+        "independent account ledgers cannot have a FIFO collision"
 
     # No collision: a different day, or a reversal of a different security -> no WARNING.
     quiet = DataGapCollector()
@@ -425,7 +437,7 @@ def test_a_same_day_reversal_and_sale_apply_reversal_first_and_warn():
         keyed_resolver, ordered, tax_year_end)
     subjects = [g.subject for g in ordered.gaps
                 if g.code == STOCK_AWARD_REVERSAL_ORDER_ASSUMED]
-    assert subjects == ["AAA am 2023-06-01", "ZZZ am 2023-06-01"], (
+    assert subjects == ["AAA am 2023-06-01 [Konto U_ONE]", "ZZZ am 2023-06-01 [Konto U_ONE]"], (
         "warnings must order by the stable classification key, not the per-run asset id")
 
 

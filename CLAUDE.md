@@ -212,13 +212,20 @@ run.
 - **The intra-day sort band of a new event kind.** Deleting the stock-award branch from
   `get_event_sort_key` leaves the suite green, including a scenario built to sort a
   same-day disposal against it. The event falls to the unknown-type band, which orders it
-  after that day's trades. It is currently harmless for stock awards, because the only
-  kind that touches the ledger is dated on the day the shares arrive; it would stop being
-  harmless the moment a kind that changes a lot is added.
+  after that day's trades. This is **not** harmless: a **reversal** takes this band too and
+  does change a lot -- it removes units, dated on the report day rather than the day the
+  shares arrived -- so a same-day reversal and disposal already depend on the band for their
+  order (reversal-first, Reading A, [GT-ESTG20-066]). Deleting the branch flips them to
+  Reading B and moves a figure silently; the collision's WARNING still fires, but it flags
+  the coincidence, not the order, so it does not stop the figure moving. Probe by mutation.
 - **Which date column an event is built from, where the export's columns agree.** Dating a
-  stock award on the broker's report date instead of the award date leaves the suite
-  green. The two coincide on every award row of the current export, so no fixture
-  distinguishes them, and the scenario written to do so passes either way.
+  stock award on the broker's report date instead of the award date moves only the
+  acquisition date under a start-of-year snapshot -- quantity, cost basis, proceeds and gain
+  reconcile either way. The award rows of the real export have the two columns equal, so no
+  real fixture distinguishes them; `test_an_award_is_dated_on_its_award_date_not_the_broker_s_report_date`
+  now uses a fixture where they differ and asserts the acquisition date, so this mutation is
+  caught. Kept here because the coincidence in the real data is what made it invisible, and
+  a fixture that lets the two columns agree would hide it again.
 
 - **A WARNING data gap's emission from a full run.** The test harness (`_run_pipeline`) returns
   `ProcessingOutput`, which does not carry the data-gap collector, and it returns before the report

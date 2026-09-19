@@ -417,22 +417,26 @@ def _report_reversal_ordering_assumption(
         parsed = parse_ibkr_date(e.event_date)
         if not parsed or parsed > tax_year_end_date_obj:
             continue
-        key = (e.asset_internal_id, e.event_date)
+        # The collision is per (account, asset): FIFO and lot consumption are per Depot
+        # ([GT-ESTG20-013]), so a reversal in one account and a disposal in another cannot
+        # order against each other -- their ledgers never touch. Keying without the account
+        # would raise a false warning on two independent accounts.
+        key = (account_key(e.account_id), e.asset_internal_id, e.event_date)
         if e.event_type == FinancialEventType.STOCK_AWARD_REVERSED:
             reversal_days.add(key)
         elif e.event_type == FinancialEventType.TRADE_SELL_LONG:
             disposal_days.add(key)
-    # Order by (day, stable name), never by asset_internal_id -- that is a per-run uuid4,
-    # so sorting on it reorders the warning lines run to run and breaks byte-parity when two
-    # collisions fall on distinct assets. The classification key is derived from the
-    # instrument's own identity and is stable.
+    # Order by (day, stable name, account), never by asset_internal_id -- that is a per-run
+    # uuid4, so sorting on it reorders the warning lines run to run and breaks byte-parity
+    # when two collisions fall on distinct assets. The classification key and the account are
+    # both derived from stable identities.
     collisions = []
-    for asset_id, day in reversal_days & disposal_days:
+    for account, asset_id, day in reversal_days & disposal_days:
         asset = asset_resolver.get_asset_by_id(asset_id)
         name = asset.get_classification_key() if asset else str(asset_id)
-        collisions.append((day, name))
-    for day, name in sorted(collisions):
-        subject = f"{name} am {day}"
+        collisions.append((day, name, account))
+    for day, name, account in sorted(collisions):
+        subject = f"{name} am {day} [Konto {account}]"
         detail = (
             "On the same day, a reversal of awarded shares (Stock Award Reversal) and a "
             "disposal of the same share coincided. Which event applies first is not fixed "
