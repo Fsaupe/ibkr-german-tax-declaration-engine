@@ -49,7 +49,8 @@ class StockAwardProcessor(EventProcessor):
         if not isinstance(event, StockAwardEvent):
             raise ProcessingError(
                 f"StockAwardProcessor received {type(event).__name__}, which carries no "
-                f"award date -- the only key an award has to its lot.")
+                f"award date -- part of the key (with the grant account) an award has to "
+                f"its lot.")
 
         if event.event_type == FinancialEventType.STOCK_AWARD_GRANTED:
             ledger.add_lot_for_stock_award(event)

@@ -644,9 +644,12 @@ class StockAwardEvent(FinancialEvent):
 
     The three kinds share a class because they share a key. `SerialNumber` is blank on
     every row of the export, so nothing identifies a row on its own; what a reversal and
-    a vesting DO carry is the originating award's date, and that is what ties them back
-    to the lot the award created. `award_date` is therefore the matching key on all
-    three kinds, and on an award row it equals the day the lot is created.
+    a vesting DO carry is the originating award's date, and that -- together with the
+    account the award was granted in -- ties them back to the lot the award created. The
+    matching key is therefore `account_id` and `award_date` together, not the date alone:
+    two accounts can grant on one day, and once a transfer relocates one award beside the
+    other in a single ledger the date no longer tells them apart. On an award row
+    `award_date` equals the day the lot is created.
 
     **The position and the tax acquisition coincide, and that is a decided position
     rather than an obvious one.** The shares sit in the account from the award, and
@@ -709,9 +712,10 @@ class StockAwardEvent(FinancialEvent):
             )
         if not award_date or not str(award_date).strip():
             raise ValueError(
-                "StockAwardEvent requires an award date. It is the only key tying a "
-                "vesting or a reversal back to the lot the award created -- the "
-                "export's SerialNumber is blank on every row."
+                "StockAwardEvent requires an award date. With the grant account it is the "
+                "key tying a vesting or a reversal back to the lot the award created -- the "
+                "export's SerialNumber is blank on every row, so there is no per-row id to "
+                "use instead."
             )
 
     def __post_init__(self):

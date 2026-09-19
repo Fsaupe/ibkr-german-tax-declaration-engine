@@ -108,15 +108,16 @@ def test_a_full_reversal_removes_the_lot():
 
 
 def test_two_awards_keep_their_own_costs():
-    """Each award is its own lot at its own price. The award date is still the matching
-    key, because a reversal names the award it undoes."""
+    """Each award is its own lot at its own price. The matching key is the grant account
+    and the award date together, because a reversal names the award it undoes and two
+    accounts can grant on the same day."""
     led = _ledger()
     led.add_lot_for_stock_award(_award("2020-03-02", "2020-03-02", "10", "4"))
     led.add_lot_for_stock_award(_award("2020-06-01", "2020-06-01", "20", "5"))
 
     by_award = {lot.source_transaction_id: lot for lot in led.lots}
-    assert by_award["STOCK_AWARD:2020-03-02"].unit_cost_basis_eur == Decimal("4")
-    assert by_award["STOCK_AWARD:2020-06-01"].unit_cost_basis_eur == Decimal("5")
+    assert by_award["STOCK_AWARD:U_TEST:2020-03-02"].unit_cost_basis_eur == Decimal("4")
+    assert by_award["STOCK_AWARD:U_TEST:2020-06-01"].unit_cost_basis_eur == Decimal("5")
 
 
 def test_the_whole_sequence_leaves_the_broker_s_quantity_and_the_awarded_cost():

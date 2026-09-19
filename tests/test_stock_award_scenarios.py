@@ -21,13 +21,15 @@ running this file:
 | parser's unclassified-kind refusal | yes |
 | factory's zero-quantity guard | yes |
 | **sort-key band in `get_event_sort_key`** | **no -- still green** |
-| **award dated on `ReportDate` instead of `AwardDate`** | **no -- still green** |
+| award dated on `ReportDate` instead of `AwardDate` | yes -- 1 red (acquisition date) |
 
-The last two are written up in CLAUDE.md's *Where the suite is blind*. The scenarios
-aimed at them (`test_a_same_day_sale_is_measured_after_the_vesting_not_before_it` and
-`test_an_award_is_dated_on_its_award_date_not_the_broker_s_report_date`) assert the right
-figures and pass, but they pass with the code broken too, so they document the intent
-without instrumenting it. Do not read them as guards.
+The sort-key band remains written up in CLAUDE.md's *Where the suite is blind*; the
+scenario aimed at it (`test_a_same_day_sale_is_measured_after_the_vesting_not_before_it`)
+asserts the right figures and passes, but passes with the code broken too, so it documents
+the intent without instrumenting it. Do not read it as a guard.
+`test_an_award_is_dated_on_its_award_date_not_the_broker_s_report_date` now asserts the
+acquisition date, which is the only figure the report-date mutation moves under a
+start-of-year snapshot, so it does instrument the choice.
 
 The award-inside-the-tax-year case is the one that motivated the file: an award or a
 reversal that goes unapplied is caught by the end-of-year quantity reconciliation, and
@@ -44,7 +46,8 @@ import pytest
 
 from src.domain.enums import TaxReportingCategory
 from tests.support.base import FifoTestCaseBase
-from tests.support.multi_account import trade_row, position_row, conid_for
+from tests.support.multi_account import trade_row, position_row, conid_for, transfer_row
+from tests.support.mock_providers import MockECBExchangeRateProvider
 
 ACCOUNT = "U_AWARD_1"
 ISIN = "TEST00AWARD01"
@@ -180,6 +183,7 @@ class TestAwardedSharesReachTheLedger(FifoTestCaseBase):
         wrong date would give a different basis."""
         results = self._run_pipeline(
             tax_year=TAX_YEAR,
+            custom_rate_provider=MockECBExchangeRateProvider(Decimal("2")),
             grants_data=[
                 grant_row("Stock Award Grant for Cash Deposit",
                           "20220302", "20220302", "20220902", "10", "4", currency="USD"),
@@ -195,10 +199,12 @@ class TestAwardedSharesReachTheLedger(FifoTestCaseBase):
             positions_end_data=[],
         )
         rgl = self._sale_gain(results)
-        assert rgl.total_cost_basis_eur > Decimal("0"), (
-            "an unconverted award would have stopped the run, not produced a zero basis")
-        assert rgl.total_cost_basis_eur != Decimal("60"), (
-            "60 is the FOREIGN figure taken as EUR -- the conversion did not happen")
+        # 1 USD = 2 EUR (fixed provider): 10 shares awarded at 4 USD -> 40 USD -> 80 EUR.
+        # A deterministic rate lets the exact basis be asserted; the live ECB rate could not.
+        assert rgl.total_cost_basis_eur == Decimal("80"), (
+            "basis is the award-day USD price converted at the award-date rate, not the "
+            "foreign figure (60) taken as EUR nor a live-rate value")
+        assert rgl.acquisition_date == "2022-03-02", "the lot is dated on the award date"
 
 
 def test_an_unclassified_activity_kind_stops_the_run(tmp_path):
@@ -274,9 +280,12 @@ class TestTheGuardsAreObserved(FifoTestCaseBase):
         )
         rgls = [r for r in results.realized_gains_losses]
         assert len(rgls) == 1
-        # The lot is created on the award date; a lot created on the report date would
-        # still reconcile, because the quantity is the same either way.
         assert rgls[0].total_cost_basis_eur == Decimal("40")
+        # The lot is dated on the award date, not the broker's report date. A lot dated on
+        # the report date reconciles identically in quantity, cost basis, proceeds and gain
+        # -- only the acquisition date differs (the SoY-snapshot blind spot in CLAUDE.md),
+        # so this is the assertion that instruments the choice rather than documenting it.
+        assert rgls[0].acquisition_date == "2022-03-02"
 
 def test_an_award_in_the_tax_year_reports_the_receipt_it_does_not_declare():
     """The one thing standing between a user and an understated return.
@@ -475,3 +484,87 @@ class TestAPartlyExportedGrantsWindowStopsTheRun(FifoTestCaseBase):
         msg = str(excinfo.value)
         assert "GRANTS_WINDOW_INCOMPLETE" in msg
         assert "2024" in msg, "the year the reader must export"
+
+
+class TestGrantTransferInteractions(FifoTestCaseBase):
+    """Awards that are transferred between accounts and later reversed or sold.
+
+    Red-first on the base (measured 2026-09-20 with `git stash` of the src/ fix):
+    * `test_transferred_same_date_awards_keep_reversal_identity` -> basis 114, not 94;
+    * `test_award_before_same_day_transfer_is_not_symbol_dependent[ZZZ]` ->
+      aborts INTERNAL_TRANSFER_PARTIAL because the transfer ran before the grant.
+    """
+
+    def test_transferred_same_date_awards_keep_reversal_identity(self):
+        """F1: two accounts grant the same security on one day; the holdings are moved
+        around so both awards end up in one account; then that account returns part of ITS
+        OWN award. The return must take that award's basis, not the co-located same-date
+        award of the other account. Keyed on the award date alone, the two awards collided
+        once relocated and the return took the first lot -- understating the later gain."""
+        out = self._run_pipeline(
+            tax_year=2023,
+            positions_start_data=[], positions_end_data=[],
+            grants_data=[
+                grant_row("Stock Award Grant for Cash Deposit",
+                          "20230102", "20230102", "20240102", "10", "4", account="U_A"),
+                grant_row("Stock Award Grant for Cash Deposit",
+                          "20230102", "20230102", "20240102", "10", "9", account="U_B"),
+                grant_row("Stock Award Return for Cash Withdrawal",
+                          "20230401", "20230102", "20240102", "-4", "9", account="U_B"),
+            ],
+            transfers_data=[
+                transfer_row("U_B", "U_A", "OUT", "20230301", isin=ISIN, quantity="-10", tx_id="100"),
+                transfer_row("U_A", "U_B", "IN", "20230301", isin=ISIN, quantity="10", tx_id="101"),
+                transfer_row("U_A", "U_B", "OUT", "20230302", isin=ISIN, quantity="-20", tx_id="200"),
+                transfer_row("U_B", "U_A", "IN", "20230302", isin=ISIN, quantity="20", tx_id="201"),
+            ],
+            trades_data=[
+                trade_row("U_B", ISIN, "2023-09-01", "-16", "10", "SELL", "C", "300")],
+        )
+        basis = sum(r.total_cost_basis_eur for r in out.realized_gains_losses
+                    if r.realization_date == "2023-09-01")
+        assert basis == Decimal("94"), (
+            "the return takes B's own award (@9), leaving 10@4 + 6@9 = 94; taking A's "
+            "same-date award (@4) would leave 6@4 + 10@9 = 114")
+
+    @pytest.mark.parametrize("symbol", ["AAA", "ZZZ"])
+    def test_award_before_same_day_transfer_is_not_symbol_dependent(self, symbol):
+        """F2: a grant, a same-day transfer of the awarded shares out of the granting
+        account, and a later sale must order grant -> transfer -> sale for any ticker. The
+        same-day order was decided by the sort-key tail (grant symbol vs the transfer's
+        category name), so a symbol sorting after it ran the transfer first and aborted."""
+        isin = symbol + "AWARD0001"
+        out = self._run_pipeline(
+            tax_year=2023,
+            positions_start_data=[], positions_end_data=[],
+            grants_data=[
+                grant_row("Stock Award Grant for Cash Deposit",
+                          "20230301", "20230301", "20240301", "10", "4",
+                          account="U_A", isin=isin)],
+            transfers_data=[
+                transfer_row("U_A", "U_B", "OUT", "20230301", isin=isin, quantity="-10", tx_id="100"),
+                transfer_row("U_B", "U_A", "IN", "20230301", isin=isin, quantity="10", tx_id="101")],
+            trades_data=[
+                trade_row("U_B", isin, "2023-06-01", "-10", "10", "SELL", "C", "200")],
+        )
+        basis = sum(r.total_cost_basis_eur for r in out.realized_gains_losses)
+        assert basis == Decimal("40"), "grant->transfer->sale must hold whatever the ticker"
+
+    def test_a_sub_freigrenze_award_still_carries_full_basis(self):
+        """F3 / Q16, Reading A (taxpayer's choice 2026-09-20): an award whose receipt value
+        stays under the 256-euro Freigrenze still supplies its full award-day value as the
+        basis of a later disposal. Not red-first -- the engine does not apply the Freigrenze,
+        so this pins the chosen reading rather than catching a regression."""
+        out = self._run_pipeline(
+            tax_year=2023,
+            positions_start_data=[], positions_end_data=[],
+            grants_data=[
+                grant_row("Stock Award Grant for Cash Deposit",
+                          "20230210", "20230210", "20240210", "10", "4")],  # receipt 40 EUR < 256
+            trades_data=[
+                trade_row(ACCOUNT, ISIN, "2023-06-01", "-10", "20", "SELL", "C", "S1")],
+        )
+        rgls = list(out.realized_gains_losses)
+        assert len(rgls) == 1
+        assert rgls[0].total_cost_basis_eur == Decimal("40"), (
+            "the sub-Freigrenze receipt still gives the full award-day value as basis")

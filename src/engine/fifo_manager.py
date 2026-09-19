@@ -13,6 +13,7 @@ from src.domain.exceptions import DataIntegrityError, ProcessingError
 from src.utils.currency_converter import CurrencyConverter
 from src.utils.exchange_rate_provider import ECBExchangeRateProvider
 from src.utils.type_utils import parse_ibkr_date, safe_decimal
+from src.utils.account_utils import account_key
 from src.utils.tax_utils import get_teilfreistellung_rate_for_fund_type
 from src.tax_law.holding_period import is_within_section23_speculation_period 
 import src.config as global_config
@@ -1482,19 +1483,36 @@ class FifoLedger:
 
     # --- Stock awards: shares a broker granted for capital placed with it ---
     #
-    # Three operations on one lot, keyed by the award date. The export's SerialNumber is
-    # blank on every row, so the award date is the only thing tying a vesting or a
-    # reversal back to the lot its award created; `_STOCK_AWARD_SOURCE_PREFIX` puts it
-    # into `source_transaction_id` where it can be matched.
+    # Three operations on one lot, keyed by the account the award was granted in *and*
+    # the award date. The grant report carries no per-row id tying a vesting or a reversal
+    # back to its award, so (grant account, award date) is the only stable identity the
+    # export supplies -- and it must be stable through a transfer: once one account's award
+    # and another account's same-date award sit in one ledger, the award date alone no
+    # longer tells them apart, and a reversal keyed on the date would take the wrong lot's
+    # basis. `_STOCK_AWARD_SOURCE_PREFIX` puts the composite identity into the lot's
+    # `source_transaction_id`, which the lot carries when it is moved.
     _STOCK_AWARD_SOURCE_PREFIX = "STOCK_AWARD:"
 
-    def _find_stock_award_lot(self, award_date: str) -> Optional[FifoLot]:
-        """The lot an award created, or None. Match is on the award date alone."""
-        wanted = f"{self._STOCK_AWARD_SOURCE_PREFIX}{award_date}"
-        for lot in self.lots:
-            if lot.source_transaction_id == wanted:
-                return lot
-        return None
+    def _stock_award_source_id(self, account_id, award_date: str) -> str:
+        return f"{self._STOCK_AWARD_SOURCE_PREFIX}{account_key(account_id)}:{award_date}"
+
+    def _find_stock_award_lot(self, account_id, award_date: str) -> Optional[FifoLot]:
+        """The lot the award (grant account, award date) created, or None.
+
+        Matches the composite originating identity, not the date alone. Two awards with the
+        same identity cannot coexist -- the creation check below refuses a same-account,
+        same-date duplicate -- so more than one match means the ledger disagrees with that
+        invariant; refuse rather than pick the first and reverse an unknown basis.
+        """
+        wanted = self._stock_award_source_id(account_id, award_date)
+        matches = [lot for lot in self.lots if lot.source_transaction_id == wanted]
+        if len(matches) > 1:
+            raise ProcessingError(
+                f"More than one lot on asset {self.asset_internal_id} carries the award "
+                f"identity {wanted}. A reversal cannot choose between them without taking a "
+                f"basis that may not be the one awarded."
+            )
+        return matches[0] if matches else None
 
     def add_lot_for_stock_award(self, event: StockAwardEvent):
         """Book an award into the ledger on the day the shares entered the account.
@@ -1507,7 +1525,7 @@ class FifoLedger:
         Its acquisition date and cost basis are FINAL. Zufluss falls on the booking --
         a contractual condition under which the grantor may reclaim the shares does not
         postpone it, only a disposal being *rechtlich unmoeglich* would ([GT-ESTG20-064],
-        BFH VI R 37/09 Leitsatz 2 and Rn. 4) -- and the value at Zufluss is the
+        BFH VI R 37/09 Leitsatz 2 and Rn. 12) -- and the value at Zufluss is the
         Anschaffungskosten ([GT-ESTG20-065]). A later vesting therefore changes nothing.
         """
         if event.unit_cost_basis_eur is None:
@@ -1518,13 +1536,13 @@ class FifoLedger:
                 f"would carry an invented acquisition cost into a later disposal."
             )
         quantity = event.quantity.quantize(global_config.PRECISION_QUANTITY, context=self.ctx)
-        source_id = f"{self._STOCK_AWARD_SOURCE_PREFIX}{event.award_date}"
-        if self._find_stock_award_lot(event.award_date) is not None:
+        source_id = self._stock_award_source_id(event.account_id, event.award_date)
+        if self._find_stock_award_lot(event.account_id, event.award_date) is not None:
             raise ProcessingError(
-                f"Two stock awards on asset {self.asset_internal_id} share the award "
-                f"date {event.award_date}. That date is the only key a vesting or a "
-                f"reversal has to find its lot by, so a duplicate would let one restate "
-                f"or reverse the wrong award's shares."
+                f"Two stock awards on asset {self.asset_internal_id} in account "
+                f"{account_key(event.account_id)} share the award date {event.award_date}. "
+                f"That identity is the only key a vesting or a reversal has to find its lot "
+                f"by, so a duplicate would let one restate or reverse the wrong award's shares."
             )
         self.lots.append(FifoLot(
             acquisition_date=event.event_date, quantity=quantity,
@@ -1545,13 +1563,14 @@ class FifoLedger:
         lot's own unit cost, which is what the broker does too -- it removes the basis
         at the original award price rather than the price on the day of the reversal.
         """
-        lot = self._find_stock_award_lot(event.award_date)
+        lot = self._find_stock_award_lot(event.account_id, event.award_date)
         if lot is None:
             raise ProcessingError(
-                f"A stock award reversal on asset {self.asset_internal_id} names award "
-                f"date {event.award_date}, and no lot in this account's ledger came from "
-                f"an award on that day. The reversal cannot be applied to some other "
-                f"lot: it would take units at a cost basis that was never awarded."
+                f"A stock award reversal on asset {self.asset_internal_id} names the award "
+                f"of {event.award_date} in account {account_key(event.account_id)}, and no "
+                f"lot with that originating identity is in this ledger. The reversal cannot "
+                f"be applied to some other lot: it would take units at a cost basis that was "
+                f"never awarded -- including another account's same-date award."
             )
         quantity = event.quantity.quantize(global_config.PRECISION_QUANTITY, context=self.ctx)
         if quantity > lot.quantity:

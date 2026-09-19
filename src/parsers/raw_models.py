@@ -391,15 +391,20 @@ class RawGrantRecord(RawBaseRecord):
     **Why both dates are mapped.** `AwardDate` is where Zufluss falls -- a contractual
     condition under which the grantor may reclaim the shares does not postpone it, only a
     disposal being *rechtlich unmoeglich* would ([GT-ESTG20-064]) -- so it is the
-    acquisition date and the matching key. `VestingDate` is mapped because it is what
+    acquisition date and, with the grant account, the matching key. `VestingDate` is mapped because it is what
     identifies a vesting row as the lapse of THAT award's condition, and because the
     claim's own test turns on whether disposal was possible before it, which a reader
     checking this engine's position has to be able to see. `ReportDate` is the broker's
     booking day, mapped for ordering only.
 
-    **`SerialNumber` is not mapped.** The export carries the column and leaves it blank,
-    so there is no identity to read from it. It stays in `GRANTS_COLUMNS` so that its
-    ever being populated is caught at the boundary rather than downstream.
+    **`SerialNumber` is not mapped.** The export carries the column and leaves it blank on
+    every row measured, so there is no identity to read from it. It stays in `GRANTS_COLUMNS`
+    so that the column being **removed or renamed** is caught at the boundary; the boundary
+    validates the header set, not the values, so a `SerialNumber` that later carries a value
+    would pass it unnoticed. Nothing reads the field, and the award's identity is (grant
+    account, award date) instead, so a populated value changes no figure today -- but it is
+    not detected, and if it ever needs to become the award key that detection is what is
+    missing.
 
     **`Value` is mapped and deliberately not read.** It is `Quantity` x `Price` rounded
     to the cent, so it can only disagree with them by rounding, and the cost basis is

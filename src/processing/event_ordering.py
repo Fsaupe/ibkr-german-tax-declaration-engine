@@ -6,7 +6,7 @@ transfer-side observations; scheduling never changes account ledger contents.
 from collections import defaultdict
 from heapq import heappop, heappush
 
-from src.domain.events import InternalTransferEvent, OptionLifecycleEvent, OptionCashSettlementEvent, TradeEvent
+from src.domain.events import InternalTransferEvent, OptionLifecycleEvent, OptionCashSettlementEvent, TradeEvent, StockAwardEvent
 from src.domain.enums import FinancialEventType as Kind
 from src.domain.exceptions import DataIntegrityError
 from src.utils.account_utils import account_key
@@ -98,6 +98,22 @@ def order_financial_events(events, resolver):
                     if account == move.account_id and opens:
                         before(j, i)
                     if account == move.to_account_id and consumes:
+                        before(i, j)
+                elif isinstance(event, StockAwardEvent):
+                    # An award changes a ledger's holding just as a trade does, so a same-day
+                    # transfer of the awarded security depends on it the same way. The grant
+                    # report carries no per-row sequence id, so the documented delivery
+                    # dependency is the only ordering: a grant adds the lot before it can be
+                    # transferred out; a reversal removes a lot, so the lot must have arrived
+                    # before a reversal in the receiving account can take it.
+                    account = account_key(event.account_id)
+                    if account not in (move.account_id, move.to_account_id):
+                        continue
+                    grants = event.event_type == Kind.STOCK_AWARD_GRANTED
+                    reverses = event.event_type == Kind.STOCK_AWARD_REVERSED
+                    if account == move.account_id and grants:
+                        before(j, i)
+                    if account == move.to_account_id and reverses:
                         before(i, j)
 
         ready = []

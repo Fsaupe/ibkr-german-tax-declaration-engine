@@ -1544,7 +1544,8 @@ class DomainEventFactory:
           account, which is what the broker's snapshot counts and therefore what the
           ledger must reconcile against.
         * A **reversal** is dated on `ReportDate` -- the day the shares were taken back.
-          Its `AwardDate` names the ORIGINAL award and is the matching key, not its date.
+          Its `AwardDate` names the ORIGINAL award and, with the grant account, is the
+          matching key, not its own date.
         * A **vesting** is dated on `VestingDate`, NOT `ReportDate` -- the day the
           condition actually lapses, not the day the broker books the row a day or more
           later. The vesting has no ledger effect (Zufluss fell on the award, so the
@@ -1602,9 +1603,9 @@ class DomainEventFactory:
             if not parsed_award:
                 data_errors.append(
                     f"Grant row for {what} has an unparseable AwardDate "
-                    f"'{rg.award_date}'. It is the only key tying a vesting or a "
-                    f"reversal to the lot its award created -- SerialNumber is blank on "
-                    f"every row of this export.")
+                    f"'{rg.award_date}'. With the grant account it is the key tying a "
+                    f"vesting or a reversal to the lot its award created -- SerialNumber is "
+                    f"blank on every row of this export, so there is no per-row id instead.")
                 continue
 
             if rg.quantity == Decimal(0):

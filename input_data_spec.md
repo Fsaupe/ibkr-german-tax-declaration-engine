@@ -347,8 +347,8 @@ dropped one would reconcile until the year the dropped kind mattered.
 - An **award** is dated on `AwardDate` — the day the shares entered the account. That is both what
   the position snapshot counts and where Zufluss falls ([GT-ESTG20-064]), so it is the acquisition
   date.
-- A **reversal** is dated on `ReportDate`. Its `AwardDate` names the *original* award and is the
-  matching key, not its own date.
+- A **reversal** is dated on `ReportDate`. Its `AwardDate` names the *original* award and, with the
+  grant account, is the matching key, not its own date.
 - A **vesting** is dated on `VestingDate` and **has no ledger effect**. It is read so that an
   unrecognised kind can still be refused, and inert because the acquisition already happened.
 
@@ -374,12 +374,12 @@ export's full header so that a column appearing or disappearing is caught at the
 | `Multiplier`          | `multiplier`           | `Optional[Decimal]` | 1 for shares.                                  | |
 | `ReportDate`          | `report_date`          | `str`               | The day the broker booked the row.             | Required. The event date for a **reversal** only; for a vesting it is the booking day and is deliberately not used. |
 | `ActivityDescription` | `activity_description` | `str`               | Which of the three kinds this row is.          | Required, and the **only** thing distinguishing them. An unrecognised value stops the run. |
-| `AwardDate`           | `award_date`           | `str`               | The originating award's date.                  | Required. **The matching key** on all three kinds, since `SerialNumber` is blank. The event date for an **award**. |
+| `AwardDate`           | `award_date`           | `str`               | The originating award's date.                  | Required. Part of the **matching key** — the grant account and this date together — on all three kinds, since `SerialNumber` is blank; the account is needed because two accounts can grant on one day and the lots can end up in one ledger after a transfer. The event date for an **award**. |
 | `VestingDate`         | `vesting_date`         | `str`               | The day the condition lapses.                  | Required. The event date for a **vesting**, which the engine reads but does not act on — Zufluss already fell on the award ([GT-ESTG20-064]). |
 | `Quantity`            | `quantity`             | `Decimal`           | Shares. Negative on a reversal.                | Required. Read as an absolute value, with the direction carried by the kind. Zero stops the run. |
 | `Price`               | `price`                | `Decimal`           | Per-share value the broker assigned.           | Required. On an **award** this is the übliche Endpreis at Zufluss (§ 8 Abs. 2 Satz 1) and becomes the Anschaffungskosten. |
 | `Value`               | `value`                | `Decimal`           | `Quantity` x `Price`, to the cent.             | Required, and **deliberately not read**. It can only differ from `Quantity` x `Price` by the broker's own rounding, and the cost basis is computed from the unrounded `Price`. Declared so the column is accounted for at the boundary rather than discarded by `extra = 'ignore'`. |
-| `SerialNumber`        | *(not mapped)*         | —                   | Row identifier.                                | **Blank on every row measured.** Declared in the tuple so that its ever being populated is caught at the boundary, and deliberately absent from the model so nothing reads an identity that is not there. |
+| `SerialNumber`        | *(not mapped)*         | —                   | Row identifier.                                | **Blank on every row measured.** Declared in the tuple so the column being **removed or renamed** is caught at the boundary — which validates the header set, not the values, so a value that later appears here would pass unnoticed. Deliberately absent from the model so nothing reads an identity that is not there. |
 
 **Notes:**
 - **The price's own date is not stated.** § 8 Abs. 2 Satz 1 wants the übliche Endpreis on the day of
@@ -387,8 +387,10 @@ export's full header so that a column appearing or disappearing is caught at the
   differ it may be either day's. It is used as given — it is a measurement, and the alternative is
   to invent one from market data this engine does not hold — and the residual uncertainty is
   recorded against [GT-ESTG20-064] rather than left for a reader to notice.
-- **Two awards sharing an award date stop the run.** That date is the only key a vesting or a
-  reversal has, so a duplicate would let one restate or reverse the wrong award's shares.
+- **Two awards in one account sharing an award date stop the run.** That date, with the grant
+  account, is the key a vesting or a reversal has, so a same-account duplicate would let one restate
+  or reverse the wrong award's shares. Two accounts granting on one day are kept apart by the
+  account in the key and do not collide, even once a transfer relocates one beside the other.
 - **A lot is never created without a EUR cost basis.** The award price is a foreign amount the
   enrichment step converts; an unconvertible award stops the run rather than acquiring shares at an
   invented price.
