@@ -20,6 +20,13 @@ area table itself and is left to a `ks-maint`.
   [gesetze-im-internet.de/estg/__11.html](https://www.gesetze-im-internet.de/estg/__11.html)
 - **Tier 1 -- § 8 Abs. 1, Abs. 2 EStG**, retrieved 2026-08-13 from
   [gesetze-im-internet.de/estg/__8.html](https://www.gesetze-im-internet.de/estg/__8.html)
+- **Tier 1 -- § 20 Abs. 1 Nr. 7 EStG**, retrieved 2026-09-20 from
+  [gesetze-im-internet.de/estg/__20.html](https://www.gesetze-im-internet.de/estg/__20.html);
+  the verbatim text is held at [GT-ESTG20-003]. Cited for the charging element that the boundary
+  against § 22 Nr. 3 turns on.
+- **Tier 2 -- BMF-Schreiben vom 14.05.2025 (Einzelfragen zur Abgeltungsteuer), Rz. 129b**, retrieved
+  2026-09-20; index and retrieval record in `../bmf-guidance/abgeltungsteuer-einzelfragen.md`. The
+  decisive administrative authority on a bank/broker premium for moving or retaining capital.
 - **Tier 4 -- BFH v. 30.06.2011 -- VI R 37/09**, retrieved 2026-08-13 from
   [bundesfinanzhof.de](https://www.bundesfinanzhof.de/en/entscheidungen/entscheidungen-online/decision-detail/STRE201110231/).
   Cited for the Zufluss test only, alongside § 11 Abs. 1 Satz 1, never alone --
@@ -72,17 +79,42 @@ Kapitalanlage for it to stand alongside or replace. That is precisely the test [
 states, and the reason it gives -- both worked Randziffern of the administration combine Abs. 3
 with a Nummer of Abs. 1 -- applies unchanged.
 
-**Step 2 -- § 20 Abs. 1 Nr. 7 fails.** Nr. 7 taxes *Ertraege aus sonstigen Kapitalforderungen*. A
-credit balance is a Kapitalforderung, so the gate that stopped the Wertpapierdarlehen fee (a
-Sachforderung, [GT-ESTG20-046]) is passed here. Nr. 7 nonetheless fails on a different element:
-what it taxes is a **yield on** the claim -- the consideration for the capital being left
-outstanding, measured by amount and time. A benefit fixed by the act of depositing, and neither
-measured by the balance over time nor forfeited if the balance yields nothing, is not an *Ertrag
-aus* the Kapitalforderung but the price of a distinct transaction.
+**Step 2 -- § 20 Abs. 1 Nr. 7 fails.** A credit balance is a Kapitalforderung, so the gate that
+stopped the Wertpapierdarlehen fee (a Sachforderung, [GT-ESTG20-046]) is passed here; the exclusion
+turns on the charging element instead. Nr. 7 Satz 1 taxes *"Ertraege aus sonstigen Kapital-
+forderungen jeder Art, **wenn die Rueckzahlung des Kapitalvermoegens oder ein Entgelt fuer die
+Ueberlassung des Kapitalvermoegens zur Nutzung** zugesagt oder geleistet worden ist, auch wenn die
+Hoehe ... von einem ungewissen Ereignis abhaengt"* ([GT-ESTG20-003], verbatim there). The taxable
+receipt must be an **Entgelt fuer die Ueberlassung des Kapitalvermoegens zur Nutzung** -- the
+consideration for the capital being made available for the bank's use. Because Satz 1 covers such an
+Entgelt *even where its amount depends on an uncertain event*, the exclusion **cannot** rest on the
+benefit not being "measured by amount and time"; that reading is contrary to the statutory text.
+
+**The administration has drawn the line, and it is not Nr. 7.** BMF-Schreiben vom 14.05.2025
+(Einzelfragen zur Abgeltungsteuer) **Rz. 129b**, under the heading *Einkuenfte aus sonstigen
+Leistungen (§ 22 Nummer 3 EStG)*, treats a **Geldpraemie a receiving Kreditinstitut pays for the
+transfer of a Wertpapierdepot** as *"Einkuenfte aus sonstigen Leistungen im Sinne des § 22 Nummer 3
+EStG ..., sofern sie nicht einer anderen Einkunftsart (§§ 13, 15, 18 oder 21 EStG) zugeordnet werden
+kann"* (¶1). The premium for moving capital to the bank is consideration for the customer's
+*Leistung*, not an Entgelt for the use of a Kapitalforderung, so it falls outside Nr. 7 and into
+§ 22 Nr. 3. The administration reserves a **different** treatment for one narrow case only: where the
+premium is paid *"unter der Bedingung ..., dass Wertpapiere ... erworben werden"*, Rz. 129b ¶2
+directs it to **reduce the Anschaffungskosten** of those securities rather than be income at all --
+which is not this benefit (see the fact pattern below).
 
 **Step 3 -- § 22 Nr. 3 applies.** Its subsidiarity clause is satisfied once § 20 is exhausted. The
 customer's conduct -- transferring funds and leaving them in place -- is a *Leistung*, and the
 benefit is its consideration.
+
+**The supported fact pattern.** The subsumption above is for a benefit granted **for the deposit or
+retention of the customer's own capital and not conditioned on the acquisition of securities**. Two
+boundaries fix its edges. Where the benefit is a security rather than a cash amount, only its
+**valuation** differs -- it is a benefit in kind, brought to tax at the ueblicher Endpreis on the
+day of Zufluss (§ 8 Abs. 2 Satz 1, [GT-ESTG20-064]); the income category is unchanged, because
+Rz. 129b ¶1 turns on what the benefit is paid *for*, not on the form it takes. Where the benefit is
+instead paid *on the condition that the customer acquires securities*, it is the Rz. 129b ¶2 case --
+a reduction of the Anschaffungskosten of those securities, not income under Nr. 3 -- and is outside
+this claim.
 
 **This is the same three-step result the store already reached for the Wertpapierdarlehen fee**
 (open-legal-questions.md Q14, retired 2026-08-09, at [GT-ESTG20-049]); the fee failed Step 2 on the
@@ -127,7 +159,7 @@ Leitsatz 2, verbatim:
 > *"Ein solcher Zufluss liegt nicht vor, solange dem Arbeitnehmer eine Verfuegung ueber die
 > Aktien rechtlich unmoeglich ist."*
 
-And the point that decides a restricted benefit, Rn. 4:
+And the point that decides a restricted benefit, Rn. 12 (restated on the facts at Rn. 23):
 
 > *"Einem solchen Zufluss im vorgenannten Sinne steht nicht entgegen, dass der Arbeitnehmer
 > aufgrund einer Sperr- bzw. Haltefrist die Aktien fuer eine bestimmte Zeit nicht veraeussern
@@ -136,7 +168,7 @@ And the point that decides a restricted benefit, Rn. 4:
 **So the line is not restricted versus unrestricted, but obligatorisch versus dinglich.** A
 contractual restraint -- a holding period, a promise to give the shares back on some future
 event -- does **not** postpone Zufluss. What postpones it is the disposal being *rechtlich
-unmoeglich*: Rn. 7, *"Aktien sind daher nicht zugeflossen, solange dem Arbeitnehmer eine
+unmoeglich*: Rn. 15, *"Aktien sind daher nicht zugeflossen, solange dem Arbeitnehmer eine
 Verfuegung darueber rechtlich unmoeglich ist."*
 
 **Applied to a benefit in shares booked into the recipient's account:** Zufluss falls on the
@@ -149,7 +181,11 @@ under § 19 Abs. 1 Satz 1 Nr. 1 in Verbindung mit § 8 Abs. 1 and § 11 Abs. 1 S
 employee receiving shares from an employer. § 11's Zufluss concept is general and is what is
 borrowed here; **no located source applies the test to a benefit granted by a broker under
 § 22 Nr. 3**, and that step is recorded as the residual uncertainty in
-`../research/open-legal-questions.md` under Q17.
+`../research/open-legal-questions.md` under Q17. The decision itself did not settle its own facts:
+Rn. 17 and Rn. 20 remand to the Finanzgericht to establish whether, under the foreign law governing
+the shares, a disposal was rechtlich moeglich in the year in dispute -- so whether Zufluss had
+occurred was left open on the facts. Rn. numbering verified 2026-09-20 against the full text at
+urteile-gesetze.de/rechtsprechung/vi-r-37-09, which carries the court's own Randnummern.
 
 **What the cited unit also contains.** § 11 Abs. 1 has five sentences: Satz 2 on regularly
 recurring income falling either side of the year end, Satz 3 on spreading income from a

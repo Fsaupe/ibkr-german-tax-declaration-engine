@@ -321,7 +321,8 @@ settled:
 
 **What it moves, if applied:** the acquisition date of every awarded lot returns to the award
 day, the Anschaffungskosten to the award price, and the declared gain on a later disposal rises
-correspondingly -- measured at about a third on the maintainer's VZ 2025 position.
+correspondingly. The size of that movement on any actual position is implementation state and is
+recorded against [GT-ESTG20-064] in the map, not here.
 
 ## Q18 -- the order of a same-day award reversal and a disposal of the same security
 
@@ -352,17 +353,16 @@ clawback's terms do not contemplate; and it too has no source on the event order
 same day: the two readings measure the disposal against different lots' Anschaffungskosten, so the
 declared gain moves. The direction depends on the awarded lot's basis relative to the others.
 
-**The choice.** Reading A, chosen by the taxpayer (Fsaupe) on 2026-09-19 as a filing position,
-disclosed on the return so the taxpayer and the Finanzamt can revisit it. The grey-area conditions
-hold: the reading is against neither Tier 1 nor Tier 2 (both are silent on the sequence); the BMF
-has not spoken on it; the ambiguity is disputed, not constructed (two events genuinely change the
-same holding on one day and nothing orders them); and no input is invented (the figure is well
-founded under either reading -- what is chosen is a position, not a value). How the choice is
-applied and disclosed is recorded against [GT-ESTG20-066] in the map.
+**Two sources of the uncertainty, kept apart.** One is evidential: the award report carries no
+intra-day identifier, so where a reversal and a disposal fall on one day the actual sequence is
+unobserved -- a limitation of the export, not of the law, and on its own a data question rather
+than a dispute of law. The other is legal: § 20 Abs. 4 Satz 7 orders a disposal's own lots and does
+not order a disposal against a same-day event that is not a disposal, so even a known simultaneity
+would leave the tax order unfixed. Only the second is the open question of law; the first is why it
+cannot be sidestepped by reading the sequence off the export.
 
-**Incidence.** Zero in the processed data: the one award reversal in the export falls in VZ 2022
-(never a result year) with no same-day disposal of the security. The point is recorded because the
-ordering would otherwise be settled silently by default, not because the data exercise it.
+Which reading is adopted, on what grey-area conditions, and with what disclosure and incidence, is
+an implementation act and is recorded against [GT-ESTG20-066] in the map, not here.
 
 ## Q16 -- Anschaffungskosten from a receipt the Freigrenze left untaxed
 

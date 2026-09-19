@@ -102,6 +102,24 @@ Nr. 3a does the same for Spezial-Investmentertraege nach § 34 InvStG.
 ### [GT-ESTG20-003] Nr. 7 -- Interest
 Interest from capital claims of any kind (Kapitalforderungen jeder Art).
 
+Statutory text (Satz 1 to 3), retrieved 2026-09-20 from gesetze-im-internet.de/estg/__20.html:
+
+> *"Ertraege aus sonstigen Kapitalforderungen jeder Art, wenn die Rueckzahlung des Kapitalvermoegens
+> oder ein Entgelt fuer die Ueberlassung des Kapitalvermoegens zur Nutzung zugesagt oder geleistet
+> worden ist, auch wenn die Hoehe der Rueckzahlung oder des Entgelts von einem ungewissen Ereignis
+> abhaengt. 2 Dies gilt unabhaengig von der Bezeichnung und der zivilrechtlichen Ausgestaltung der
+> Kapitalanlage. 3 Erstattungszinsen im Sinne des § 233a der Abgabenordnung sind Ertraege im Sinne
+> des Satzes 1."*
+
+**The charging element** is either a promised/paid **Rueckzahlung des Kapitalvermoegens** or an
+**Entgelt fuer die Ueberlassung des Kapitalvermoegens zur Nutzung** -- consideration for capital
+being made available for use. Satz 1 taxes such an Entgelt *even where its amount depends on an
+uncertain event*, and Satz 2 relaxes the **form** of the investment (which is what admits a
+Zertifikat, [GT-ESTG20-008]); neither dispenses with the receipt being an Entgelt for the *Nutzung*
+of the capital. A payment that is the consideration for a distinct act rather than for the use of
+the capital is therefore outside Nr. 7 -- the boundary drawn at [GT-ESTG20-063] and, for the
+lending fee, at [GT-ESTG20-049].
+
 ### [GT-ESTG20-004] Nr. 11 -- Stillhalterpraemien (Option Premiums)
 Premiums received for granting options (Einraeumung von Optionen).
 
