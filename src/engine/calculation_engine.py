@@ -410,6 +410,15 @@ def _report_reversal_ordering_assumption(
     Checked across every processed year -- a historical collision moves a carried basis, a
     tax-year one moves the year's gain; events after the tax year are not processed and do
     not warn. Zero incidence in the export today.
+
+    **Bounded assumption (recorded, not guarded).** The disposal side matched here is
+    `TRADE_SELL_LONG` -- how awarded shares are actually disposed of. A same-day disposal of
+    the awarded stock through a non-sell path (a cash merger, an expiring dividend right)
+    would move a figure under Reading A with no warning, since the warning IS the disclosure.
+    It is not broadened to every long-lot-consuming kind because the sort band already fixes
+    the order regardless, the awarded stock's disposal in the data is always a sale, and a
+    set enumerated here could itself miss a kind -- a second blind spot for a shape at zero
+    incidence. Per CLAUDE.md's data-import rule this is written down, not built against.
     """
     reversal_days: set = set()
     disposal_days: set = set()

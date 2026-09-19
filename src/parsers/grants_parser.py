@@ -15,6 +15,17 @@ from .column_validator import GRANTS_COLUMNS
 # Matching is on a substring rather than the whole string because the broker appends the
 # reason to the kind -- an award reads "... for Cash Deposit", a reversal "... for Cash
 # Withdrawal" -- and the reason names the customer's conduct, not a different tax event.
+#
+# **Bounded assumption (recorded, not guarded).** The substring cannot tell the reason
+# apart, and it assumes the reason is the cash-deposit fact pattern GT-ESTG20-063 scopes to:
+# a benefit for placing capital, § 22 Nr. 3, its value the Anschaffungskosten. A grant
+# *conditioned on the customer acquiring securities* is the different case BMF Rz. 129b ¶2
+# governs -- there the benefit reduces those securities' Anschaffungskosten and is not
+# § 22 Nr. 3 income -- and a row like "Stock Award Grant for Securities Purchase" would
+# match AWARD_MARKER and be processed as the Nr. 3 pattern, mis-stating both halves. Every
+# row measured across Grants-2022..2025 reads "for Cash Deposit"/"for Cash Withdrawal"
+# (zero incidence of the ¶2 reason), so per CLAUDE.md's data-import rule this is written
+# down where the match relies on it rather than guarded against a shape the data never shows.
 AWARD_MARKER = "Stock Award Grant"
 REVERSAL_MARKER = "Stock Award Return"
 VESTING_MARKER = "Stock Award Vesting"
