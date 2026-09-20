@@ -85,14 +85,16 @@ def test_the_award_lot_is_final_and_no_vesting_operation_exists():
 
 def test_reversal_takes_units_at_the_awarded_cost_and_realises_nothing():
     """The condition failed, so the award is undone rather than sold. The units leave at
-    the lot's own cost, which is what the broker does."""
+    the value originally brought to account ([GT-ESTG20-067]) -- never the return row's
+    own price -- and the method hands that unit cost back so the negative Einnahme can be
+    stated from it."""
     led = _ledger()
     led.add_lot_for_stock_award(_award("2020-03-02", "2020-03-02", "10", "4"))
     result = led.reverse_stock_award_lot(
         _award("2020-09-01", "2020-03-02", "4", "9",
                kind=FinancialEventType.STOCK_AWARD_REVERSED))
 
-    assert result is None, "a reversal is not a disposal and returns no gain"
+    assert result == Decimal("4"), "the awarded unit cost, not the return row's 9; a cost, not a gain"
     assert led.lots[0].quantity == Decimal("6")
     assert led.lots[0].unit_cost_basis_eur == Decimal("4"), "at the awarded cost, not 9"
     assert led.lots[0].total_cost_basis_eur == Decimal("24")

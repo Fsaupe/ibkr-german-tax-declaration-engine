@@ -404,41 +404,45 @@ def test_a_vesting_and_a_reversal_report_no_receipt():
     assert not [g for g in collector.gaps if g.code == STOCK_AWARD_RECEIPT_NOT_DECLARED]
 
 
-def test_an_in_year_reversal_reports_the_unsettled_return_treatment():
-    """A reversal dated inside the processed year returns a taxed § 22 Nr. 3 benefit, whose
-    return treatment is unsettled ([GT-ESTG20-067], Q20). The engine does not declare a
-    negative Anlage SO income (issue #76), so it records a WARNING naming the open point
-    rather than silently producing a figure it cannot source. Asserted on the collector, as
-    the receipt gap is: it is a WARNING the harness does not surface.
+def test_a_return_in_the_tax_year_reports_the_negative_receipt_it_does_not_declare():
+    """[GT-ESTG20-067]: awarded shares handed back after Zufluss are a negative Einnahme of
+    the year of the return, in the amount originally brought to account -- not the value
+    on the day of the return (BFH VI R 17/08), and not a correction of the award year
+    (EStH H 22.8, BFH VI R 6/18). There is no Anlage SO line for it (issue #76), so the
+    run has to hand the reader the amount, the year and the destination.
 
-    Red on the base: the processor recorded nothing for a reversal, so an in-year clawback
-    left the § 22 Nr. 3 return consequence silent."""
+    The return row carries its own price (9); the award was brought to account at 4. The
+    amount is 4 units x 4 = 16.00, and 36 would be the defect.
+    """
     from decimal import Decimal as D
     from src.domain.enums import FinancialEventType as T
     from src.domain.events import StockAwardEvent
     from src.engine.event_processors.stock_award_processor import (
-        StockAwardProcessor, STOCK_AWARD_RETURN_TREATMENT_UNSETTLED)
+        StockAwardProcessor, STOCK_AWARD_RETURN_NOT_DECLARED)
     from src.processing.data_gaps import DataGapCollector, GapSeverity
     from tests.test_stock_award_lots import _ledger, ASSET_ID
 
     ledger = _ledger()
     collector = DataGapCollector()
-    award = StockAwardEvent(ASSET_ID, "2023-01-02",
-                            event_type=T.STOCK_AWARD_GRANTED, award_date="2023-01-02",
+    award = StockAwardEvent(ASSET_ID, "2022-11-02",
+                            event_type=T.STOCK_AWARD_GRANTED, award_date="2022-11-02",
                             quantity=D("10"), unit_price_foreign=D("4"), currency="EUR")
     award.unit_cost_basis_eur = D("4")
     ledger.add_lot_for_stock_award(award)
 
-    reversal = StockAwardEvent(ASSET_ID, "2023-03-01",
-                               event_type=T.STOCK_AWARD_REVERSED, award_date="2023-01-02",
-                               quantity=D("4"), unit_price_foreign=D("4"), currency="EUR")
-    reversal.unit_cost_basis_eur = D("4")
-    StockAwardProcessor().process(reversal, ledger, {'data_gap_collector': collector})
+    returned = StockAwardEvent(ASSET_ID, "2023-03-01",
+                               event_type=T.STOCK_AWARD_REVERSED, award_date="2022-11-02",
+                               quantity=D("4"), unit_price_foreign=D("9"), currency="EUR")
+    returned.unit_cost_basis_eur = D("9")
+    StockAwardProcessor().process(returned, ledger, {'data_gap_collector': collector})
 
-    gaps = [g for g in collector.gaps if g.code == STOCK_AWARD_RETURN_TREATMENT_UNSETTLED]
-    assert len(gaps) == 1, "an in-year clawback must flag the unsettled § 22 Nr. 3 return"
+    gaps = [g for g in collector.gaps if g.code == STOCK_AWARD_RETURN_NOT_DECLARED]
+    assert len(gaps) == 1, "the undeclared negative receipt must reach the report"
     assert gaps[0].severity is GapSeverity.WARNING
-    assert "Q20" in gaps[0].detail
+    assert "EUR 16.00" in gaps[0].detail, "original value of the returned units"
+    assert "36" not in gaps[0].detail, "never the return-day value"
+    assert "Anlage SO" in gaps[0].subject and "2023" in gaps[0].subject
+    assert "unsettled" not in gaps[0].detail.lower() and "Q20" not in gaps[0].detail
 
 
 class TestASameDayReturnAndSale(FifoTestCaseBase):

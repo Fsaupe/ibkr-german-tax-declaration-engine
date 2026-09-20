@@ -1555,13 +1555,17 @@ class FifoLedger:
         logger.info("Stock award %s: added lot on %s, qty %s, cost/unit %s",
                     event.award_date, event.event_date, quantity, event.unit_cost_basis_eur)
 
-    def reverse_stock_award_lot(self, event: StockAwardEvent):
+    def reverse_stock_award_lot(self, event: StockAwardEvent) -> Decimal:
         """Take back part or all of an award whose condition failed.
 
-        **Realises nothing.** The award is undone rather than disposed of, so no
-        `RealizedGainLoss` is produced and none is returned. The units leave at the
-        lot's own unit cost, which is what the broker does too -- it removes the basis
-        at the original award price rather than the price on the day of the reversal.
+        **Realises nothing.** A return to the grantor is not a Veraeusserung -- nothing is
+        received for it -- so no `RealizedGainLoss` is produced. The units leave at the
+        lot's own unit cost, the value originally brought to account; what the shares are
+        worth on the day of the return is recognised nowhere ([GT-ESTG20-067], BFH VI R
+        17/08). The return row's own `Price` is therefore never used.
+
+        Returns that unit cost, so the caller can state the negative Einnahme the return
+        gives rise to without reaching into the lot.
         """
         lot = self._find_stock_award_lot(event.account_id, event.award_date)
         if lot is None:
@@ -1587,6 +1591,7 @@ class FifoLedger:
             lot.total_cost_basis_eur = self.ctx.multiply(lot.quantity, lot.unit_cost_basis_eur)
         logger.info("Stock award %s: reversed %s units, no gain realised",
                     event.award_date, quantity)
+        return lot.unit_cost_basis_eur
 
     def consume_long_option_get_cost(self, quantity_contracts_to_consume: Decimal) -> List[ConsumedLotDetail]:
         if self.asset_category != AssetCategory.OPTION:
