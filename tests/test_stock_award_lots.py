@@ -144,7 +144,7 @@ def test_the_whole_sequence_leaves_the_broker_s_quantity_and_the_awarded_cost():
 def test_reversing_more_than_was_awarded_stops_the_run():
     led = _ledger()
     led.add_lot_for_stock_award(_award("2020-03-02", "2020-03-02", "10", "4"))
-    with pytest.raises(ProcessingError, match="Reversing more than was awarded"):
+    with pytest.raises(ProcessingError, match="which holds 10"):
         led.reverse_stock_award_lot(
             _award("2020-09-01", "2020-03-02", "11", "4",
                    kind=FinancialEventType.STOCK_AWARD_REVERSED))

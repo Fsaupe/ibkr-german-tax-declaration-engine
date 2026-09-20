@@ -1581,8 +1581,13 @@ class FifoLedger:
             raise ProcessingError(
                 f"A stock award reversal on asset {self.asset_internal_id} would take "
                 f"{quantity} units from the award of {event.award_date}, which holds "
-                f"{lot.quantity}. Reversing more than was awarded means the export and "
-                f"the ledger disagree about the award itself."
+                f"{lot.quantity}. Either the export returns more than it awarded, or "
+                f"earlier sales have already consumed units of this award: FIFO "
+                f"([GT-ESTG20-012]) deems the oldest shares sold first, so a sale of "
+                f"separately bought shares of the same stock takes the award's units if "
+                f"the award is older. How a return is measured once that has happened is "
+                f"not established in reference/ ([GT-ESTG20-067]), and the units are not "
+                f"taken from another lot instead."
             )
         if quantity == lot.quantity:
             self.lots.remove(lot)
