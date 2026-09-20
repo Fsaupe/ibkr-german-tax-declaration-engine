@@ -25,12 +25,22 @@ area table itself and is left to a `ks-maint`.
   the verbatim text is held at [GT-ESTG20-003]. Cited for the charging element that the boundary
   against § 22 Nr. 3 turns on.
 - **Tier 2 -- BMF-Schreiben vom 14.05.2025 (Einzelfragen zur Abgeltungsteuer), Rz. 129b**, retrieved
-  2026-09-20; index and retrieval record in `../bmf-guidance/abgeltungsteuer-einzelfragen.md`. The
-  decisive administrative authority on a bank/broker premium for moving or retaining capital.
+  2026-09-20; index and retrieval record in `../bmf-guidance/abgeltungsteuer-einzelfragen.md`.
+  Supports the § 22 Nr. 3 reading of a premium for a Wertpapierdepot transfer (¶1); it does not
+  address a premium for a cash deposit left in place, so it does not settle the classification here.
+- **Tier 4 -- BFH v. 15.11.2022 -- VIII R 18/20**, retrieved 2026-09-20 from
+  [bundesfinanzhof.de](https://www.bundesfinanzhof.de/en/entscheidungen/entscheidungen-online/decision-detail/STRE202310054/).
+  Cited for the § 20 Abs. 1 Nr. 7 reading: a Bonuszins that accrues for leaving capital on deposit is
+  an *Entgelt fuer die Ueberlassung von Kapitalvermoegen zur Nutzung*. Tier 4, never alone -- it
+  supports one side of the open classification question, not a settled position.
 - **Tier 4 -- BFH v. 30.06.2011 -- VI R 37/09**, retrieved 2026-08-13 from
   [bundesfinanzhof.de](https://www.bundesfinanzhof.de/en/entscheidungen/entscheidungen-online/decision-detail/STRE201110231/).
   Cited for the Zufluss test only, alongside § 11 Abs. 1 Satz 1, never alone --
   Validation Protocol item 1.
+- **Tier 5 -- Littmann/Bitz/Pust, Das Einkommensteuerrecht, EStG § 22** (Rueckzahlung von Einnahmen),
+  and **Tier 4 -- BFH** on Leistungen for which § 22 Nr. 3 Satz 3 does not apply, retrieved 2026-09-20.
+  Cited only for the open question [GT-ESTG20-067] on the return of a taxed benefit -- both are
+  Tier 4/5, they do not settle it, and no Tier 1/2 source on the point was located.
 
 Applicable tax years: unrestricted within the Abgeltungsteuer regime. None of the three provisions
 carries a first year of application relevant here, and the 256-Euro figure in Nr. 3 Satz 2 is not
@@ -79,42 +89,47 @@ Kapitalanlage for it to stand alongside or replace. That is precisely the test [
 states, and the reason it gives -- both worked Randziffern of the administration combine Abs. 3
 with a Nummer of Abs. 1 -- applies unchanged.
 
-**Step 2 -- § 20 Abs. 1 Nr. 7 fails.** A credit balance is a Kapitalforderung, so the gate that
-stopped the Wertpapierdarlehen fee (a Sachforderung, [GT-ESTG20-046]) is passed here; the exclusion
-turns on the charging element instead. Nr. 7 Satz 1 taxes *"Ertraege aus sonstigen Kapital-
-forderungen jeder Art, **wenn die Rueckzahlung des Kapitalvermoegens oder ein Entgelt fuer die
-Ueberlassung des Kapitalvermoegens zur Nutzung** zugesagt oder geleistet worden ist, auch wenn die
-Hoehe ... von einem ungewissen Ereignis abhaengt"* ([GT-ESTG20-003], verbatim there). The taxable
-receipt must be an **Entgelt fuer die Ueberlassung des Kapitalvermoegens zur Nutzung** -- the
-consideration for the capital being made available for the bank's use. Because Satz 1 covers such an
-Entgelt *even where its amount depends on an uncertain event*, the exclusion **cannot** rest on the
-benefit not being "measured by amount and time"; that reading is contrary to the statutory text.
+**Step 2 -- whether § 20 Abs. 1 Nr. 7 applies is not settled by a located source; the question is
+open.** A credit balance is a Kapitalforderung, so the Nr. 7 gate that stopped the
+Wertpapierdarlehen fee (a Sachforderung, [GT-ESTG20-046]) is passed here, and the question turns on
+the charging element. Nr. 7 Satz 1 taxes *"Ertraege aus sonstigen Kapitalforderungen jeder Art,
+**wenn die Rueckzahlung des Kapitalvermoegens oder ein Entgelt fuer die Ueberlassung des
+Kapitalvermoegens zur Nutzung** zugesagt oder geleistet worden ist, auch wenn die Hoehe ... von
+einem ungewissen Ereignis abhaengt"* ([GT-ESTG20-003]). Whether a benefit granted for **depositing
+capital and leaving it in place** is such an Entgelt is not settled by a located Tier 1 or Tier 2
+source; both readings are live:
 
-**The administration has drawn the line, and it is not Nr. 7.** BMF-Schreiben vom 14.05.2025
-(Einzelfragen zur Abgeltungsteuer) **Rz. 129b**, under the heading *Einkuenfte aus sonstigen
-Leistungen (§ 22 Nummer 3 EStG)*, treats a **Geldpraemie a receiving Kreditinstitut pays for the
-transfer of a Wertpapierdepot** as *"Einkuenfte aus sonstigen Leistungen im Sinne des § 22 Nummer 3
-EStG ..., sofern sie nicht einer anderen Einkunftsart (§§ 13, 15, 18 oder 21 EStG) zugeordnet werden
-kann"* (¶1). The premium for moving capital to the bank is consideration for the customer's
-*Leistung*, not an Entgelt for the use of a Kapitalforderung, so it falls outside Nr. 7 and into
-§ 22 Nr. 3. The administration reserves a **different** treatment for one narrow case only: where the
-premium is paid *"unter der Bedingung ..., dass Wertpapiere ... erworben werden"*, Rz. 129b ¶2
-directs it to **reduce the Anschaffungskosten** of those securities rather than be income at all --
-which is not this benefit (see the fact pattern below).
+- **Toward Nr. 7.** The benefit is conditioned on the capital remaining with the bank, which is the
+  *Ueberlassung ... zur Nutzung* the Entgelt would pay for. BFH v. 15.11.2022 -- VIII R 18/20 treats
+  a Bonuszins that accrues for leaving capital on deposit as an *"Entgelt fuer die Ueberlassung von
+  Kapitalvermoegen zur Nutzung i.S. des § 20 Abs. 1 Nr. 7 Satz 1 EStG"*. That Satz 1 admits an
+  Entgelt whose amount depends on an uncertain event answers the objection that a one-off grant is
+  too unlike interest.
+- **Toward § 22 Nr. 3.** The administration treats a Geldpraemie for the **transfer of a
+  Wertpapierdepot** as a § 22 Nr. 3 Leistung (BMF 14.05.2025 Rz. 129b ¶1), and its stated practice
+  treats a Kontoeroeffnungs- or Startguthaben-Praemie the same way; on this reading the grant is
+  consideration for the customer's conduct, not an Entgelt for the use of the capital.
 
-**Step 3 -- § 22 Nr. 3 applies.** Its subsidiarity clause is satisfied once § 20 is exhausted. The
-customer's conduct -- transferring funds and leaving them in place -- is a *Leistung*, and the
-benefit is its consideration.
+**Neither limb of Rz. 129b is this fact pattern.** ¶1 is a securities-depot transfer, which places
+no capital at the bank's disposal; ¶2 is a premium *"unter der Bedingung ..., dass Wertpapiere ...
+erworben werden"*, which reduces the Anschaffungskosten of those securities and is a third case, not
+this benefit. So the § 22 Nr. 3 classification of a Sachpraemie for a cash deposit left in place
+rests on analogy, not on a located source. The question is recorded as open in
+`../research/open-legal-questions.md` (Nr. 7 versus § 22 Nr. 3); which reading is applied is the
+taxpayer's filing choice, recorded against this claim in the map, not settled here.
 
-**The supported fact pattern.** The subsumption above is for a benefit granted **for the deposit or
-retention of the customer's own capital and not conditioned on the acquisition of securities**. Two
-boundaries fix its edges. Where the benefit is a security rather than a cash amount, only its
-**valuation** differs -- it is a benefit in kind, brought to tax at the ueblicher Endpreis on the
-day of Zufluss (§ 8 Abs. 2 Satz 1, [GT-ESTG20-064]); the income category is unchanged, because
-Rz. 129b ¶1 turns on what the benefit is paid *for*, not on the form it takes. Where the benefit is
-instead paid *on the condition that the customer acquires securities*, it is the Rz. 129b ¶2 case --
-a reduction of the Anschaffungskosten of those securities, not income under Nr. 3 -- and is outside
-this claim.
+**Step 3 -- under the § 22 Nr. 3 reading, § 22 Nr. 3 applies.** On that reading its subsidiarity
+clause is satisfied once § 20 is exhausted, the customer's conduct -- transferring funds and leaving
+them in place -- is a *Leistung*, and the benefit is its consideration.
+
+**The supported fact pattern.** This claim is for a benefit granted **for the deposit or retention
+of the customer's own capital and not conditioned on the acquisition of securities**. Two boundaries
+fix its edges. Where the benefit is a security rather than a cash amount, only its **valuation**
+differs under either reading -- a Sachbezug is brought to tax at the ueblicher Endpreis on the day
+of Zufluss (§ 8 Abs. 2 Satz 1, [GT-ESTG20-064]); the form it takes does not decide the income
+category. Where the benefit is instead paid *on the condition that the customer acquires securities*,
+it is the Rz. 129b ¶2 case -- a reduction of the Anschaffungskosten of those securities, not income
+under Nr. 3 -- and is outside this claim.
 
 **This is the same three-step result the store already reached for the Wertpapierdarlehen fee**
 (open-legal-questions.md Q14, retired 2026-08-09, at [GT-ESTG20-049]); the fee failed Step 2 on the
@@ -230,3 +245,31 @@ This has to be decided for a figure only where an award reversal and a disposal 
 security fall on one day and the awarded lot is within the disposal's FIFO reach. The reading
 chosen, and the evidence that each grey-area condition is met, are recorded against this claim ID
 in `docs/legal-implementation-map.md` -- not here, where only the law belongs.
+
+---
+
+## [GT-ESTG20-067] The return of a benefit already taxed under § 22 Nr. 3
+
+Where a benefit that zufloss and was brought to tax under § 22 Nr. 3 ([GT-ESTG20-063],
+[GT-ESTG20-064]) is later returned because its condition failed -- an awarded share clawed back --
+the return has a § 22 Nr. 3 income consequence that no located Tier 1 or Tier 2 source settles.
+
+The disposal side is separate and settled: a returned share is no longer the taxpayer's and is not
+available for a later Veraeusserung, so a disposal is measured only against the shares retained, at
+their own Anschaffungskosten (§ 20 Abs. 2, [GT-ESTG20-065]). What is open is the treatment of the
+return itself as a § 22 Nr. 3 item. The two readings and their authorities are in
+`../research/open-legal-questions.md`; in outline:
+
+- **Reading A -- a negative Leistungseinnahme in the year of return.** § 11 books an item in the year
+  of its Abfluss, so the value returned is negative § 22 Nr. 3 income in the year the return occurs;
+  the loss-offset restriction of § 22 Nr. 3 Satz 3 ([GT-ESTG20-062]) is held not to reach a loss
+  caused by repaying previously-taxed income, so it may be set against other income.
+- **Reading B -- a retroactive reduction of the receipt.** For a one-off Leistung the return is a
+  rueckwirkendes Ereignis (§ 175 Abs. 1 Satz 1 Nr. 2 AO) that reduces the receipt in the year of
+  Zufluss, correcting the original assessment rather than recognising a later loss.
+
+Only Tier 4 and Tier 5 sources address the repayment of Leistungseinnahmen, and none addresses the
+return of a benefit in kind of this kind, so the point is recorded as open, not resolved. Which
+reading is applied, and the evidence for it, are recorded against this claim ID in
+`docs/legal-implementation-map.md`. Applicable tax years: unrestricted within the regime; § 22 Nr. 3
+Satz 3-4 are not year-parameterised.

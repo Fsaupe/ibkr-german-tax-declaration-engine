@@ -24,6 +24,8 @@ An unresolved question recorded is ground truth. An unresolved question silently
 | Q17 | [GT-ESTG20-064] | Does a benefit booked into the recipient's account but revocable until a condition lapses zufliessen on the booking, or on the lapse? | this file |
 | Q16 | [GT-ESTG20-065] | Does a benefit in kind left untaxed by the Freigrenze of § 22 Nr. 3 Satz 2 still supply Anschaffungskosten at its full value on the later disposal? | this file |
 | Q18 | [GT-ESTG20-066] | Where a same-day award reversal and a disposal of the same security fall on one day, which applies first? (Unsettled by law, but figure-neutral by construction -- see the entry below.) | this file |
+| Q19 | [GT-ESTG20-063] | Is a benefit granted for depositing cash and leaving it in place a § 22 Nr. 3 Leistung, or an Entgelt für die Überlassung des Kapitalvermögens zur Nutzung under § 20 Abs. 1 Nr. 7? | this file |
+| Q20 | [GT-ESTG20-067] | When a benefit already taxed under § 22 Nr. 3 is later returned (the condition failed), is the return a negative Leistungseinnahme in the year of return, or a retroactive reduction of the receipt? | this file |
 
 **Retired on the same terms, and for the same reason -- a source that settles the point was found,
 or the point was never one.** Numbers are never reused. Each line says what answered it; the
@@ -442,3 +444,67 @@ Veraeusserungsbegriff without valuing anything. **No Tier 1 or Tier 2 statement 
 been located.** The asymmetry between the two readings is one of authority, not of plausibility:
 Reading A extends what the administration says everywhere else, Reading B contradicts what it says
 here.
+
+## Q19 -- § 22 Nr. 3 or § 20 Abs. 1 Nr. 7 for a benefit granted to deposit and keep capital
+
+**What is settled.** A credit balance is a Kapitalforderung, so the § 20 Abs. 1 Nr. 7 gate is passed
+([GT-ESTG20-063] Step 2). Nr. 7 Satz 1 charges an *"Entgelt fuer die Ueberlassung des
+Kapitalvermoegens zur Nutzung ... auch wenn die Hoehe ... von einem ungewissen Ereignis abhaengt"*
+([GT-ESTG20-003]). § 22 Nr. 3 is subsidiary and reached only once § 20 is exhausted.
+
+**What no located Tier 1 or Tier 2 source settles** is whether a benefit a bank or broker grants for
+**depositing capital and leaving it in place** -- clawed back if the capital is withdrawn within a
+period -- is such an Entgelt (Nr. 7, Kapitalertrag, Anlage KAP) or the consideration for the
+customer's conduct (§ 22 Nr. 3, sonstige Leistung, Anlage SO).
+
+**Reading A -- § 20 Abs. 1 Nr. 7.** The benefit is conditioned on the capital remaining with the
+bank, which is the *Ueberlassung ... zur Nutzung* the Entgelt pays for. **BFH v. 15.11.2022 -- VIII
+R 18/20** treats a Bonuszins that accrues for leaving capital on deposit as an Entgelt under
+Nr. 7 Satz 1; that Satz 1 admits an Entgelt of uncertain amount removes the objection that a one-off
+grant is unlike interest. (Tier 4, never alone.)
+**Against it:** VIII R 18/20 is a Bonuszins -- interest expressly measured on the balance -- not a
+one-off Sachpraemie; nothing located carries the reasoning to a promotional grant.
+
+**Reading B -- § 22 Nr. 3.** The administration treats a Geldpraemie for a Wertpapierdepot transfer
+as a § 22 Nr. 3 Leistung (BMF 14.05.2025 Rz. 129b ¶1), and its stated practice treats a
+Kontoeroeffnungs- or Startguthaben-Praemie the same way; the grant is consideration for the
+customer's conduct, not an Entgelt for the use of the capital.
+**Against it:** Rz. 129b ¶1 is a *depot* transfer, which places no capital at the bank's disposal,
+and the Startguthaben practice is Tier 5; neither addresses a premium for a cash balance left in
+place, so § 22 Nr. 3 here rests on analogy.
+
+**Why it is open.** Rz. 129b addresses only a depot transfer (¶1) and a securities-conditioned cash
+premium (¶2), not a premium for a cash deposit left in place; and VIII R 18/20 addresses a Bonuszins,
+not a Sachpraemie. No located source is on the fact pattern. The reading applied is a filing choice,
+recorded against [GT-ESTG20-063] in the map.
+
+## Q20 -- the return of a benefit already taxed under § 22 Nr. 3
+
+**What is settled.** A benefit that zufloss and was taxed under § 22 Nr. 3 supplies the
+Anschaffungskosten of the securities received ([GT-ESTG20-065]); a returned share is no longer the
+taxpayer's and is not available for a later Veraeusserung, so a disposal is measured only against the
+shares retained (§ 20 Abs. 2). § 22 Nr. 3 Satz 3 ring-fences a loss from Leistungen; Satz 4 lets it
+reduce Leistungen income of the adjacent years ([GT-ESTG20-062]).
+
+**What no located Tier 1 or Tier 2 source settles** is the § 22 Nr. 3 income consequence when the
+benefit is returned because its condition failed.
+
+**Reading A -- a negative Leistungseinnahme in the year of return.** § 11 books an item in the year
+of its Abfluss, so the value returned is negative § 22 Nr. 3 income in the year the return occurs.
+Tier 5 commentary (Littmann/Bitz/Pust, EStG § 22) holds that Satz 3's loss-offset restriction does
+not reach a loss caused by repaying previously-taxed income, so it may be set against other income.
+**Against it:** Tier 5; and it leaves the receipt year's assessment standing while the return falls
+in a later year.
+
+**Reading B -- a retroactive reduction of the receipt.** For a one-off Leistung the return is a
+rueckwirkendes Ereignis (§ 175 Abs. 1 Satz 1 Nr. 2 AO) reducing the receipt in the year of Zufluss,
+correcting the original assessment rather than recognising a later loss.
+**Against it:** no located Tier 1/2 source directs § 175 AO to this case.
+
+**Why it is open.** Only Tier 4/5 sources address the repayment of Leistungseinnahmen, and none
+addresses the return of a benefit in kind of this kind; the two readings put the reduction in
+different years and differ on whether an offset against other income is allowed. The reading applied,
+and how it is disclosed, are recorded against [GT-ESTG20-067] in the map.
+
+**Incidence.** Zero in the processed data: the one award reversal falls in VZ 2022 (never a result
+year); no award is reversed inside a processed year in the export.

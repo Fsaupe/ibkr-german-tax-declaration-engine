@@ -90,10 +90,13 @@ and read 2026-09-20 (PDF pages 59-60, URL and query string in the Source block a
   die Anschaffungskosten** of those securities, offset in the order of their acquisition. It is not
   income under Nr. 3.
 
-The boundary this fixes -- a premium for the capital move is a *Leistung* unless it is tied to a
-securities purchase -- is the decisive authority for the subsumption at [GT-ESTG20-063]; the
-distinction between ¶1 and ¶2 is worked there. Rz. 129/129a concern unrelated matters (negative
-Einlagezinsen); Rz. 130 is *"Nicht besetzt"*.
+¶1 addresses a **securities-depot transfer** and ¶2 a **cash premium conditioned on a securities
+purchase**; **neither addresses a premium for a cash deposit left in place**, which is the fact
+pattern at [GT-ESTG20-063]. So Rz. 129b supports the § 22 Nr. 3 reading there by analogy (¶1) and
+rules out the ¶2 cost-reduction case, but does not settle the classification -- that question is open
+(Q19), the § 20 Abs. 1 Nr. 7 side resting on BFH VIII R 18/20. The distinction between ¶1 and ¶2 is
+worked at GT-ESTG20-063. Rz. 129/129a concern unrelated matters (negative Einlagezinsen); Rz. 130 is
+*"Nicht besetzt"*.
 
 #### [GT-ESTG20-038] What counts as a Termingeschaeft (Rz. 9)
 
