@@ -877,3 +877,16 @@ Head = the reworked tree; base = the reviewed head before it. Contributor export
 
 Clean-clone suite (`cp src/config_example.py src/config.py && uv run pytest -q`, throwaway
 worktree): **1408 passed, 1 skipped**.
+
+**After the cold review of that tree (same day).** Four further commits: an award row whose `Price`
+is not positive now stops the run (a zero had given the lot a nil basis and declared the whole
+later proceeds as gain — reproduced on invented figures, zero occurrence in the contributor's
+files); both production ends of every optional export's path are asserted; the over-return refusal
+names both of its causes and the ledger tool passes the Grants missing-years string; and doc
+statements about a `SerialNumber` guard and an earliest-year fallback that do not exist are
+corrected. Re-measured on the final tree against the tree measured above: **VZ 2023, VZ 2024 and
+VZ 2025 byte-identical** in console and metadata-stripped PDF; same-tree control identical. The
+log differs in VZ 2023 by one line in both the comparison and the control, and it is ambient: an
+award dated on an ECB holiday has no cached rate, so each run asks the live ECB service, and one
+run received an empty answer where the other timed out. Both fall back to the preceding business
+day's rate, and no figure differs. Clean-clone suite: **1426 passed, 1 skipped**.
