@@ -307,16 +307,25 @@ settles it.
     synthesised dated `{tax_year-1}-12-31`, and **the run completes**. A user whose award falls in
     the first year of their input window gets a figure, not a refusal, and the acquisition date
     behind it is invented. This is the fallback rule's case, and the report is what avoids it.
-- **Legal ground:** shares granted for placing capital are a *Leistung* under § 22 Nr. 3 EStG, not
-  Kapitalertrag ([GT-ESTG20-063]). Zufluss falls where wirtschaftliche Verfügungsmacht arrives,
-  which is the booking into the account: a contractual condition under which the grantor may still
-  take the shares back does not postpone it ([GT-ESTG20-064]), and the amount brought to tax then
-  is the Anschaffungskosten on a later disposal ([GT-ESTG20-065]).
+- **Supported programme: Interactive Brokers' Refer-A-Friend share award, and no other.** The
+  treatment below is what `reference/tax-law/estg-22-nr3-leistungen.md` establishes by applying the
+  law to that programme's terms. **The export does not name the programme.** The parser admits only
+  the three row descriptions that programme writes and refuses anything else, but a different
+  programme writing the same three could not be told apart — a stated limit, not a guarded one.
+- **Legal ground, for that programme:** the award is a *Leistung* under § 22 Nr. 3 EStG, not
+  Kapitalertrag ([GT-ESTG20-063]). Zufluss falls on the booking into the account: the holding period
+  and the reclaim condition do not postpone it ([GT-ESTG20-064], with the one dependency that would
+  — the terms' clause calling an early disposal "void"). The value that day is the
+  Anschaffungskosten on a later disposal, whether or not the receipt was taxed ([GT-ESTG20-065]).
+  Shares handed back are a negative Einnahme of the year of the return at that same original value
+  ([GT-ESTG20-067]).
 - **What this engine does and does not do with it.** It supplies the **acquisition** — the lot, its
   date and its cost basis — so a later disposal is measured correctly on Anlage KAP. It does **not**
-  declare the **receipt** as income in the year it accrued: that belongs on Anlage SO under
-  *Einkünfte aus Leistungen*, the reporting layer has no such category, and this library holds no
-  Zeilen for that half of the form. Tracked as issue #76, which closes it for this and for the
+  declare the **receipt** as income in the year it accrued, nor the negative receipt of a return:
+  both belong on Anlage SO under *Einkünfte aus Leistungen*, the reporting layer has no such
+  category, and this library holds no Zeilen for that half of the form. The run prints each with
+  its amount, year and destination (`STOCK_AWARD_RECEIPT_NOT_DECLARED`,
+  `STOCK_AWARD_RETURN_NOT_DECLARED`). Tracked as issue #76, which closes it for this and for the
   securities-lending fee together.
 - **Optional as a whole, but not per year.** A person whose broker has never awarded them shares
   has no rows. A window with a hole is different: a year of awards that does not arrive is a year
@@ -330,11 +339,15 @@ settles it.
 
 **Three activity kinds share the file and only two move the position.**
 
-| `ActivityDescription` contains | Meaning | Moves the position? |
+| `ActivityDescription` is exactly | Meaning | Moves the position? |
 |---|---|---|
-| `Stock Award Grant` | Shares booked into the account | Yes, positive |
-| `Stock Award Return` | Taken back when the condition fails | Yes, negative |
+| `Stock Award Grant for Cash Deposit` | Shares booked into the account | Yes, positive |
+| `Stock Award Return for Cash Withdrawal` | Taken back when the condition fails | Yes, negative |
 | `Stock Award Vesting` | The condition lapsed | **No** |
+
+The match is on the whole description. A row that merely contains one of these — a grant
+*for a securities purchase*, say, which the law treats as a cost reduction and not as income — belongs
+to a programme nobody has read the terms of, and stops the run.
 
 Adding the vesting quantities to the position roughly doubles the holding against the broker's
 snapshot. `parse_grants_csv` therefore **raises** on an `ActivityDescription` it does not
@@ -352,11 +365,29 @@ dropped one would reconcile until the year the dropped kind mattered.
 - A **vesting** is dated on `VestingDate` and **has no ledger effect**. It is read so that an
   unrecognised kind can still be refused, and inert because the acquisition already happened.
 
-**The award creates the lot and the lot is final.** BFH VI R 37/09 Rn. 12 holds that a Sperr- or
-Haltefrist does not prevent Zufluss, and Leitsatz 2 (Rn. 15) that what does is a disposal being *rechtlich
-unmöglich* — so a contractual clawback does not postpone the acquisition. A reversal reduces the
+**The award creates the lot and the lot is final** ([GT-ESTG20-064]). A reversal reduces the
 matching lot **at that lot's own unit cost** and realises nothing: it is not a disposal and
-produces no `RealizedGainLoss`.
+produces no `RealizedGainLoss` ([GT-ESTG20-067]). A same-day reversal and sale need no rule of
+order: shares handed back cannot also be the shares sold, so the sale is measured against what the
+reversal left ([GT-ESTG20-066]).
+
+**Input contract — every fact a declared amount, year or destination depends on.**
+
+| Fact | Where it comes from | If absent or contradictory |
+|---|---|---|
+| That the row belongs to the supported programme | `ActivityDescription`, matched whole | Any other text: run stops, all rows named. *Not checkable:* another programme writing the same text |
+| Which account and instrument | `ClientAccountID`; `ISIN` / `Conid` / `Symbol` | Resolved like any other instrument; an unresolvable one stops the run |
+| Acquisition date (= day of Zufluss) | award row `AwardDate` | Unparseable: run stops |
+| Units | `Quantity` (absolute value; the row kind carries the direction) | Zero: run stops |
+| Value per unit at Zufluss | award row `Price`, in `CurrencyPrimary` | Required column; the day it was struck is not stated (see Notes) |
+| EUR value | ECB rate of `AwardDate` | No rate: no EUR cost, and the ledger refuses to create the lot — run stops |
+| Which award a reversal undoes | reversal row `AwardDate` + account | No such lot, or more units than it holds: run stops |
+| Amount of a reversal's negative receipt | the lot's own unit cost × units — **never** the reversal row's `Price` | follows from the two rows above |
+| Year of the receipt / of the negative receipt | `AwardDate` / reversal row `ReportDate` | Unparseable: run stops |
+| A complete window | one Grants file per year, as for Transfers | A hole in a supplied window: run stops (`GRANTS_WINDOW_INCOMPLETE`) |
+| Destination | Anlage SO for receipt and return (printed, not declared — issue #76); Anlage KAP for the later sale | — |
+
+Nothing here is asked of the user beyond the export, and nothing is defaulted.
 
 **Column Specifications** — `GRANTS_COLUMNS` in `src/parsers/column_validator.py` declares the
 export's full header so that a column appearing or disappearing is caught at the boundary.
@@ -383,10 +414,11 @@ export's full header so that a column appearing or disappearing is caught at the
 
 **Notes:**
 - **The price's own date is not stated.** § 8 Abs. 2 Satz 1 wants the übliche Endpreis on the day of
-  Zufluss, and no column says which day `Price` was struck on. Where `ReportDate` and `VestingDate`
-  differ it may be either day's. It is used as given — it is a measurement, and the alternative is
-  to invent one from market data this engine does not hold — and the residual uncertainty is
-  recorded against [GT-ESTG20-064] rather than left for a reader to notice.
+  Zufluss, and no column says which day `Price` was struck on. Zufluss is the award, so the
+  question arises only on an award row whose `ReportDate` differs from its `AwardDate`; there it may
+  be either day's. It is used as given — it is a measurement, and the alternative is to invent one
+  from market data this engine does not hold — and the residual uncertainty is recorded against
+  [GT-ESTG20-064] rather than left for a reader to notice.
 - **Two awards in one account sharing an award date stop the run.** That date, with the grant
   account, is the key a vesting or a reversal has, so a same-account duplicate would let one restate
   or reverse the wrong award's shares. Two accounts granting on one day are kept apart by the

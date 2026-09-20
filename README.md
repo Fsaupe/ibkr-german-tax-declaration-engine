@@ -303,11 +303,19 @@ between two position snapshots it refuses, but in the earliest year of your inpu
 warns, invents an acquisition date and gives you a figure anyway. Set the ID rather than rely
 on being told.
 
-### Query 8: Grants (needed if your broker has awarded you shares)
+### Query 8: Grants (needed if you received shares under IBKR's Refer-A-Friend programme)
 
-Create an Activity Flex Query with only the **Stock Grant Activity** section enabled. If your
-broker has never given you shares — IBKR awards them for wiring cash in, for example — you have no
-rows and do not need this query.
+Create an Activity Flex Query with only the **Stock Grant Activity** section enabled. If you have
+never been awarded shares you have no rows and do not need this query.
+
+**Only one share-award programme is supported: Interactive Brokers' Refer-A-Friend award** — IBKR
+shares granted to a referred client in proportion to the cash or assets they bring, locked for a
+year, and taken back in part if they withdraw early. How such shares are taxed follows from the
+programme's terms, and those are the only terms this engine's treatment has been established for
+(`reference/tax-law/estg-22-nr3-leistungen.md`). Rows of any other kind stop the run. **The export
+does not name the programme**, so the engine cannot check this for you: if your shares came from a
+different promotion that happens to write the same three row descriptions, the treatment below may
+not be right for them, and nothing will tell you.
 
 **Export it for every year, the same years as the other queries.** The award is the only record
 that those shares arrived and what they were worth. A year you do not export is a year the engine
@@ -350,21 +358,26 @@ second rate alongside creates a plausible wrong path.
 **Three row kinds share this report and they are not interchangeable.** A *Grant* books shares in,
 a *Return* takes some back if you withdraw the cash that earned them, and a *Vesting* moves no
 shares at all — it records the day they stopped being forfeitable. Adding the vesting rows to your
-position would roughly double it. If your broker ever introduces a fourth kind, the run stops and
-names it rather than guessing which sort it is.
+position would roughly double it. A row carrying any other description — a fourth kind, or a
+grant of some other programme — stops the run and is named, rather than guessed at.
 
-**The award date is what counts, not the vesting date.** Your shares are acquired for tax purposes
-on the day they are booked into your account, at that day's value. A promise to give them back if
-you withdraw the cash does not postpone that — the BFH holds that a contractual lock-up or
-forfeiture clause does not delay Zufluss, only being *legally unable to sell* would. So a vesting
-row changes nothing the engine computes.
+**The award date is what counts, not the vesting date.** Under the Refer-A-Friend terms your
+shares are acquired for tax purposes on the day they are booked into your account, at that day's
+value: you vote them, receive their dividends and carry their price risk from that day, and a
+contractual lock-up or a promise to give them back does not delay Zufluss — only being *legally
+unable* to dispose of them would ([GT-ESTG20-064]). So a vesting row changes nothing the engine
+computes. **One dependency is stated rather than hidden:** the terms call an early sale "void".
+The engine reads that as the contractual lock-up it is on its face. If it were established that
+under the law governing the programme such a sale is legally ineffective, the acquisition would
+move to the vesting date and the vesting-day price, and the figures here would be wrong.
 
 **What the engine does with it.** The award gives your shares a real acquisition date and cost, so
 when you eventually sell them the gain on **Anlage KAP** is measured properly instead of against an
 invented basis. What it does **not** do is declare the award itself as income in the year you
 received it — that belongs on **Anlage SO** under *Einkünfte aus Leistungen*, and this engine has no
-line for it yet. The run now says so, naming the year and the amount, but **declaring it is still
-yours to do.**
+line for it yet. The same goes for shares you had to hand back: that is a *negative* receipt of the
+year you handed them back, at the value they were originally awarded at ([GT-ESTG20-067]). The run
+states both, with the amount, the year and the form, but **entering them is still yours to do.**
 ## Preparing Input Data
 
 Place your IBKR Flex Query CSV files in the `data_import/` directory using this naming scheme:
@@ -776,7 +789,7 @@ uv run pytest tests/test_group7_currency_fifo.py -v   # Currency FIFO
 ## Known Limitations
 
 *   **IBKR API history:** The Flex Web Service API only retains ~2 calendar years of data. Older years come from the Client Portal instead, either with the browser downloader or by hand (see [Client Portal Download](#client-portal-download-for-older-years)).
-*   **Awarded shares: the sale is handled, the receipt is not.** Where your broker has given you shares for placing capital with it, the engine gives them a real acquisition date and cost basis, so the **gain when you sell them** is computed correctly on Anlage KAP. It does **not** declare the **award itself** as income in the year you received it. Such a benefit is a *Leistung* under § 22 Nr. 3 EStG ([GT-ESTG20-063]), which belongs on **Anlage SO**, and the reporting layer has no line for it — the same gap as for a securities-lending fee, tracked as issue #76. **If you have been awarded shares, the income side of them is still yours to declare.**
+*   **Awarded shares: one programme, and the sale is handled while the receipt is not.** The only share-award programme supported is **IBKR's Refer-A-Friend award**; the export does not name the programme, so shares from a different promotion that writes the same row descriptions would be treated the same way without warning. For that programme the engine gives the shares a real acquisition date and cost basis, so the **gain when you sell them** is computed correctly on Anlage KAP. It does **not** declare the **award itself** as income in the year you received it, nor the negative receipt when shares are handed back. Both are *Leistungen* under § 22 Nr. 3 EStG ([GT-ESTG20-063], [GT-ESTG20-067]), which belong on **Anlage SO**, and the reporting layer has no line for them — the same gap as for a securities-lending fee, tracked as issue #76. The run prints the amount, year and form for each; **entering them is yours to do.**
 *   **No "Alt-Anteile":** Assumes all investment fund shares were acquired on or after January 1, 2018.
 *   **Foreign WHT:** Aggregates WHT paid (Anlage KAP Zeile 41) but does not calculate creditable WHT.
 *   **No loss carry-forward/backward:** Calculations are limited to the specified tax year.

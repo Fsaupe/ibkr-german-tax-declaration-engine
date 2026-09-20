@@ -108,7 +108,7 @@ class StockAwardProcessor(EventProcessor):
         silence would produce a complete-looking declaration that is not complete.
 
         WARNING and not FAIL_FAST: the figures the engine does emit are correct under the
-        reading it applies, and every other Kapitalertrag in the year is unaffected.
+        store's application ([GT-ESTG20-064]), and every other Kapitalertrag in the year is unaffected.
         Refusing the year would withhold sound figures over a line the engine has never
         been able to produce. What the severity asserts is exactly that -- the declared
         figures are safe, and something outside them is not computed here.

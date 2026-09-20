@@ -651,14 +651,16 @@ class StockAwardEvent(FinancialEvent):
     other in a single ledger the date no longer tells them apart. On an award row
     `award_date` equals the day the lot is created.
 
-    **The position and the tax acquisition coincide, and that is a decided position
-    rather than an obvious one.** The shares sit in the account from the award, and
-    Zufluss falls there too: a contractual condition under which the grantor may reclaim
-    them does not postpone it, only a disposal being *rechtlich unmoeglich* would
-    ([GT-ESTG20-064], BFH VI R 37/09). So the award creates the lot with its final date
-    and cost ([GT-ESTG20-065]) and a vesting has nothing to change. An earlier revision
-    restated the lot at vesting; that reading was retired when the Zufluss test was
-    sourced, and Q17 records what remains uncertain about it.
+    **The position and the tax acquisition coincide, and that is the store's application
+    of the law to one programme's terms rather than something obvious.** The shares sit in
+    the account from the award, and under the Refer-A-Friend terms Zufluss falls there
+    too: a contractual holding period and a reclaim condition do not postpone it, only a
+    disposal being *rechtlich unmoeglich* would ([GT-ESTG20-064]). So the award creates the
+    lot with its final date and cost ([GT-ESTG20-065]) and a vesting has nothing to
+    change. The one thing that would displace this -- the programme's clause calling a
+    premature disposal "void" turning out to make a transfer ineffective under the law
+    governing it -- is stated at [GT-ESTG20-064] and in its map row; it would move the
+    acquisition to the vesting row's date and price.
 
     **A reversal realises nothing.** The condition failed and the award is undone, so
     there is no disposal and no `RealizedGainLoss`. It carries no proceeds for that
