@@ -852,3 +852,28 @@ carries one grant, no cross-account award collision, no same-day grant-and-trans
 security, and no award reversal in a result year. This is the compatibility/parity gate for the
 rework itself; it does not restate the separate Band A feature approval owed for the grant feature
 (above, 2026-09-19), which the maintainer approves named to VZ 2023/2024/2025.
+
+## 2026-09-20 — PR #90 acceptance rework: store re-audit, one supported programme, real-data parity
+
+Measured after the rework answering the maintainer's acceptance requirements: the share-award
+claims re-grounded in `reference/` for one named programme (Q16–Q20 retired); the grant parser
+matching the supported programme's three whole activity descriptions; the same-day
+return/disposal warning removed; a return of awarded shares stated as a negative § 22 Nr. 3
+receipt with amount, year and destination; both Anlage SO lines asserted on the pipeline output.
+This entry supersedes the framing of the entry above where it speaks of "Q16 recorded as the
+taxpayer's Reading A" and of a reversal-ordering warning: neither exists any more.
+
+Head = the reworked tree; base = the reviewed head before it. Contributor exports, VZ 2023–2025,
+`scripts/parity_check.sh`; same-tree control on the base identical (console/log/PDF).
+
+- **VZ 2024 and VZ 2025: byte-identical** — console (normalized), log (normalized),
+  metadata-stripped PDF.
+- **VZ 2023: PDF byte-identical; the console differs in exactly one line** — the text of the
+  `STOCK_AWARD_RECEIPT_NOT_DECLARED` note, which now names the programme and the year. The amount
+  in that line is unchanged (compared, not printed). No declared figure moves.
+- The exact-match parser admits every row of the contributor's Grants files (measured by parsing
+  them); the removed warning and the return line have no occurrence in the processed years, so
+  their change is exercised by the synthetic scenarios only, which is where it is calibrated.
+
+Clean-clone suite (`cp src/config_example.py src/config.py && uv run pytest -q`, throwaway
+worktree): **1408 passed, 1 skipped**.
