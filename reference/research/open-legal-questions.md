@@ -289,7 +289,7 @@ from the general requirement rather than a rule about conditional benefits.
 is theirs to dispose of; a condition that merely *might* undo it is resolutive, and what has
 accrued is not postponed by the possibility of its being reversed.
 **Against it:** it attributes to the recipient a benefit they may have to give back, and the
-possibility is not hypothetical -- a reversal is one of the row kinds the export carries.
+possibility is not hypothetical -- a reclaim is a real feature of such conditional benefits.
 
 **What the choice moves.** The two readings put the acquisition date roughly a vesting period
 apart and take the Anschaffungskosten from two different days' prices, so both the declared gain
@@ -318,8 +318,8 @@ settled:
    employer. § 11's Zufluss concept is general, but whether the same result carries to a
    § 22 Nr. 3 benefit from a broker is the step no located source takes.
 3. **The distinction the cases turn on is delivery versus expectancy**, and this fact pattern
-   sits on the delivered side: the shares are in the account and their dividends are paid to the
-   recipient from the booking. That is an argument for Reading B, and it is an argument, not a
+   sits on the delivered side: the shares are the recipient's from the booking, with the economic
+   rights that attach to ownership, not a mere expectancy. That is an argument for Reading B, and it is an argument, not a
    citation.
 
 **What it moves, if applied:** the acquisition date of every awarded lot returns to the award
@@ -336,9 +336,7 @@ lot ([GT-ESTG20-064]).
 
 **What no located Tier 1 or Tier 2 source settles** is, where a reversal and a disposal of the same
 security fall on the same day, which is applied first. FIFO orders the lots a disposal consumes; it
-does not order a disposal against a same-day event that is not itself a disposal. The award report
-carries no intra-day identifier -- SerialNumber is blank on every grant row -- so the export cannot
-order the two either.
+does not order a disposal against a same-day event that is not itself a disposal.
 
 **Reading A (reversal before disposal).** A share the grantor has clawed back was never
 unconditionally the taxpayer's, so the disposal is measured after the awarded lot has left the
@@ -360,17 +358,14 @@ reversal-first (Reading A) completes. The two readings therefore never yield two
 figures -- the same figure, or a figure versus an abort on inconsistent input. This is measured, not
 assumed; the working is in the [GT-ESTG20-066] map row.
 
-**Two sources of the uncertainty, kept apart.** One is evidential: the award report carries no
-intra-day identifier, so where a reversal and a disposal fall on one day the actual sequence is
-unobserved -- a limitation of the export, not of the law, and on its own a data question rather
-than a dispute of law. The other is legal: § 20 Abs. 4 Satz 7 orders a disposal's own lots and does
-not order a disposal against a same-day event that is not a disposal, so even a known simultaneity
-would leave the tax order unfixed. Only the second is the open question of law; the first is why it
-cannot be sidestepped by reading the sequence off the export.
+**The question is one of law, not only of evidence.** § 20 Abs. 4 Satz 7 orders a disposal's own
+lots and does not order a disposal against a same-day event that is not a disposal, so even a known
+sequence would leave the tax order unfixed. Whether the sequence is observable at all is a separate,
+data-side matter, recorded in the map rather than here.
 
 Because the order is figure-neutral, no filing position turns on it. Which order is applied, how it
-is disclosed, and its incidence are implementation state, recorded against [GT-ESTG20-066] in the
-map, not here.
+is disclosed, and how often it arises are implementation state, recorded against [GT-ESTG20-066] in
+the map, not here.
 
 ## Q16 -- Anschaffungskosten from a receipt the Freigrenze left untaxed
 
@@ -504,7 +499,4 @@ correcting the original assessment rather than recognising a later loss.
 **Why it is open.** Only Tier 4/5 sources address the repayment of Leistungseinnahmen, and none
 addresses the return of a benefit in kind of this kind; the two readings put the reduction in
 different years and differ on whether an offset against other income is allowed. The reading applied,
-and how it is disclosed, are recorded against [GT-ESTG20-067] in the map.
-
-**Incidence.** Zero in the processed data: the one award reversal falls in VZ 2022 (never a result
-year); no award is reversed inside a processed year in the export.
+how it is disclosed, and how often it arises are recorded against [GT-ESTG20-067] in the map.

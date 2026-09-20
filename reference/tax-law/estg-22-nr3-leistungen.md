@@ -221,6 +221,15 @@ the same accretion twice; the acquisition is entgeltlich to the extent it has be
 **This claim does not depend on the benefit having actually been declared.** The Anschaffungskosten
 follow from the value that fell to be taxed under § 11 and § 8, not from what appeared on a return.
 
+**What grounds it, and the limit of the citation.** The proposition rests on the
+Korrespondenzprinzip -- an accretion taxed once on receipt is not taxed again on disposal -- to
+which § 20 Abs. 4 Satz 1 gives effect by measuring the gain against the Anschaffungskosten. § 20
+Abs. 4 Satz 1 states the measurement, **not** the Anschaffungskosten of a benefit received in kind;
+no located Tier 1 or Tier 2 source states those in a sentence for a § 22 Nr. 3 benefit. This is the
+general principle applied, and its only alternative -- a nil basis that taxes the same accretion
+twice -- is not a viable reading, so it is not an open question; but the claim rests on the principle,
+not on a quoted provision, and is marked so rather than left to read as directly sourced.
+
 **Where the sources run out.** Whether a receipt left untaxed by the Freigrenze of Nr. 3 Satz 2
 nonetheless supplies Anschaffungskosten at its full value is **not settled** by any Tier 1 or
 Tier 2 source located. Recorded in `../research/open-legal-questions.md`.
@@ -254,10 +263,13 @@ Where a benefit that zufloss and was brought to tax under § 22 Nr. 3 ([GT-ESTG2
 [GT-ESTG20-064]) is later returned because its condition failed -- an awarded share clawed back --
 the return has a § 22 Nr. 3 income consequence that no located Tier 1 or Tier 2 source settles.
 
-The disposal side is separate and settled: a returned share is no longer the taxpayer's and is not
-available for a later Veraeusserung, so a disposal is measured only against the shares retained, at
-their own Anschaffungskosten (§ 20 Abs. 2, [GT-ESTG20-065]). What is open is the treatment of the
-return itself as a § 22 Nr. 3 item. The two readings and their authorities are in
+The disposal side is separate: § 20 Abs. 2 taxes a *Veraeusserung*, an entgeltliche Uebertragung,
+and a clawback when the condition fails is an unentgeltliche Rueckgewaehr to the grantor -- not a
+Veraeusserung, so it yields no § 20 Abs. 2 gain. The returned shares leave the holding, and a later
+disposal is measured only against the shares retained, at their own Anschaffungskosten (§ 20 Abs. 2,
+[GT-ESTG20-065]). That a Veraeusserung is an entgeltliche Uebertragung is the settled meaning of the
+term across § 17, § 20 and § 23 rather than a sentence quoted here. What is open is the treatment of
+the return itself as a § 22 Nr. 3 item. The two readings and their authorities are in
 `../research/open-legal-questions.md`; in outline:
 
 - **Reading A -- a negative Leistungseinnahme in the year of return.** § 11 books an item in the year
