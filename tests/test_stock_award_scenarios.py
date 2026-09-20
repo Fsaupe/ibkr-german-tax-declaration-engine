@@ -382,9 +382,9 @@ def test_a_vesting_and_a_reversal_report_no_receipt():
 def test_a_same_day_reversal_and_sale_apply_reversal_first_and_warn():
     """Q18 / [GT-ESTG20-066]: the order of a same-day award reversal and a disposal of the
     same security is not fixed by law. The reversal takes the lot-delivering band, so it is
-    applied first (Reading A, the taxpayer's grey-area choice of 2026-09-19). Because that
-    can move which lot's basis the sale uses, the collision is surfaced as a WARNING, not
-    left silent.
+    applied first. The intra-day order is figure-neutral -- a reversal removes its own lot at
+    its own cost and refuses over-reversal -- so the collision is surfaced as a WARNING to
+    flag an unusual same-day pair, not because a figure is in doubt.
 
     Red on the base: the detection did not exist, so a reversal and a sale of one security
     sharing a day recorded nothing. Asserted on the collector directly, as the receipt gap

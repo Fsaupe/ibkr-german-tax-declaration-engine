@@ -23,6 +23,7 @@ An unresolved question recorded is ground truth. An unresolved question silently
 | Q15 | [GT-FX-010] | Rz. 131 makes an Umbuchung between two foreign-currency accounts a Veraeusserung. What is the Veraeusserungspreis, when nothing is paid? | `../bmf-guidance/fremdwaehrung-konten.md` |
 | Q17 | [GT-ESTG20-064] | Does a benefit booked into the recipient's account but revocable until a condition lapses zufliessen on the booking, or on the lapse? | this file |
 | Q16 | [GT-ESTG20-065] | Does a benefit in kind left untaxed by the Freigrenze of § 22 Nr. 3 Satz 2 still supply Anschaffungskosten at its full value on the later disposal? | this file |
+| Q18 | [GT-ESTG20-066] | Where a same-day award reversal and a disposal of the same security fall on one day, which applies first? (Unsettled by law, but figure-neutral by construction -- see the entry below.) | this file |
 
 **Retired on the same terms, and for the same reason -- a source that settles the point was found,
 or the point was never one.** Numbers are never reused. Each line says what answered it; the

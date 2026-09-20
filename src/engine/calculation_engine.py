@@ -929,9 +929,9 @@ def run_main_calculations(
         grants_file_supplied, grants_missing_years, data_gap_collector)
     _report_multi_account_limitations(
         _known_accounts, data_gap_collector, transfers_file_supplied)
-    # A same-day award reversal and disposal are ordered reversal-first by the sort band
-    # (Reading A); the order is a grey-area choice no source fixes, so surface it where it
-    # can move a figure. See Q18 / GT-ESTG20-066.
+    # A same-day award reversal and disposal are ordered reversal-first by the sort band; the
+    # order is figure-neutral (no source fixes it, but it cannot change a completed figure --
+    # see Q18 / GT-ESTG20-066), so this only surfaces the unusual same-day pair.
     _report_reversal_ordering_assumption(
         financial_events, asset_resolver, data_gap_collector, tax_year_end_date_obj)
 

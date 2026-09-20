@@ -74,11 +74,13 @@ def get_event_sort_key(event: FinancialEvent, asset_resolver: AssetResolver) -> 
         # although it changes nothing, so that all three kinds of one export sort the same
         # way and a future kind that DOES touch the ledger inherits the safe order.
         #
-        # A reversal here is therefore applied BEFORE a same-day disposal of the same share
-        # (Reading A). Which of the two comes first is not fixed by any source -- FIFO orders
-        # a disposal's own lots, not a disposal against a same-day non-disposal event -- so it
-        # is the taxpayer's grey-area choice (Q18, [GT-ESTG20-066]); the calculation engine
-        # warns on the collision (STOCK_AWARD_REVERSAL_ORDER_ASSUMED) so the choice is visible.
+        # A reversal here is therefore applied BEFORE a same-day disposal of the same share.
+        # Which of the two comes first is not fixed by any source -- FIFO orders a disposal's
+        # own lots, not a disposal against a same-day non-disposal event -- but the order is
+        # figure-neutral (Q18, [GT-ESTG20-066]): a reversal removes its own lot at its own
+        # cost and refuses over-reversal, so a completed run gives the same figure either way,
+        # or aborts on inconsistent input. The calculation engine records the collision
+        # (STOCK_AWARD_REVERSAL_ORDER_ASSUMED) so an unusual same-day pair is visible.
         #
         # The band decides this only because the event carries no `ibkr_transaction_id`:
         # the export's SerialNumber is blank on every row, so there is none to carry, and
