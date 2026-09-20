@@ -313,9 +313,11 @@ shares granted to a referred client in proportion to the cash or assets they bri
 year, and taken back in part if they withdraw early. How such shares are taxed follows from the
 programme's terms, and those are the only terms this engine's treatment has been established for
 (`reference/tax-law/estg-22-nr3-leistungen.md`). Rows of any other kind stop the run. **The export
-does not name the programme**, so the engine cannot check this for you: if your shares came from a
-different promotion that happens to write the same three row descriptions, the treatment below may
-not be right for them, and nothing will tell you.
+does not name the programme**, so the engine cannot check this for you and asks you to say so
+once: set `STOCK_AWARD_PROGRAMME = "IBKR_REFER_A_FRIEND"` in `src/config.py`. With grant rows
+present and that line unset, the run stops. If your shares came from a different promotion that
+happens to write the same three row descriptions, do not set it — the treatment below has not been
+established for them.
 
 **Export it for every year, the same years as the other queries.** The award is the only record
 that those shares arrived and what they were worth. A year you do not export is a year the engine
@@ -793,7 +795,7 @@ uv run pytest tests/test_group7_currency_fifo.py -v   # Currency FIFO
 ## Known Limitations
 
 *   **IBKR API history:** The Flex Web Service API only retains ~2 calendar years of data. Older years come from the Client Portal instead, either with the browser downloader or by hand (see [Client Portal Download](#client-portal-download-for-older-years)).
-*   **Awarded shares: one programme, and the sale is handled while the receipt is not.** The only share-award programme supported is **IBKR's Refer-A-Friend award**; the export does not name the programme, so shares from a different promotion that writes the same row descriptions would be treated the same way without warning. For that programme the engine gives the shares a real acquisition date and cost basis, so the **gain when you sell them** is computed correctly on Anlage KAP. It does **not** declare the **award itself** as income in the year you received it, nor the negative receipt when shares are handed back. Both are *Leistungen* under § 22 Nr. 3 EStG ([GT-ESTG20-063], [GT-ESTG20-067]), which belong on **Anlage SO**, and the reporting layer has no line for them — the same gap as for a securities-lending fee, tracked as issue #76. The run prints the amount, year and form for each; **entering them is yours to do.**
+*   **Awarded shares: one programme, and the sale is handled while the receipt is not.** The only share-award programme supported is **IBKR's Refer-A-Friend award**; the export does not name the programme, so you confirm it once by setting `STOCK_AWARD_PROGRAMME = "IBKR_REFER_A_FRIEND"` in `src/config.py`, and a run with grant rows and no confirmation stops. For that programme the engine gives the shares a real acquisition date and cost basis, so the **gain when you sell them** is computed correctly on Anlage KAP. It does **not** declare the **award itself** as income in the year you received it, nor the negative receipt when shares are handed back. Both are *Leistungen* under § 22 Nr. 3 EStG ([GT-ESTG20-063], [GT-ESTG20-067]), which belong on **Anlage SO**, and the reporting layer has no line for them — the same gap as for a securities-lending fee, tracked as issue #76. The run prints the amount, year and form for each; **entering them is yours to do.**
 *   **No "Alt-Anteile":** Assumes all investment fund shares were acquired on or after January 1, 2018.
 *   **Foreign WHT:** Aggregates WHT paid (Anlage KAP Zeile 41) but does not calculate creditable WHT.
 *   **No loss carry-forward/backward:** Calculations are limited to the specified tax year.

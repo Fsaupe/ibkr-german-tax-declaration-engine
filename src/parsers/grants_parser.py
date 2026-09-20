@@ -20,10 +20,12 @@ from .column_validator import GRANTS_COLUMNS
 # that merely contains one of them belongs to something nobody has read the terms of, and
 # stops the run.
 #
-# **Assumption, stated because nothing can check it:** the export does not name the
-# programme. A different programme that wrote these identical strings could not be told
-# apart here. The map row for [GT-ESTG20-063], the README and input_data_spec.md say the
-# same; by the owner's decision there is no input or warning for it.
+# **The export does not name the programme**, so a different programme that wrote these
+# identical strings could not be told apart here. That the rows came under Refer-A-Friend
+# is therefore a fact the user states once, as config.STOCK_AWARD_PROGRAMME; with rows
+# present and no such confirmation `ParsingOrchestrator` stops the run.
+SUPPORTED_STOCK_AWARD_PROGRAMME = "IBKR_REFER_A_FRIEND"
+
 AWARD_ACTIVITY = "Stock Award Grant for Cash Deposit"
 REVERSAL_ACTIVITY = "Stock Award Return for Cash Withdrawal"
 VESTING_ACTIVITY = "Stock Award Vesting"

@@ -500,6 +500,32 @@ def test_a_return_in_the_tax_year_reports_the_negative_receipt_it_does_not_decla
     assert "unsettled" not in gaps[0].detail.lower() and "Q20" not in gaps[0].detail
 
 
+class TestTheProgrammeIsConfirmedNotAssumed(FifoTestCaseBase):
+    """The export does not name the programme, and the treatment follows from its terms
+    ([GT-ESTG20-063]). Matching the row text cannot prove which terms applied, so the user
+    states it once in config; grant rows without that statement stop the run."""
+
+    GRANT = [grant_row("Stock Award Grant for Cash Deposit",
+                       "20230210", "20230210", "20240210", "10", "4")]
+
+    @pytest.mark.parametrize("value", [None, "SOME_OTHER_PROGRAMME"])
+    def test_grant_rows_without_the_confirmation_stop_the_run(self, monkeypatch, value):
+        from src import config as app_config
+        monkeypatch.setattr(app_config, "STOCK_AWARD_PROGRAMME", value, raising=False)
+        with pytest.raises(BaseException, match="STOCK_AWARD_PROGRAMME"):
+            self._run_pipeline(
+                tax_year=2023, positions_start_data=[],
+                positions_end_data=[position_row(ACCOUNT, ISIN, "10", "40", price="4")],
+                grants_data=self.GRANT)
+
+    def test_an_empty_grants_file_needs_no_confirmation(self, monkeypatch):
+        from src import config as app_config
+        monkeypatch.setattr(app_config, "STOCK_AWARD_PROGRAMME", None, raising=False)
+        out = self._run_pipeline(tax_year=2023, positions_start_data=[],
+                                 positions_end_data=[], grants_data=[])
+        assert not out.realized_gains_losses
+
+
 class TestTheAnlageSoAmountsReachTheRunsOutput(FifoTestCaseBase):
     """The receipt and the return are not declared (issue #76), so what the reader is told
     to enter is the whole of the engine's Anlage SO output for an award. Asserted on the

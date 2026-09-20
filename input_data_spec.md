@@ -312,7 +312,9 @@ settles it.
   treatment below is what `reference/tax-law/estg-22-nr3-leistungen.md` establishes by applying the
   law to that programme's terms. **The export does not name the programme.** The parser admits only
   the three row descriptions that programme writes and refuses anything else, but a different
-  programme writing the same three could not be told apart — a stated limit, not a guarded one.
+  programme writing the same three could not be told apart from the text. That the rows came under
+  Refer-A-Friend is therefore confirmed by the user, once, as `STOCK_AWARD_PROGRAMME =
+  "IBKR_REFER_A_FRIEND"` in `src/config.py`; grant rows without it stop the run.
 - **Legal ground, for that programme:** the award is a *Leistung* under § 22 Nr. 3 EStG, not
   Kapitalertrag ([GT-ESTG20-063]). Zufluss falls on the booking into the account: the holding period
   and the reclaim condition do not postpone it ([GT-ESTG20-064] — Reading B of the open question Q17:
@@ -377,7 +379,7 @@ reversal left ([GT-ESTG20-066]).
 
 | Fact | Where it comes from | If absent or contradictory |
 |---|---|---|
-| That the row belongs to the supported programme | `ActivityDescription`, matched whole | Any other text: run stops, all rows named. *Not checkable:* another programme writing the same text |
+| That the row belongs to the supported programme | `ActivityDescription`, matched whole, **and** the user's confirmation `config.STOCK_AWARD_PROGRAMME` — the export does not name the programme, so the text alone cannot establish it | Any other text: run stops, all rows named. Rows present and the confirmation unset or different: run stops and says what to set |
 | Which account and instrument | `ClientAccountID`; `ISIN` / `Conid` / `Symbol` | Resolved like any other instrument; an unresolvable one stops the run |
 | Acquisition date (= day of Zufluss) | award row `AwardDate` | Unparseable: run stops |
 | Units | `Quantity` (absolute value; the row kind carries the direction) | Zero: run stops |
@@ -389,7 +391,8 @@ reversal left ([GT-ESTG20-066]).
 | A complete window | one Grants file per year, as for Transfers | A hole in a supplied window: run stops (`GRANTS_WINDOW_INCOMPLETE`) |
 | Destination | Anlage SO for receipt and return (printed, not declared — issue #76); Anlage KAP for the later sale | — |
 
-Nothing here is asked of the user beyond the export, and nothing is defaulted.
+One fact is asked of the user beyond the export — the programme confirmation in the first row,
+stated once in config — and nothing is defaulted.
 
 **Column Specifications** — `GRANTS_COLUMNS` in `src/parsers/column_validator.py` declares the
 export's full header so that a column appearing or disappearing is caught at the boundary.

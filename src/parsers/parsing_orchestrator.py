@@ -39,7 +39,7 @@ from .corporate_actions_parser import parse_corporate_actions_csv
 from .cash_balance_parser import parse_cash_balance_csv
 from .options_eae_parser import parse_options_eae_csv
 from .transfers_parser import parse_transfers_csv
-from .grants_parser import parse_grants_csv
+from .grants_parser import parse_grants_csv, SUPPORTED_STOCK_AWARD_PROGRAMME
 from .domain_event_factory import DomainEventFactory
 # NEW IMPORTS
 from src.processing.option_trade_linker import perform_option_trade_linking
@@ -374,6 +374,19 @@ class ParsingOrchestrator:
             self.grants_file_supplied = True
             self.raw_grants = parse_grants_csv(grants_file)
             logger.info(f"Loaded {len(self.raw_grants)} raw stock-award records.")
+            confirmed = getattr(global_config, "STOCK_AWARD_PROGRAMME", None)
+            if self.raw_grants and confirmed != SUPPORTED_STOCK_AWARD_PROGRAMME:
+                # The row descriptions are matched whole, but the export does not name the
+                # programme, so the text cannot prove which terms governed the award. That
+                # fact is the user's to state, once, in config.
+                raise DataIntegrityError(
+                    f"The Grants export holds {len(self.raw_grants)} row(s), and config."
+                    f"STOCK_AWARD_PROGRAMME is {confirmed!r}. The export does not say which "
+                    f"programme awarded the shares, and their tax treatment follows from that "
+                    f"programme's terms ([GT-ESTG20-063]). The only programme supported is "
+                    f"Interactive Brokers' Refer-A-Friend award: if every row came under it, "
+                    f"set STOCK_AWARD_PROGRAMME = {SUPPORTED_STOCK_AWARD_PROGRAMME!r} in "
+                    f"src/config.py. If any did not, this engine cannot declare them.")
         for mark_year, mark_file in sorted((positions_mark_files or {}).items()):
             self.raw_positions_marks[mark_year] = parse_positions_csv(mark_file)
             logger.info(f"Loaded {len(self.raw_positions_marks[mark_year])} raw position records "
