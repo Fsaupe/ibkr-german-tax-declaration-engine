@@ -391,77 +391,6 @@ def _report_multi_account_limitations(accounts, data_gap_collector,
         logger.warning("[%s] %s: %s", MULTI_ACCOUNT_LIMITATIONS, subject, detail)
 
 
-STOCK_AWARD_REVERSAL_ORDER_ASSUMED = "STOCK_AWARD_REVERSAL_ORDER_ASSUMED"
-
-
-def _report_reversal_ordering_assumption(
-        events, asset_resolver, data_gap_collector, tax_year_end_date_obj) -> None:
-    """Note when an award reversal and a disposal of the same security fall on one day.
-
-    No Tier 1 or Tier 2 source fixes which of a same-day reversal and disposal applies first
-    (Q18, [GT-ESTG20-066]): § 20 Abs. 4 Satz 7 FIFO ([GT-ESTG20-012]) orders the lots of a
-    single disposal, not a disposal against a same-day non-disposal event, and the award
-    report carries no intra-day id. **But the order is figure-neutral here by construction.**
-    A reversal removes its own `(account, award_date)` lot at that lot's own cost and refuses
-    to take more than the lot holds; a disposal consumes FIFO. So when a same-day reversal
-    and disposal both complete, the declared figure is the same in either order -- the only
-    order-dependent outcome is that a disposal-first sequence aborts on over-reversal where a
-    reversal-first sequence completes. The engine applies the reversal first, which completes
-    wherever the input is consistent. Nothing is chosen between two figures.
-
-    This records the coincidence so a filer can eyeball an unusual same-day pair; it is not a
-    grey-area figure disclosure. Checked across every processed year; zero incidence today.
-
-    The disposal side matched is `TRADE_SELL_LONG`, how awarded shares are actually disposed
-    of. A non-sell disposal of the awarded stock (a cash merger) shares the reversal's sort
-    band rather than following it, and is figure-neutral for the same reason, so it is not
-    matched here -- recorded, per CLAUDE.md's data-import rule, not built against a shape the
-    data never shows.
-    """
-    reversal_days: set = set()
-    disposal_days: set = set()
-    for e in events:
-        parsed = parse_ibkr_date(e.event_date)
-        if not parsed or parsed > tax_year_end_date_obj:
-            continue
-        # The collision is per (account, asset): FIFO and lot consumption are per Depot
-        # ([GT-ESTG20-013]), so a reversal in one account and a disposal in another cannot
-        # order against each other -- their ledgers never touch. Keying without the account
-        # would raise a false warning on two independent accounts.
-        key = (account_key(e.account_id), e.asset_internal_id, e.event_date)
-        if e.event_type == FinancialEventType.STOCK_AWARD_REVERSED:
-            reversal_days.add(key)
-        elif e.event_type == FinancialEventType.TRADE_SELL_LONG:
-            disposal_days.add(key)
-    # Order by (day, stable name, account), never by asset_internal_id -- that is a per-run
-    # uuid4, so sorting on it reorders the warning lines run to run and breaks byte-parity
-    # when two collisions fall on distinct assets. The classification key and the account are
-    # both derived from stable identities.
-    collisions = []
-    for account, asset_id, day in reversal_days & disposal_days:
-        asset = asset_resolver.get_asset_by_id(asset_id)
-        name = asset.get_classification_key() if asset else str(asset_id)
-        collisions.append((day, name, account))
-    for day, name, account in sorted(collisions):
-        subject = f"{name} am {day} [Konto {account}]"
-        detail = (
-            "On the same day, a reversal of awarded shares (Stock Award Reversal) and a "
-            "disposal of the same share coincided. No Tier 1 or Tier 2 source fixes which "
-            "applies first (Q18, GT-ESTG20-066), but the order does not change a declared "
-            "figure: the reversal removes its own award lot at that lot's own cost and the "
-            "disposal consumes FIFO, so a completed run gives the same result either way -- "
-            "a disposal-first order would only ever abort on over-reversal, never yield a "
-            "different figure. The engine applied the reversal first. Recorded so an unusual "
-            "same-day pair can be eyeballed, not because a figure is in doubt."
-        )
-        if data_gap_collector is not None:
-            data_gap_collector.record(
-                code=STOCK_AWARD_REVERSAL_ORDER_ASSUMED, subject=subject, detail=detail,
-                severity=GapSeverity.WARNING)
-        else:
-            logger.warning("[%s] %s: %s", STOCK_AWARD_REVERSAL_ORDER_ASSUMED, subject, detail)
-
-
 TRANSFERS_WINDOW_INCOMPLETE = "TRANSFERS_WINDOW_INCOMPLETE"
 
 
@@ -929,11 +858,6 @@ def run_main_calculations(
         grants_file_supplied, grants_missing_years, data_gap_collector)
     _report_multi_account_limitations(
         _known_accounts, data_gap_collector, transfers_file_supplied)
-    # A same-day award reversal and disposal are ordered reversal-first by the sort band; the
-    # order is figure-neutral (no source fixes it, but it cannot change a completed figure --
-    # see Q18 / GT-ESTG20-066), so this only surfaces the unusual same-day pair.
-    _report_reversal_ordering_assumption(
-        financial_events, asset_resolver, data_gap_collector, tax_year_end_date_obj)
 
     logger.info("Building unified historical replay stream (securities, mergers, currencies)...")
     for asset_id, asset_obj in asset_resolver.assets_by_internal_id.items():

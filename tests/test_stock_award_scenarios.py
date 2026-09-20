@@ -441,89 +441,48 @@ def test_an_in_year_reversal_reports_the_unsettled_return_treatment():
     assert "Q20" in gaps[0].detail
 
 
-def test_a_same_day_reversal_and_sale_apply_reversal_first_and_warn():
-    """Q18 / [GT-ESTG20-066]: the order of a same-day award reversal and a disposal of the
-    same security is not fixed by law. The reversal takes the lot-delivering band, so it is
-    applied first. The intra-day order is figure-neutral -- a reversal removes its own lot at
-    its own cost and refuses over-reversal -- so the collision is surfaced as a WARNING to
-    flag an unusual same-day pair, not because a figure is in doubt.
+class TestASameDayReturnAndSale(FifoTestCaseBase):
+    """[GT-ESTG20-066]: no rule of law orders a same-day return against a sale, and none is
+    needed. A return takes units of ITS OWN award at that award's cost ([GT-ESTG20-067]);
+    the shares handed back cannot also be the shares sold. So the sale is measured against
+    what is left, and the result may not depend on how the input happens to be ordered."""
 
-    Red on the base: the detection did not exist, so a reversal and a sale of one security
-    sharing a day recorded nothing. Asserted on the collector directly, as the receipt gap
-    is -- the harness does not expose WARNING gaps.
-    """
-    from types import SimpleNamespace
-    from datetime import date
-    from src.domain.enums import FinancialEventType as T
-    from src.processing.data_gaps import DataGapCollector, GapSeverity
-    from src.engine.calculation_engine import (
-        _report_reversal_ordering_assumption, STOCK_AWARD_REVERSAL_ORDER_ASSUMED)
+    @pytest.mark.parametrize("historical", [False, True])
+    @pytest.mark.parametrize("reverse_rows", [False, True])
+    def test_the_sale_is_measured_against_what_the_return_left(self, historical, reverse_rows):
+        # Award 10 @4, buy 10 @9, then on ONE day hand back 4 and sell 8 @10.
+        # The award lot is left with 6 @4, so FIFO sells 6 @4 + 2 @9 = 42.
+        # The 8 still held (@9 = 72) are sold later; asserting them catches a return
+        # that took its units from the wrong lot.
+        y = 2022 if historical else 2023
+        grants = [
+            grant_row("Stock Award Grant for Cash Deposit",
+                      f"{y}0102", f"{y}0102", f"{y + 1}0102", "10", "4"),
+            grant_row("Stock Award Return for Cash Withdrawal",
+                      f"{y}0601", f"{y}0102", f"{y + 1}0102", "-4", "4"),
+        ]
+        trades = [
+            trade_row(ACCOUNT, ISIN, f"{y}-02-01", "10", "9", "BUY", "O", "100"),
+            trade_row(ACCOUNT, ISIN, f"{y}-06-01", "-8", "10", "SELL", "C", "200"),
+            trade_row(ACCOUNT, ISIN, "2023-09-01", "-8", "10", "SELL", "C", "300"),
+        ]
+        if reverse_rows:
+            grants.reverse()
+            trades.reverse()
+        out = self._run_pipeline(
+            tax_year=2023,
+            positions_start_data=(
+                [position_row(ACCOUNT, ISIN, "8", "72", price="9")] if historical else []),
+            positions_end_data=[], grants_data=grants, trades_data=trades)
 
-    def ev(kind, day, asset="A1", account="U_ONE"):
-        return SimpleNamespace(event_type=kind, event_date=day, asset_internal_id=asset,
-                               account_id=account)
-
-    resolver = SimpleNamespace(get_asset_by_id=lambda _id: None)
-    tax_year_end = date(2023, 12, 31)
-
-    # Collision: a reversal and a sale of the same security in one account on one day -> one
-    # WARNING.
-    collector = DataGapCollector()
-    _report_reversal_ordering_assumption(
-        [ev(T.STOCK_AWARD_REVERSED, "2023-06-01"),
-         ev(T.TRADE_SELL_LONG, "2023-06-01")],
-        resolver, collector, tax_year_end)
-    gaps = [g for g in collector.gaps if g.code == STOCK_AWARD_REVERSAL_ORDER_ASSUMED]
-    assert len(gaps) == 1, "the collision must reach the report"
-    assert gaps[0].severity is GapSeverity.WARNING
-    assert "2023-06-01" in gaps[0].subject
-
-    # No collision across accounts: a reversal in one account and a sale in another cannot
-    # order against each other -- per-Depot FIFO ([GT-ESTG20-013]) keeps their ledgers apart.
-    cross = DataGapCollector()
-    _report_reversal_ordering_assumption(
-        [ev(T.STOCK_AWARD_REVERSED, "2023-06-01", account="U_A"),
-         ev(T.TRADE_SELL_LONG, "2023-06-01", account="U_B")],
-        resolver, cross, tax_year_end)
-    assert not [g for g in cross.gaps if g.code == STOCK_AWARD_REVERSAL_ORDER_ASSUMED], \
-        "independent account ledgers cannot have a FIFO collision"
-
-    # No collision: a different day, or a reversal of a different security -> no WARNING.
-    quiet = DataGapCollector()
-    _report_reversal_ordering_assumption(
-        [ev(T.STOCK_AWARD_REVERSED, "2023-06-01"),
-         ev(T.TRADE_SELL_LONG, "2023-06-02"),
-         ev(T.STOCK_AWARD_REVERSED, "2023-07-01", asset="A2")],
-        resolver, quiet, tax_year_end)
-    assert not [g for g in quiet.gaps if g.code == STOCK_AWARD_REVERSAL_ORDER_ASSUMED], \
-        "the order matters only when both fall on one day for one security"
-
-    # After the tax year: not processed, so not warned.
-    later = DataGapCollector()
-    _report_reversal_ordering_assumption(
-        [ev(T.STOCK_AWARD_REVERSED, "2024-06-01"),
-         ev(T.TRADE_SELL_LONG, "2024-06-01")],
-        resolver, later, tax_year_end)
-    assert not [g for g in later.gaps if g.code == STOCK_AWARD_REVERSAL_ORDER_ASSUMED]
-
-    # Determinism: two collisions on one day, ordered by the STABLE classification key,
-    # not by asset_internal_id (a per-run uuid4). The asset whose id sorts first is given
-    # the key that sorts LAST, so an id-keyed sort would reverse these two lines.
-    keys = {"z-id": "AAA", "a-id": "ZZZ"}
-    keyed_resolver = SimpleNamespace(
-        get_asset_by_id=lambda _id: SimpleNamespace(
-            get_classification_key=lambda _id=_id: keys[_id]))
-    ordered = DataGapCollector()
-    _report_reversal_ordering_assumption(
-        [ev(T.STOCK_AWARD_REVERSED, "2023-06-01", asset="a-id"),
-         ev(T.TRADE_SELL_LONG, "2023-06-01", asset="a-id"),
-         ev(T.STOCK_AWARD_REVERSED, "2023-06-01", asset="z-id"),
-         ev(T.TRADE_SELL_LONG, "2023-06-01", asset="z-id")],
-        keyed_resolver, ordered, tax_year_end)
-    subjects = [g.subject for g in ordered.gaps
-                if g.code == STOCK_AWARD_REVERSAL_ORDER_ASSUMED]
-    assert subjects == ["AAA am 2023-06-01 [Konto U_ONE]", "ZZZ am 2023-06-01 [Konto U_ONE]"], (
-        "warnings must order by the stable classification key, not the per-run asset id")
+        sales = out.realized_gains_losses
+        later = [r for r in sales if r.realization_date == "2023-09-01"]
+        assert sum(r.total_cost_basis_eur for r in later) == Decimal("72")
+        if not historical:
+            same_day = [r for r in sales if r.realization_date == "2023-06-01"]
+            assert sum(r.total_cost_basis_eur for r in same_day) == Decimal("42")
+        assert not [g for g in out.data_gaps if "REVERSAL_ORDER" in g.code], (
+            "a scheduling convention is not something for the reader to assess")
 
 
 def test_a_grants_window_hole_stops_the_run_unit():

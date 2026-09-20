@@ -74,13 +74,15 @@ def get_event_sort_key(event: FinancialEvent, asset_resolver: AssetResolver) -> 
         # although it changes nothing, so that all three kinds of one export sort the same
         # way and a future kind that DOES touch the ledger inherits the safe order.
         #
-        # A reversal here is therefore applied BEFORE a same-day disposal of the same share.
-        # Which of the two comes first is not fixed by any source -- FIFO orders a disposal's
-        # own lots, not a disposal against a same-day non-disposal event -- but the order is
-        # figure-neutral (Q18, [GT-ESTG20-066]): a reversal removes its own lot at its own
-        # cost and refuses over-reversal, so a completed run gives the same figure either way,
-        # or aborts on inconsistent input. The calculation engine records the collision
-        # (STOCK_AWARD_REVERSAL_ORDER_ASSUMED) so an unusual same-day pair is visible.
+        # A return here is therefore applied BEFORE a same-day disposal of the same share,
+        # and that is the only order consistent with both having happened: a return takes
+        # units of its own award at that award's cost ([GT-ESTG20-067]), and shares handed
+        # back cannot also be the shares sold, so the sale is measured against what is
+        # left. No rule of law orders the two ([GT-ESTG20-066]) and none is needed. The
+        # other order could never give a second figure -- a lot's unit cost is uniform, so
+        # the sale would cost the same -- it could only leave the return short of units
+        # and stop the run. Pinned, under both input row orders, by
+        # `TestASameDayReturnAndSale` in tests/test_stock_award_scenarios.py.
         #
         # The band decides this only because the event carries no `ibkr_transaction_id`:
         # the export's SerialNumber is blank on every row, so there is none to carry, and
