@@ -379,6 +379,43 @@ def test_a_vesting_and_a_reversal_report_no_receipt():
     assert not [g for g in collector.gaps if g.code == STOCK_AWARD_RECEIPT_NOT_DECLARED]
 
 
+def test_an_in_year_reversal_reports_the_unsettled_return_treatment():
+    """A reversal dated inside the processed year returns a taxed § 22 Nr. 3 benefit, whose
+    return treatment is unsettled ([GT-ESTG20-067], Q20). The engine does not declare a
+    negative Anlage SO income (issue #76), so it records a WARNING naming the open point
+    rather than silently producing a figure it cannot source. Asserted on the collector, as
+    the receipt gap is: it is a WARNING the harness does not surface.
+
+    Red on the base: the processor recorded nothing for a reversal, so an in-year clawback
+    left the § 22 Nr. 3 return consequence silent."""
+    from decimal import Decimal as D
+    from src.domain.enums import FinancialEventType as T
+    from src.domain.events import StockAwardEvent
+    from src.engine.event_processors.stock_award_processor import (
+        StockAwardProcessor, STOCK_AWARD_RETURN_TREATMENT_UNSETTLED)
+    from src.processing.data_gaps import DataGapCollector, GapSeverity
+    from tests.test_stock_award_lots import _ledger, ASSET_ID
+
+    ledger = _ledger()
+    collector = DataGapCollector()
+    award = StockAwardEvent(ASSET_ID, "2023-01-02",
+                            event_type=T.STOCK_AWARD_GRANTED, award_date="2023-01-02",
+                            quantity=D("10"), unit_price_foreign=D("4"), currency="EUR")
+    award.unit_cost_basis_eur = D("4")
+    ledger.add_lot_for_stock_award(award)
+
+    reversal = StockAwardEvent(ASSET_ID, "2023-03-01",
+                               event_type=T.STOCK_AWARD_REVERSED, award_date="2023-01-02",
+                               quantity=D("4"), unit_price_foreign=D("4"), currency="EUR")
+    reversal.unit_cost_basis_eur = D("4")
+    StockAwardProcessor().process(reversal, ledger, {'data_gap_collector': collector})
+
+    gaps = [g for g in collector.gaps if g.code == STOCK_AWARD_RETURN_TREATMENT_UNSETTLED]
+    assert len(gaps) == 1, "an in-year clawback must flag the unsettled § 22 Nr. 3 return"
+    assert gaps[0].severity is GapSeverity.WARNING
+    assert "Q20" in gaps[0].detail
+
+
 def test_a_same_day_reversal_and_sale_apply_reversal_first_and_warn():
     """Q18 / [GT-ESTG20-066]: the order of a same-day award reversal and a disposal of the
     same security is not fixed by law. The reversal takes the lot-delivering band, so it is

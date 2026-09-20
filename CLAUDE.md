@@ -235,8 +235,10 @@ run.
   `ProcessingOutput`, which does not carry the data-gap collector, and it returns before the report
   renders — so a `GapSeverity.WARNING` recorded during a run is invisible to a scenario test.
   Deleting the call site that records one (the undeclared-receipt gap, the same-day
-  reversal/disposal ordering gap) leaves the suite green; only the recording function itself is
-  unit-tested, by calling it directly. Probe the call site by mutation.
+  reversal/disposal ordering gap, the unsettled-return gap on an in-year reversal) leaves the suite
+  green; only the recording function itself is unit-tested, by calling it directly (through
+  `process()` for the award/reversal gaps, which does reach the call site). Probe the call site by
+  mutation.
 
 Add to this list whenever a probe finds a site the suite cannot observe.
 

@@ -39,6 +39,7 @@ from .base_processor import EventProcessor
 logger = logging.getLogger(__name__)
 
 STOCK_AWARD_RECEIPT_NOT_DECLARED = "STOCK_AWARD_RECEIPT_NOT_DECLARED"
+STOCK_AWARD_RETURN_TREATMENT_UNSETTLED = "STOCK_AWARD_RETURN_TREATMENT_UNSETTLED"
 
 
 class StockAwardProcessor(EventProcessor):
@@ -72,6 +73,8 @@ class StockAwardProcessor(EventProcessor):
 
         if event.event_type == FinancialEventType.STOCK_AWARD_GRANTED:
             self._record_undeclared_receipt(event, context)
+        elif event.event_type == FinancialEventType.STOCK_AWARD_REVERSED:
+            self._record_unsettled_return(event, context)
 
         # No RealizedGainLoss from any of the three. See the module docstring: the
         # receipt is Anlage SO income this engine does not yet declare, and the effect on
@@ -126,5 +129,43 @@ class StockAwardProcessor(EventProcessor):
             f"out of scope for the same reason as the § 23 Freigrenze ([GT-ESTG23-009]), "
             f"a per-Kalenderjahr total across all Leistungen that one portfolio cannot "
             f"establish.",
+            severity=GapSeverity.WARNING,
+        )
+
+    @staticmethod
+    def _record_unsettled_return(event: StockAwardEvent,
+                                 context: Dict[str, Any]) -> None:
+        """Say, in the report, that a taxed benefit was returned this year and the § 22
+        Nr. 3 consequence of the return is not settled.
+
+        The disposal side is safe: the returned shares leave the holding, so a later
+        disposal is measured only against the shares retained, at their own cost -- which
+        no reading disturbs. What is unsettled ([GT-ESTG20-067], Q20) is the § 22 Nr. 3
+        income consequence of the return: a negative Leistungseinnahme in the year of
+        return, or a retroactive reduction of the receipt. Only Tier 4/5 sources address
+        it, so the engine does not declare it -- as it does not declare the receipt itself
+        (issue #76) -- and names it here so the reader handles the Anlage SO side.
+
+        WARNING and not FAIL_FAST, for the reason `_record_undeclared_receipt` gives: the
+        declared Kapitalertrag figures are correct under the reading applied; only the
+        undeclared Anlage SO side is open. This fires only for a reversal dated inside the
+        processed year; a pre-tax-year reversal is applied by the historical replay, whose
+        receipt and return both fell in a year that is not a result year.
+        """
+        collector = context.get('data_gap_collector')
+        if collector is None:
+            return
+        collector.record(
+            STOCK_AWARD_RETURN_TREATMENT_UNSETTLED,
+            f"Anlage SO (Einkuenfte aus Leistungen), {event.event_date}",
+            f"Awarded shares taxed as a § 22 Nr. 3 receipt ([GT-ESTG20-063]) were returned "
+            f"on {event.event_date} because the award's condition failed ({event.quantity} "
+            f"units of the award of {event.award_date}). The disposal side is handled -- the "
+            f"returned units leave the holding and a later disposal is measured only against "
+            f"the shares retained. What is NOT settled ([GT-ESTG20-067], Q20) is the § 22 "
+            f"Nr. 3 consequence of the return: a negative Leistung in this year, or a "
+            f"reduction of the original receipt. No Tier 1/2 source settles it, so the engine "
+            f"does not declare it (issue #76). Determine the Anlage SO effect of the return "
+            f"yourself; ignoring it may overstate the year's income.",
             severity=GapSeverity.WARNING,
         )
