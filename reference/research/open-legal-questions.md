@@ -349,9 +349,13 @@ remains of the awarded lot.
 **Against it:** it can leave the reversal without enough of its own lot to remove, an outcome the
 clawback's terms do not contemplate; and it too has no source on the event ordering.
 
-**What the choice moves.** Only where the awarded lot is within the disposal's FIFO reach on the
-same day: the two readings measure the disposal against different lots' Anschaffungskosten, so the
-declared gain moves. The direction depends on the awarded lot's basis relative to the others.
+**What the choice moves -- nothing, in a completed run.** Where the awarded lot holds enough units
+for both the reversal and the same-day disposal, the disposal consumes FIFO oldest-first under either
+order and the reversal removes its own lot at its own cost, so the declared figure is identical.
+Where it does not, disposal-first (Reading B) leaves the reversal short and the run aborts, while
+reversal-first (Reading A) completes. The two readings therefore never yield two different declared
+figures -- the same figure, or a figure versus an abort on inconsistent input. This is measured, not
+assumed; the working is in the [GT-ESTG20-066] map row.
 
 **Two sources of the uncertainty, kept apart.** One is evidential: the award report carries no
 intra-day identifier, so where a reversal and a disposal fall on one day the actual sequence is
@@ -361,8 +365,9 @@ not order a disposal against a same-day event that is not a disposal, so even a 
 would leave the tax order unfixed. Only the second is the open question of law; the first is why it
 cannot be sidestepped by reading the sequence off the export.
 
-Which reading is adopted, on what grey-area conditions, and with what disclosure and incidence, is
-an implementation act and is recorded against [GT-ESTG20-066] in the map, not here.
+Because the order is figure-neutral, no filing position turns on it. Which order is applied, how it
+is disclosed, and its incidence are implementation state, recorded against [GT-ESTG20-066] in the
+map, not here.
 
 ## Q16 -- Anschaffungskosten from a receipt the Freigrenze left untaxed
 
