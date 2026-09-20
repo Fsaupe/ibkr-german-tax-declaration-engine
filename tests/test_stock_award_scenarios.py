@@ -1,9 +1,12 @@
 """Awarded shares, end to end, through the real pipeline.
 
-legal_basis: [GT-ESTG20-064] puts Zufluss on the booking -- a condition under which the
-grantor may later reclaim the shares does not defer it, only a disposal being rechtlich
-unmoeglich would; [GT-ESTG20-065] makes the value brought to tax then the
-Anschaffungskosten on a later disposal. Both in reference/tax-law/estg-22-nr3-leistungen.md.
+legal_basis: established for ONE programme, Interactive Brokers' Refer-A-Friend award
+([GT-ESTG20-063]). [GT-ESTG20-064] puts Zufluss on the booking -- the holding period and
+the reclaim condition do not defer it, only a disposal being rechtlich unmoeglich would;
+[GT-ESTG20-065] makes that day's value the Anschaffungskosten on a later disposal;
+[GT-ESTG20-067] makes a return a negative Einnahme of its own year at that original value;
+[GT-ESTG20-066] says no rule of law orders a same-day return against a sale. All in
+reference/tax-law/estg-22-nr3-leistungen.md.
 
 **What the unit tests beside this file cannot see.** `test_stock_award_lots.py` calls the
 three `FifoLedger` methods directly, so it stays green while the events never reach the
@@ -19,6 +22,10 @@ running this file:
 | historical bucket entry | yes -- 2 of 4 red |
 | EUR conversion in enrichment | yes -- 4 of 4 red |
 | parser's unclassified-kind refusal | yes |
+| parser matching a substring instead of the whole description | yes -- 3 of 3 red |
+| receipt disclosure call site | yes -- 2 red (processor and pipeline) |
+| return disclosure call site / return priced at the return row's price | yes -- 1 red each |
+| a return forced to sort after the day's trades | yes -- 4 of 4 red, each a refusal, never a second figure |
 | factory's zero-quantity guard | yes |
 | **sort-key band in `get_event_sort_key`** | **no -- and the suite cannot** |
 | award dated on `ReportDate` instead of `AwardDate` | yes -- 1 red (acquisition date) |
@@ -344,8 +351,8 @@ def test_an_award_in_the_tax_year_reports_the_receipt_it_does_not_declare():
     reduces a figure and dropping the half that adds one is understatement, so the
     omission has to reach the report rather than only the README.
 
-    Asserted on the collector rather than through the scenario harness: the gap is a
-    WARNING, so the run completes and the harness returns before the report is rendered.
+    Asserted here on the processor; `TestTheAnlageSoAmountsReachTheRunsOutput` asserts the
+    same line on the pipeline's output, which carries WARNING gaps.
     """
     from decimal import Decimal as D
     from src.domain.enums import FinancialEventType as T
@@ -443,6 +450,54 @@ def test_a_return_in_the_tax_year_reports_the_negative_receipt_it_does_not_decla
     assert "36" not in gaps[0].detail, "never the return-day value"
     assert "Anlage SO" in gaps[0].subject and "2023" in gaps[0].subject
     assert "unsettled" not in gaps[0].detail.lower() and "Q20" not in gaps[0].detail
+
+
+class TestTheAnlageSoAmountsReachTheRunsOutput(FifoTestCaseBase):
+    """The receipt and the return are not declared (issue #76), so what the reader is told
+    to enter is the whole of the engine's Anlage SO output for an award. Asserted on the
+    pipeline's own output, where a deleted call site shows, not only on the processor."""
+
+    def _award_gaps(self, out):
+        return {g.code: g for g in out.data_gaps if g.code.startswith("STOCK_AWARD_")}
+
+    def test_an_award_and_a_return_in_the_year_each_state_amount_year_and_destination(self):
+        # 10 awarded @4 -> receipt 40.00. 4 handed back; the return row says 9, the award
+        # was brought to account at 4 -> negative Einnahme 16.00, never 36.
+        out = self._run_pipeline(
+            tax_year=2023, positions_start_data=[],
+            positions_end_data=[position_row(ACCOUNT, ISIN, "6", "24", price="4")],
+            grants_data=[
+                grant_row("Stock Award Grant for Cash Deposit",
+                          "20230210", "20230210", "20240210", "10", "4"),
+                grant_row("Stock Award Return for Cash Withdrawal",
+                          "20230601", "20230210", "20240210", "-4", "9"),
+            ])
+        gaps = self._award_gaps(out)
+        assert set(gaps) == {"STOCK_AWARD_RECEIPT_NOT_DECLARED",
+                             "STOCK_AWARD_RETURN_NOT_DECLARED"}
+        receipt, returned = (gaps["STOCK_AWARD_RECEIPT_NOT_DECLARED"],
+                             gaps["STOCK_AWARD_RETURN_NOT_DECLARED"])
+        assert "EUR 40.00" in receipt.detail and "Anlage SO" in receipt.subject
+        assert "2023-02-10" in receipt.subject
+        assert "EUR 16.00" in returned.detail and "36" not in returned.detail
+        assert "2023-06-01" in returned.subject and "Anlage SO" in returned.subject
+
+    def test_an_award_and_a_return_before_the_year_state_nothing_but_still_set_the_basis(self):
+        # Their Einnahmen belonged to 2022, which is not the year declared. What they leave
+        # behind is the lot: 6 @4 = 24, against which the 2023 sale is measured.
+        out = self._run_pipeline(
+            tax_year=2023,
+            positions_start_data=[position_row(ACCOUNT, ISIN, "6", "24", price="4")],
+            positions_end_data=[],
+            grants_data=[
+                grant_row("Stock Award Grant for Cash Deposit",
+                          "20220210", "20220210", "20230210", "10", "4"),
+                grant_row("Stock Award Return for Cash Withdrawal",
+                          "20220601", "20220210", "20230210", "-4", "9"),
+            ],
+            trades_data=[trade_row(ACCOUNT, ISIN, "2023-09-01", "-6", "10", "SELL", "C", "300")])
+        assert not self._award_gaps(out)
+        assert sum(r.total_cost_basis_eur for r in out.realized_gains_losses) == Decimal("24")
 
 
 class TestASameDayReturnAndSale(FifoTestCaseBase):
@@ -611,10 +666,12 @@ class TestGrantTransferInteractions(FifoTestCaseBase):
         assert basis == Decimal("40"), "grant->transfer->sale must hold whatever the ticker"
 
     def test_a_sub_freigrenze_award_still_carries_full_basis(self):
-        """F3 / Q16, Reading A (taxpayer's choice 2026-09-20): an award whose receipt value
-        stays under the 256-euro Freigrenze still supplies its full award-day value as the
-        basis of a later disposal. Not red-first -- the engine does not apply the Freigrenze,
-        so this pins the chosen reading rather than catching a regression."""
+        """[GT-ESTG20-065]: an award whose receipt value stays under the 256-euro Freigrenze
+        still supplies its full award-day value as the basis of a later disposal -- the
+        shares are acquired for consideration, and the Freigrenze exempts the income without
+        turning that consideration into a gift (BMF 06.03.2025 Rn. 75, BMF 14.05.2025 Rz. 87).
+        Not red-first -- the engine never applied the Freigrenze to the basis, so this pins
+        the rule rather than catching a regression."""
         out = self._run_pipeline(
             tax_year=2023,
             positions_start_data=[], positions_end_data=[],

@@ -215,13 +215,12 @@ run.
   transaction id, and the secondary key sorts an empty id before every trade's id, so a
   grant or a reversal stays ahead of same-day *trades* with or without the branch. The
   branch's only real effect is precedence against same-day *corporate actions* (both share
-  the lot-delivering band). Even there the figure does not move: a reversal removes its own
-  `(account, award_date)` lot at that lot's own cost and refuses over-reversal, so a same-day
-  reversal and disposal that both complete give the same figure in either order -- the only
-  alternative is the run aborting on over-reversal ([GT-ESTG20-066]). The still-blind case is
-  therefore award-versus-corporate-action *ordering* of a kind that is not itself a disposal;
-  probe it by mutation if such a kind is ever added, but it is figure-neutral for the kinds
-  present today.
+  the lot-delivering band). Even there the figure does not move: a return removes its own
+  `(account, award_date)` lot at that lot's own cost and refuses to take more than it holds, so
+  the opposite order cannot produce a second figure, only stop the run -- which is what
+  `TestASameDayReturnAndSale` shows when a return is forced after the day's trades. The
+  still-blind case is therefore award-versus-corporate-action *ordering* of a kind that is not
+  itself a disposal; probe it by mutation if such a kind is ever added.
 - **Which date column an event is built from, where the export's columns agree.** Dating a
   stock award on the broker's report date instead of the award date moves only the
   acquisition date under a start-of-year snapshot -- quantity, cost basis, proceeds and gain
@@ -230,15 +229,6 @@ run.
   now uses a fixture where they differ and asserts the acquisition date, so this mutation is
   caught. Kept here because the coincidence in the real data is what made it invisible, and
   a fixture that lets the two columns agree would hide it again.
-
-- **A WARNING data gap's emission from a full run.** The test harness (`_run_pipeline`) returns
-  `ProcessingOutput`, which does not carry the data-gap collector, and it returns before the report
-  renders — so a `GapSeverity.WARNING` recorded during a run is invisible to a scenario test.
-  Deleting the call site that records one (the undeclared-receipt gap, the same-day
-  reversal/disposal ordering gap, the unsettled-return gap on an in-year reversal) leaves the suite
-  green; only the recording function itself is unit-tested, by calling it directly (through
-  `process()` for the award/reversal gaps, which does reach the call site). Probe the call site by
-  mutation.
 
 Add to this list whenever a probe finds a site the suite cannot observe.
 
