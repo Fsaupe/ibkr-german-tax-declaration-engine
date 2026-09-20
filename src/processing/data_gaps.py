@@ -41,7 +41,6 @@ The conditions routed through this channel, as of 2026-09-19:
     MULTI_ACCOUNT_LIMITATIONS                          WARNING
     REPLAY_MARK_UNCONFIRMED_START                      WARNING
     STOCK_AWARD_RECEIPT_NOT_DECLARED                   WARNING
-    STOCK_AWARD_RETURN_NOT_DECLARED                    WARNING
     VORABPAUSCHALE_DECLARATION_DIVERGES                WARNING
     VORABPAUSCHALE_PRICE_ISSUER_NAV                    WARNING
     VORABPAUSCHALE_PRICE_MARKET_FALLBACK               WARNING

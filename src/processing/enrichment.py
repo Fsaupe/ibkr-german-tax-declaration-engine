@@ -203,14 +203,14 @@ def enrich_financial_events(
                      eur_corp_action_detail_conversions_failed += 1
 
         elif isinstance(event, StockAwardEvent):
-            # The award price converted at the ECB rate for the EVENT's own date -- the
-            # award day for an award, the vesting day for a vesting. Never the broker's
-            # rate: the export carries none here, and § 8 Abs. 2 Satz 1 wants the price
-            # at Zufluss, which is the day this event is dated on ([GT-ESTG20-064]).
+            # The row's price converted at the ECB rate for the EVENT's own date. Only the
+            # vesting's is used: § 8 Abs. 2 Satz 1 wants the price at Zufluss, which is the
+            # vesting day ([GT-ESTG20-064], Reading A of Q17). Never the broker's rate: the
+            # export carries none here.
             #
             # A failed conversion is left as None rather than defaulted. The ledger
-            # refuses a lot without a EUR cost, so an unconvertible award stops the run
-            # instead of acquiring shares at an invented price.
+            # refuses to vest a lot without a EUR value, so an unconvertible vesting stops
+            # the run instead of acquiring shares at an invented price.
             if event.unit_cost_basis_eur is None:
                 if event_date_obj and event.currency:
                     if event.currency.upper() != "EUR":

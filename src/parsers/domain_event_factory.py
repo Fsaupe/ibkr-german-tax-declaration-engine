@@ -1547,10 +1547,9 @@ class DomainEventFactory:
           Its `AwardDate` names the ORIGINAL award and, with the grant account, is the
           matching key, not its own date.
         * A **vesting** is dated on `VestingDate`, NOT `ReportDate` -- the day the
-          condition actually lapses, not the day the broker books the row a day or more
-          later. The vesting has no ledger effect (Zufluss fell on the award, so the
-          acquisition already happened, [GT-ESTG20-064]), but it is dated on the legal
-          event rather than the booking so the event carries the real date it stands for.
+          restriction actually lapses, not the day the broker books the row a day or more
+          later. It is the day of Zufluss ([GT-ESTG20-064], Reading A of Q17): the
+          acquisition date of the lot, and the day whose ECB rate converts the row's price.
 
         **What the export does not say, and what is done about it.** § 8 Abs. 2 Satz 1
         wants the ueblicher Endpreis *on the day of Zufluss*, and the row's `Price` is
@@ -1616,18 +1615,18 @@ class DomainEventFactory:
                     f"reason nothing recorded.")
                 continue
 
-            # Only the award row's price is ever used: it is the value at Zufluss and so the
-            # Anschaffungskosten ([GT-ESTG20-064], [GT-ESTG20-065]). That value is the market
-            # price of a listed share, which is never zero -- so a zero here is a missing
-            # valuation, and reading it as one gives the lot a nil basis and declares the
-            # whole later proceeds as gain, indistinguishable from a measured figure. A
-            # return leaves at the award's own unit cost and a vesting is inert, so nothing
-            # is demanded of their price.
-            if event_type == FinancialEventType.STOCK_AWARD_GRANTED and rg.price <= Decimal(0):
+            # Only the vesting row's price is ever used: it is the value at Zufluss and so
+            # the Anschaffungskosten ([GT-ESTG20-064] Reading A, [GT-ESTG20-065]). That value
+            # is the market price of a listed share, which is never zero -- so a zero here is
+            # a missing valuation, and reading it as one gives the lot a nil basis and
+            # declares the whole later proceeds as gain, indistinguishable from a measured
+            # figure. An award books units without a cost and a return takes unvested units
+            # back, so nothing is demanded of their price.
+            if event_type == FinancialEventType.STOCK_AWARD_VESTED and rg.price <= Decimal(0):
                 data_errors.append(
-                    f"Grant row for {what} awards shares at a price of {rg.price}. An award "
+                    f"Grant row for {what} vests shares at a price of {rg.price}. A vesting "
                     f"must carry a positive per-share value: it is the market value on the "
-                    f"day the shares arrived, which becomes their acquisition cost, and "
+                    f"day the shares were received, which becomes their acquisition cost, and "
                     f"without it the later sale would be declared with no cost at all.")
                 continue
 

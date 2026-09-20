@@ -65,15 +65,14 @@ class FinancialEventType(Enum):
     # the three rows of the grant export have three different consequences and a single
     # member would let a dispatch confuse them:
     #   * AWARD books the shares in. They are in the account from this day, which is what
-    #     the broker's snapshot reports, and this is also where they are acquired for tax:
-    #     Zufluss falls on the booking ([GT-ESTG20-064]), so this day gives the acquisition
-    #     date and the Anschaffungskosten ([GT-ESTG20-065]).
-    #   * REVERSAL takes some back when the condition fails. It is NOT a disposal and
-    #     realises nothing -- deliberately not routed through the trade path, which would
-    #     produce a RealizedGainLoss the law does not recognise here.
-    #   * VESTING moves no shares at all. It is the day the condition lapses, and a
-    #     contractual condition does not postpone Zufluss ([GT-ESTG20-064]), so the
-    #     acquisition has already happened and the vesting is inert.
+    #     the broker's snapshot reports -- a holding, not yet an acquisition: no cost, no
+    #     acquisition date ([GT-ESTG20-064], Reading A of Q17).
+    #   * REVERSAL takes unvested shares back when the condition fails. It is NOT a
+    #     disposal and realises nothing, and since nothing had zugeflossen it is no
+    #     negative Einnahme either ([GT-ESTG20-067], Boundary).
+    #   * VESTING moves no shares at all. It is the day the transfer restriction lapses,
+    #     which is where Zufluss falls: it gives the lot its acquisition date and, at the
+    #     vesting row's price, its Anschaffungskosten ([GT-ESTG20-065]).
     STOCK_AWARD_GRANTED = auto()
     STOCK_AWARD_REVERSED = auto()
     STOCK_AWARD_VESTED = auto()

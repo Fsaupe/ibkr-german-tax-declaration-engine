@@ -890,3 +890,36 @@ log differs in VZ 2023 by one line in both the comparison and the control, and i
 award dated on an ECB holiday has no cached rate, so each run asks the live ECB service, and one
 run received an empty answer where the other timed out. Both fall back to the preceding business
 day's rate, and no figure differs. Clean-clone suite: **1426 passed, 1 skipped**.
+
+## 2026-09-20 — PR #90: Zufluss moved to the vesting day (Q17, Reading A), real-data measurement
+
+Assessment years **VZ 2023, VZ 2024, VZ 2025**, contributor exports, `scripts/parity_check.sh
+capture`, compared against the last award-day captures of the same day. No amounts are printed
+here; differences were read with every figure masked, and directions computed without displaying
+values. This is a **measured correction**, not a parity result: the maintainer decided on
+2026-09-20 that the shares zufliessen when the programme's transfer restriction lapses
+(`docs/legal-implementation-map.md`, GT-ESTG20-064), and the figures are expected to move.
+
+- **All three years reconcile and complete.** The unvested lots count towards the holding at every
+  snapshot and mark, as before.
+- **VZ 2023: 3 console lines differ, none a declared figure.** The award-day receipt note for the
+  award of that year is gone; two receipt notes appear, one per vesting of that year, each dated on
+  its `VestingDate` and valued at the vesting row's price and that day's ECB rate.
+- **VZ 2024: 1 console line differs, not a declared figure.** One receipt note appears for that
+  year's vesting.
+- **VZ 2025: 8 console lines differ, and these are declared figures.** The year disposes of awarded
+  shares. Anlage KAP Zeile 19, Zeile 20, the instrument's line and *Saldo Aktien* each move **down
+  by one and the same amount** (the four deltas compared for equality, not printed): the vested
+  lots carry the higher vesting-day Anschaffungskosten, so the gain is lower by exactly the
+  difference in basis. No receipt note: nothing vested in 2025.
+- The 2022 return precedes its award's vesting. It reduces the unvested lot and states nothing,
+  in any year.
+- The contributor's three vesting rows each name exactly the units their award still held
+  (the run would have stopped otherwise); on 2 of the 3 the broker's `ReportDate` is later than
+  the `VestingDate` the event is dated on.
+
+Suite in the developer checkout: **1436 passed, 1 failed** — the failure is
+`test_the_column_tuples_match_the_real_exports`, which reads the local `data_import/` and is
+skipped on a clean clone. Red-first for the change: **30** of the award tests written for the
+award-day reading failed against the vesting-day engine before they were rewritten to the new
+requirement; the mutation table is in `tests/test_stock_award_scenarios.py`.

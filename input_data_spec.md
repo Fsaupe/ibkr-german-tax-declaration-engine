@@ -296,8 +296,9 @@ settles it.
 
 ## 8. Grants File (Optional)
 - **Input:** `data_import/Grants-{YYYY}.csv`, concatenated across every year <= the tax year
-- **Purpose:** Records shares a broker awarded for capital placed with it. The award is the only
-  record that those shares arrived and what they were worth; no other export carries it. Without
+- **Purpose:** Records shares a broker awarded for capital placed with it. The report is the only
+  record that those shares arrived, when they vested and what they were worth then; no other export
+  carries it. Without
   this file the historical replay reconstructs a holding smaller than the broker reports. **What
   happens then depends on the interval**, and only one of the two cases is a stop:
   - the interval **began at a reported snapshot** — `REPLAY_MARK_MISMATCH`, FAIL_FAST, and the run
@@ -316,20 +317,20 @@ settles it.
   Refer-A-Friend is therefore confirmed by the user, once, as `STOCK_AWARD_PROGRAMME =
   "IBKR_REFER_A_FRIEND"` in `src/config.py`; grant rows without it stop the run.
 - **Legal ground, for that programme:** the award is a *Leistung* under § 22 Nr. 3 EStG, not
-  Kapitalertrag ([GT-ESTG20-063]). Zufluss falls on the booking into the account: the holding period
-  and the reclaim condition do not postpone it ([GT-ESTG20-064] — Reading B of the open question Q17:
-  whether the terms' clause calling an early disposal "void" makes one legally ineffective is not
-  settled by any German source, and the map records the maintainer's choice). The value that day is the
+  Kapitalertrag ([GT-ESTG20-063]). Zufluss falls on the day the programme's transfer restriction
+  lapses — the vesting ([GT-ESTG20-064], Reading A of the open question Q17: whether the terms'
+  clause calling an early disposal "void" makes one legally ineffective is not settled by any German
+  source, and the map records the maintainer's choice). The value that day is the
   Anschaffungskosten on a later disposal, whether or not the receipt was taxed ([GT-ESTG20-065]).
-  Shares handed back are a negative Einnahme of the year of the return at that same original value
-  ([GT-ESTG20-067]).
-- **What this engine does and does not do with it.** It supplies the **acquisition** — the lot, its
-  date and its cost basis — so a later disposal is measured correctly on Anlage KAP. It does **not**
-  declare the **receipt** as income in the year it accrued, nor the negative receipt of a return:
-  both belong on Anlage SO under *Einkünfte aus Leistungen*, the reporting layer has no such
-  category, and this library holds no Zeilen for that half of the form. The run states each with
+  Shares handed back before vesting never accrued: neither a receipt nor a negative Einnahme
+  ([GT-ESTG20-067], Boundary).
+- **What this engine does and does not do with it.** It supplies the **holding** from the award and
+  the **acquisition** — date and cost basis — from the vesting, so a later disposal is measured
+  correctly on Anlage KAP. It does **not** declare the **receipt** as income in the year of the
+  vesting: that belongs on Anlage SO under *Einkünfte aus Leistungen*, the reporting layer has no
+  such category, and this library holds no Zeilen for that half of the form. The run states it with
   its amount, year and destination, on the console and in the PDF's Anlage SO chapter
-  (`STOCK_AWARD_RECEIPT_NOT_DECLARED`, `STOCK_AWARD_RETURN_NOT_DECLARED`). Tracked as issue #76, which closes it for this and for the
+  (`STOCK_AWARD_RECEIPT_NOT_DECLARED`). Tracked as issue #76, which closes it for this and for the
   securities-lending fee together.
 - **Optional as a whole, but not per year.** A person whose broker has never awarded them shares
   has no rows. A window with a hole is different: a year of awards that does not arrive is a year
@@ -343,11 +344,11 @@ settles it.
 
 **Three activity kinds share the file and only two move the position.**
 
-| `ActivityDescription` is exactly | Meaning | Moves the position? |
-|---|---|---|
-| `Stock Award Grant for Cash Deposit` | Shares booked into the account | Yes, positive |
-| `Stock Award Return for Cash Withdrawal` | Taken back when the condition fails | Yes, negative |
-| `Stock Award Vesting` | The condition lapsed | **No** |
+| `ActivityDescription` is exactly | Meaning | Moves the position? | Tax event? |
+|---|---|---|---|
+| `Stock Award Grant for Cash Deposit` | Shares booked into the account, unvested | Yes, positive | No |
+| `Stock Award Return for Cash Withdrawal` | Unvested shares taken back when the condition fails | Yes, negative | No |
+| `Stock Award Vesting` | The transfer restriction lapsed | **No** | **Yes — the receipt, and the acquisition** |
 
 The match is on the whole description. A row that merely contains one of these — a grant
 *for a securities purchase*, say, which the law treats as a cost reduction and not as income — belongs
@@ -361,19 +362,19 @@ dropped one would reconcile until the year the dropped kind mattered.
 
 **Each kind takes its date from a different column.**
 
-- An **award** is dated on `AwardDate` — the day the shares entered the account. That is both what
-  the position snapshot counts and where Zufluss falls ([GT-ESTG20-064]), so it is the acquisition
-  date.
+- An **award** is dated on `AwardDate` — the day the shares entered the account, which is what the
+  position snapshots count. It books the units and nothing else.
 - A **reversal** is dated on `ReportDate`. Its `AwardDate` names the *original* award and, with the
   grant account, is the matching key, not its own date.
-- A **vesting** is dated on `VestingDate` and **has no ledger effect**. It is read so that an
-  unrecognised kind can still be refused, and inert because the acquisition already happened.
+- A **vesting** is dated on `VestingDate`, not on the `ReportDate` the broker books it on a day or
+  more later. It is the day of Zufluss ([GT-ESTG20-064]) and so the acquisition date.
 
-**The award creates the lot and the lot is final** ([GT-ESTG20-064]). A reversal reduces the
-matching lot **at that lot's own unit cost** and realises nothing: it is not a disposal and
-produces no `RealizedGainLoss` ([GT-ESTG20-067]). A same-day reversal and sale need no rule of
-order: shares handed back cannot also be the shares sold, so the sale is measured against what the
-reversal left ([GT-ESTG20-066]).
+**The award books a lot without a cost, and the vesting completes it** ([GT-ESTG20-064],
+[GT-ESTG20-065]). Until then the units count towards the holding and towards reconciliation, and
+towards nothing else: a disposal is measured against acquired shares only. A reversal removes
+unvested units of its own award and realises nothing: it is not a disposal and produces no
+`RealizedGainLoss` ([GT-ESTG20-067], Boundary). A same-day reversal and sale need no rule of order:
+the one takes unvested units, the other never does ([GT-ESTG20-066]).
 
 **Input contract — every fact a declared amount, year or destination depends on.**
 
@@ -381,15 +382,16 @@ reversal left ([GT-ESTG20-066]).
 |---|---|---|
 | That the row belongs to the supported programme | `ActivityDescription`, matched whole, **and** the user's confirmation `config.STOCK_AWARD_PROGRAMME` — the export does not name the programme, so the text alone cannot establish it | Any other text: run stops, all rows named. Rows present and the confirmation unset or different: run stops and says what to set |
 | Which account and instrument | `ClientAccountID`; `ISIN` / `Conid` / `Symbol` | Resolved like any other instrument; an unresolvable one stops the run |
-| Acquisition date (= day of Zufluss) | award row `AwardDate` | Unparseable: run stops |
-| Units | `Quantity` (absolute value; the row kind carries the direction) | Zero: run stops |
-| Value per unit at Zufluss | award row `Price`, in `CurrencyPrimary` | Blank, zero or negative: run stops — a listed share has a price, so a zero is a missing valuation, not a value. The day it was struck is not stated (see Notes). `Price` on a reversal or vesting row is never used |
-| EUR value | ECB rate of `AwardDate` | No rate: no EUR cost, and the ledger refuses to create the lot — run stops |
-| Which award a reversal undoes | reversal row `AwardDate` + account | No such lot, or more units than it holds: run stops |
-| Amount of a reversal's negative receipt | the lot's own unit cost × units — **never** the reversal row's `Price` | follows from the two rows above |
-| Year of the receipt / of the negative receipt | `AwardDate` / reversal row `ReportDate` | Unparseable: run stops |
+| Units held | award row `Quantity` on `AwardDate`, less reversal rows (absolute value; the row kind carries the direction) | Zero: run stops |
+| Day of Zufluss = acquisition date | vesting row `VestingDate` | Unparseable: run stops. No vesting row yet: the units stay unvested, and a disposal that would reach them stops the run |
+| Units received | vesting row `Quantity` | Must equal what the award still holds after reversals; otherwise run stops |
+| Value per unit at Zufluss | vesting row `Price`, in `CurrencyPrimary` | Blank, zero or negative: run stops — a listed share has a price, so a zero is a missing valuation, not a value. The day it was struck is not stated (see Notes). `Price` on an award or reversal row is never used |
+| EUR value | ECB rate of `VestingDate` | No rate: no EUR value, and the ledger refuses to vest the lot — run stops |
+| Which award a reversal or a vesting belongs to | the row's `AwardDate` + account | No such lot in that account's ledger: run stops. *Assumed, at zero incidence in the files measured:* the row carries the account whose ledger holds the lot |
+| Year of the receipt | `VestingDate` | Unparseable: run stops |
+| A reversal after its award vested | — the programme reclaims only before vesting | Run stops; the negative Einnahme it would be ([GT-ESTG20-067]) is not implemented |
 | A complete window | one Grants file per year, as for Transfers | A hole in a supplied window: run stops (`GRANTS_WINDOW_INCOMPLETE`) |
-| Destination | Anlage SO for receipt and return (printed, not declared — issue #76); Anlage KAP for the later sale | — |
+| Destination | Anlage SO for the receipt (stated, not declared — issue #76); Anlage KAP for the later sale | — |
 
 One fact is asked of the user beyond the export — the programme confirmation in the first row,
 stated once in config — and nothing is defaulted.
@@ -408,24 +410,24 @@ export's full header so that a column appearing or disappearing is caught at the
 | `Conid`               | `conid`                | `Optional[str]`     | IBKR contract identifier.                      | |
 | `ISIN`                | `isin`                 | `Optional[str]`     | Instrument ISIN.                               | |
 | `Multiplier`          | `multiplier`           | `Optional[Decimal]` | 1 for shares.                                  | |
-| `ReportDate`          | `report_date`          | `str`               | The day the broker booked the row.             | Required. The event date for a **reversal** only; for a vesting it is the booking day and is deliberately not used. |
+| `ReportDate`          | `report_date`          | `str`               | The day the broker booked the row.             | Required. The event date for a **reversal** only; for a vesting it is the broker's booking day, a day or more after the lapse, and is deliberately not used. |
 | `ActivityDescription` | `activity_description` | `str`               | Which of the three kinds this row is.          | Required, and the **only** thing distinguishing them. An unrecognised value stops the run. |
 | `AwardDate`           | `award_date`           | `str`               | The originating award's date.                  | Required. Part of the **matching key** — the grant account and this date together — on all three kinds, since `SerialNumber` is blank; the account is needed because two accounts can grant on one day and the lots can end up in one ledger after a transfer. The event date for an **award**. |
-| `VestingDate`         | `vesting_date`         | `str`               | The day the condition lapses.                  | Required. The event date for a **vesting**, which the engine reads but does not act on — Zufluss already fell on the award ([GT-ESTG20-064]). |
+| `VestingDate`         | `vesting_date`         | `str`               | The day the condition lapses.                  | Required. The event date for a **vesting**: the day of Zufluss, so the acquisition date and the day whose ECB rate converts `Price` ([GT-ESTG20-064]). |
 | `Quantity`            | `quantity`             | `Decimal`           | Shares. Negative on a reversal.                | Required. Read as an absolute value, with the direction carried by the kind. Zero stops the run. |
-| `Price`               | `price`                | `Decimal`           | Per-share value the broker assigned.           | Required. On an **award** this is the übliche Endpreis at Zufluss (§ 8 Abs. 2 Satz 1) and becomes the Anschaffungskosten. |
+| `Price`               | `price`                | `Decimal`           | Per-share value the broker assigned.           | Required. On a **vesting** this is the übliche Endpreis at Zufluss (§ 8 Abs. 2 Satz 1) and becomes the Anschaffungskosten; it must be positive. On an award or a reversal it is not used. |
 | `Value`               | `value`                | `Decimal`           | `Quantity` x `Price`, to the cent.             | Required, and **deliberately not read**. It can only differ from `Quantity` x `Price` by the broker's own rounding, and the cost basis is computed from the unrounded `Price`. Declared so the column is accounted for at the boundary rather than discarded by `extra = 'ignore'`. |
 | `SerialNumber`        | *(not mapped)*         | —                   | Row identifier.                                | **Blank on every row measured.** Declared in the tuple so the column being **removed or renamed** is caught at the boundary — which validates the header set, not the values, so a value that later appears here would pass unnoticed. Deliberately absent from the model so nothing reads an identity that is not there. |
 
 **Notes:**
 - **The price's own date is not stated.** § 8 Abs. 2 Satz 1 wants the übliche Endpreis on the day of
-  Zufluss, and no column says which day `Price` was struck on. Zufluss is the award, so the
-  question arises only on an award row whose `ReportDate` differs from its `AwardDate`; there it may
-  be either day's. It is used as given — it is a measurement, and the alternative is to invent one
+  Zufluss, and no column says which day `Price` was struck on. Zufluss is the vesting, so the
+  question arises on a vesting row whose `ReportDate` differs from its `VestingDate` — which the
+  broker's later booking makes the usual case; there it may be either day's. It is used as given — it is a measurement, and the alternative is to invent one
   from market data this engine does not hold — and the residual uncertainty is recorded against
   [GT-ESTG20-064] rather than left for a reader to notice.
 - **Two awards in one account sharing an award date stop the run.** That date, with the grant
-  account, is the key a vesting or a reversal has, so a same-account duplicate would let one restate
+  account, is the key a vesting or a reversal has, so a same-account duplicate would let one vest
   or reverse the wrong award's shares. Two accounts granting on one day are kept apart by the
   account in the key and do not collide, even once a transfer relocates one beside the other.
 - **A lot is never created without a EUR cost basis.** The award price is a foreign amount the

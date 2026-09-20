@@ -319,8 +319,8 @@ present and that line unset, the run stops. If your shares came from a different
 happens to write the same three row descriptions, do not set it — the treatment below has not been
 established for them.
 
-**Export it for every year, the same years as the other queries.** The award is the only record
-that those shares arrived and what they were worth. A year you do not export is a year the engine
+**Export it for every year, the same years as the other queries.** The report is the only record
+that those shares arrived, when they vested and what they were worth then. A year you do not export is a year the engine
 cannot reconstruct your holding for.
 
 What happens when a year is missing depends on where the gap falls. A hole *inside* the window you
@@ -347,9 +347,9 @@ Select these fields:
 | 10 | Report Date | The day the broker booked the row |
 | 11 | Activity Description | **The only thing distinguishing an award from a vesting** |
 | 12 | Award Date | The matching key tying a vesting or a reversal to its award |
-| 13 | Vesting Date | The day the shares become unconditionally yours |
+| 13 | Vesting Date | The day the transfer restriction lapses — the day the shares are received for tax, and the acquisition date |
 | 14 | Quantity | Shares, negative on a return |
-| 15 | Price | Per-share value |
+| 15 | Price | Per-share value. The **vesting** row's price is the value of the receipt and the cost basis |
 | 16 | Value | Quantity x Price, to the cent. Requested so the column is accounted for; the engine computes from the unrounded Price and does not read it |
 | 17 | Serial Number | Blank in practice; requested so the column is accounted for. The engine does not read it and would **not** notice if the broker started filling it |
 
@@ -360,30 +360,36 @@ second rate alongside creates a plausible wrong path.
 
 **Three row kinds share this report and they are not interchangeable.** A *Grant* books shares in,
 a *Return* takes some back if you withdraw the cash that earned them, and a *Vesting* moves no
-shares at all — it records the day they stopped being forfeitable. Adding the vesting rows to your
-position would roughly double it. A row carrying any other description — a fourth kind, or a
-grant of some other programme — stops the run and is named, rather than guessed at.
+shares at all — it records the day the one-year transfer restriction lapsed. Adding the vesting
+rows to your position would roughly double it. A row carrying any other description — a fourth
+kind, or a grant of some other programme — stops the run and is named, rather than guessed at.
 
-**The award date is what counts, not the vesting date.** Under the Refer-A-Friend terms your
-shares are acquired for tax purposes on the day they are booked into your account, at that day's
-value: you vote them, receive their dividends and carry their price risk from that day, and a
-contractual lock-up or a promise to give them back does not delay Zufluss — only being *legally
-unable* to dispose of them would ([GT-ESTG20-064]). So a vesting row changes nothing the engine
-computes. **This is a chosen reading, stated rather than hidden.** German law is clear on the
-rule and stops short of one fact: the terms call an early sale "void", and whether that makes such
-a sale legally ineffective under the law governing your holding is something no German source
-says. If it does, the acquisition would fall on the vesting date at the vesting-day price. The
-maintainer decided to read the clause as the contractual lock-up it is on its face, as a
-defensible position; both readings are in `reference/research/open-legal-questions.md` (Q17) and
-the grounds in `docs/legal-implementation-map.md`. The position on your own return remains yours.
+**The vesting date is what counts, not the award date.** The shares sit in your account from the
+award, and the engine books them then so its holdings match the broker's. They are *received* for
+tax on the day the restriction lapses, at that day's value: until then the programme's terms
+declare any sale "void" and the broker, who holds the shares, will not process one, so you cannot
+dispose of them at all — and German law puts Zufluss at the point where that ends
+([GT-ESTG20-064]). The vesting row therefore supplies the acquisition date and, with its price at
+that day's ECB rate, the cost basis. **This is a chosen reading, stated rather than hidden.** German
+law is clear on the rule and stops short of one fact: whether the "void" clause really makes an
+early sale legally ineffective under the law governing your holding is something no German source
+says. If it were only a contractual lock-up, the acquisition would fall on the award date at the
+award-day price. The maintainer decided to read the clause as doing what it says, as a defensible
+position; both readings are in `reference/research/open-legal-questions.md` (Q17) and the grounds
+in `docs/legal-implementation-map.md`. The position on your own return remains yours.
 
-**What the engine does with it.** The award gives your shares a real acquisition date and cost, so
-when you eventually sell them the gain on **Anlage KAP** is measured properly instead of against an
-invented basis. What it does **not** do is declare the award itself as income in the year you
-received it — that belongs on **Anlage SO** under *Einkünfte aus Leistungen*, and this engine has no
-line for it yet. The same goes for shares you had to hand back: that is a *negative* receipt of the
-year you handed them back, at the value they were originally awarded at ([GT-ESTG20-067]). The run
-states both, with the amount, the year and the form, but **entering them is still yours to do.**
+**What the engine does with it.** The vesting gives your shares a real acquisition date and cost,
+so when you eventually sell them the gain on **Anlage KAP** is measured properly instead of against
+an invented basis. What it does **not** do is declare the receipt itself as income in the year the
+shares vested — that belongs on **Anlage SO** under *Einkünfte aus Leistungen*, and this engine has
+no line for it yet. The run states it on the console and in the PDF, with the amount, the year and
+the form, but **entering it is still yours to do.** Shares you had to hand back before they vested
+were never received: they are no income and no negative income, and the run states nothing for them.
+
+**What stops the run.** A sale that would need shares which have not vested — the terms forbid it,
+so it means a vesting row is missing from your export or the broker liquidated restricted shares,
+and neither can be measured. A vesting that names a different number of shares than the award still
+holds. A return dated after its award vested. A vesting row without a positive price.
 ## Preparing Input Data
 
 Place your IBKR Flex Query CSV files in the `data_import/` directory using this naming scheme:
@@ -795,7 +801,7 @@ uv run pytest tests/test_group7_currency_fifo.py -v   # Currency FIFO
 ## Known Limitations
 
 *   **IBKR API history:** The Flex Web Service API only retains ~2 calendar years of data. Older years come from the Client Portal instead, either with the browser downloader or by hand (see [Client Portal Download](#client-portal-download-for-older-years)).
-*   **Awarded shares: one programme, and the sale is handled while the receipt is not.** The only share-award programme supported is **IBKR's Refer-A-Friend award**; the export does not name the programme, so you confirm it once by setting `STOCK_AWARD_PROGRAMME = "IBKR_REFER_A_FRIEND"` in `src/config.py`, and a run with grant rows and no confirmation stops. For that programme the engine gives the shares a real acquisition date and cost basis, so the **gain when you sell them** is computed correctly on Anlage KAP. It does **not** declare the **award itself** as income in the year you received it, nor the negative receipt when shares are handed back. Both are *Leistungen* under § 22 Nr. 3 EStG ([GT-ESTG20-063], [GT-ESTG20-067]), which belong on **Anlage SO**, and the reporting layer has no line for them — the same gap as for a securities-lending fee, tracked as issue #76. The run prints the amount, year and form for each; **entering them is yours to do.**
+*   **Awarded shares: one programme, and the sale is handled while the receipt is not.** The only share-award programme supported is **IBKR's Refer-A-Friend award**; the export does not name the programme, so you confirm it once by setting `STOCK_AWARD_PROGRAMME = "IBKR_REFER_A_FRIEND"` in `src/config.py`, and a run with grant rows and no confirmation stops. For that programme the engine gives the shares a real acquisition date and cost basis, so the **gain when you sell them** is computed correctly on Anlage KAP. The shares count as received on the day their one-year transfer restriction lapses (the vesting), at that day's value — a chosen reading of an open point, see the Grants query section. The engine does **not** declare that **receipt** as income: it is a *Leistung* under § 22 Nr. 3 EStG ([GT-ESTG20-063]), which belongs on **Anlage SO**, and the reporting layer has no line for it — the same gap as for a securities-lending fee, tracked as issue #76. The run states the amount, year and form on the console and in the PDF; **entering it is yours to do.** Shares handed back before they vested are no income and no negative income. A sale that would reach unvested shares stops the run.
 *   **No "Alt-Anteile":** Assumes all investment fund shares were acquired on or after January 1, 2018.
 *   **Foreign WHT:** Aggregates WHT paid (Anlage KAP Zeile 41) but does not calculate creditable WHT.
 *   **No loss carry-forward/backward:** Calculations are limited to the specified tax year.

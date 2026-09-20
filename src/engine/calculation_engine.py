@@ -1405,10 +1405,10 @@ def run_main_calculations(
         FinancialEventType.OPTION_CASH_SETTLEMENT: option_cash_settlement_processor,
         FinancialEventType.INTERNAL_TRANSFER: internal_transfer_processor,
         FinancialEventType.INTERNAL_CASH_TRANSFER: internal_cash_transfer_processor,
-        # All three; the award is the one that carries a figure. An award or a reversal
+        # All three; the vesting is the one that carries a figure. An award or a reversal
         # dated inside the tax year is caught by the EoY reconciliation if it goes
-        # unapplied; a vesting moves no shares and is inert (Zufluss fell on the award),
-        # so it is dispatched here only to be handled explicitly rather than fall through.
+        # unapplied; a vesting moves no shares, so an unapplied one would reconcile clean
+        # and leave the lot without a cost -- which a later sale then refuses.
         FinancialEventType.STOCK_AWARD_GRANTED: stock_award_processor,
         FinancialEventType.STOCK_AWARD_REVERSED: stock_award_processor,
         FinancialEventType.STOCK_AWARD_VESTED: stock_award_processor,

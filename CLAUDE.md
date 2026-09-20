@@ -212,23 +212,24 @@ run.
 - **The intra-day sort band of a new event kind.** Deleting the stock-award branch from
   `get_event_sort_key` leaves the suite green -- and, for the stock award, that is not a
   hidden figure risk but the truth of the key. A `StockAwardEvent` carries no broker
-  transaction id, and the secondary key sorts an empty id before every trade's id, so a
-  grant or a reversal stays ahead of same-day *trades* with or without the branch. The
-  branch's only real effect is precedence against same-day *corporate actions* (both share
-  the lot-delivering band). Even there the figure does not move: a return removes its own
-  `(account, award_date)` lot at that lot's own cost and refuses to take more than it holds, so
-  the opposite order cannot produce a second figure, only stop the run -- which is what
-  `TestASameDayReturnAndSale` shows when a return is forced after the day's trades. The
-  still-blind case is therefore award-versus-corporate-action *ordering* of a kind that is not
-  itself a disposal; probe it by mutation if such a kind is ever added.
+  transaction id, and the secondary key sorts an empty id before every trade's id, so an
+  award, a return or a vesting stays ahead of same-day *trades* with or without the
+  branch. The branch's only real effect is precedence against same-day *corporate actions*
+  (both share the lot-delivering band). Even there no second figure is possible: a vesting
+  that ran after a same-day sale of its shares would leave the sale reaching unvested units,
+  which stops the run, and a return takes unvested units a sale never touches. The
+  still-blind case is therefore award-versus-corporate-action *ordering* of a kind that is
+  not itself a disposal; probe it by mutation if such a kind is ever added.
 - **Which date column an event is built from, where the export's columns agree.** Dating a
-  stock award on the broker's report date instead of the award date moves only the
+  vesting on the broker's report date instead of the vesting date moves only the
   acquisition date under a start-of-year snapshot -- quantity, cost basis, proceeds and gain
-  reconcile either way. The award rows of the real export have the two columns equal, so no
-  real fixture distinguishes them; `test_an_award_is_dated_on_its_award_date_not_the_broker_s_report_date`
-  now uses a fixture where they differ and asserts the acquisition date, so this mutation is
-  caught. Kept here because the coincidence in the real data is what made it invisible, and
-  a fixture that lets the two columns agree would hide it again.
+  reconcile either way -- and, in a real run, the ECB rate the receipt is converted at.
+  `test_a_vesting_is_dated_on_its_vesting_date_not_the_broker_s_report_date` uses a fixture
+  where the two differ and asserts the acquisition date, so this mutation is caught (6 red,
+  measured). The *award's* date column is the blind one now: an award only books units, so
+  dating it on `ReportDate` instead of `AwardDate` moves no figure and nothing observes it
+  -- harmless while the award carries none, and a fixture that lets the two agree would
+  hide it the moment it did.
 
 Add to this list whenever a probe finds a site the suite cannot observe.
 

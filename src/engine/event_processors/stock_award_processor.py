@@ -9,32 +9,30 @@ processor, and produced a log line -- and the run continued.
 
 For an award or a reversal that is loud: the quantity is wrong and the end-of-year
 reconciliation refuses it. A vesting moves no shares, so an unhandled one would reconcile
-clean; it is dispatched here and made explicitly inert rather than left to fall through,
-and an award kind nobody has classified raises instead of being dropped in silence.
+clean while the lot stayed without a cost; it is dispatched here, and an award kind nobody
+has classified raises instead of being dropped in silence.
 
 The three kinds do here what they do in the replay, and the two paths call the same
 `FifoLedger` methods so they cannot disagree about what an award means.
 
 **One programme only.** Everything here applies the store's result for Interactive Brokers'
 Refer-A-Friend share award ([GT-ESTG20-063] to [GT-ESTG20-067]); `grants_parser` refuses rows
-of anything else.
+of anything else, and the user confirms the programme in config.
 
-None of the three declares anything by itself. An award and a return are not disposals.
-The award -- not the vesting -- is the § 22 Nr. 3 receipt ([GT-ESTG20-063]): under that
-programme's terms Zufluss falls on the booking ([GT-ESTG20-064]), so the vesting is inert.
-A return after Zufluss is a negative Einnahme of the year it is made, in the amount
-originally brought to account ([GT-ESTG20-067]). Both belong on Anlage SO, a category the
-reporting layer does not have (issue #76), so both are handed to the reader with amount,
-year and destination. The value at the award is the Anschaffungskosten of the lot
-([GT-ESTG20-065]), and that reaches a declared figure through the disposal, not through
-this processor.
+**The vesting is the receipt.** Which day the shares zufliessen is an open question (Q17 at
+[GT-ESTG20-064]): the law is settled, and what no German source supplies is whether the
+programme's clause calling a premature disposal "void" makes one legally ineffective. The
+maintainer decided on 2026-09-20 to take Reading A -- it does, so Zufluss falls on the day
+the restriction lapses. The grounds are in the map row; this processor implements it:
 
-Booking-day Zufluss is Reading B of an open question (Q17 at [GT-ESTG20-064]). The law is
-settled; what no German source supplies is whether the programme's clause calling a
-premature disposal "void" makes a transfer ineffective under the law governing the
-holding. Were it to, Zufluss would move to the vesting, and date, value and returns here
-would all change (Reading A). The maintainer decided on 2026-09-20 to take Reading B as
-defensible; the grounds are in the map row, and this processor implements that choice.
+* the **award** books the shares as a holding without cost or acquisition date;
+* the **vesting** is the § 22 Nr. 3 receipt ([GT-ESTG20-063]) at the vesting row's price and
+  that day's ECB rate, and that value is the lot's Anschaffungskosten ([GT-ESTG20-065]);
+* a **return** takes unvested shares back, and since nothing had zugeflossen there is
+  neither a receipt nor a negative Einnahme ([GT-ESTG20-067], Boundary).
+
+The receipt belongs on Anlage SO, a category the reporting layer does not have (issue #76),
+so it is handed to the reader with amount, year and destination.
 """
 import logging
 from decimal import Decimal, ROUND_HALF_UP
@@ -52,7 +50,6 @@ from .base_processor import EventProcessor
 logger = logging.getLogger(__name__)
 
 STOCK_AWARD_RECEIPT_NOT_DECLARED = "STOCK_AWARD_RECEIPT_NOT_DECLARED"
-STOCK_AWARD_RETURN_NOT_DECLARED = "STOCK_AWARD_RETURN_NOT_DECLARED"
 
 
 class StockAwardProcessor(EventProcessor):
@@ -66,29 +63,22 @@ class StockAwardProcessor(EventProcessor):
                 f"award date -- part of the key (with the grant account) an award has to "
                 f"its lot.")
 
-        returned_unit_cost = None
         if event.event_type == FinancialEventType.STOCK_AWARD_GRANTED:
             ledger.add_lot_for_stock_award(event)
         elif event.event_type == FinancialEventType.STOCK_AWARD_REVERSED:
-            returned_unit_cost = ledger.reverse_stock_award_lot(event)
+            ledger.reverse_stock_award_lot(event)
         elif event.event_type == FinancialEventType.STOCK_AWARD_VESTED:
-            # Deliberately inert. Zufluss was the booking ([GT-ESTG20-064]), so the lot
-            # already carries its final date and cost and a vesting has nothing to change.
-            pass
+            ledger.vest_stock_award_lot(event)
+            self._record_undeclared_receipt(event, context)
         else:
             # A fourth kind must stop the run rather than fall through. Falling through
-            # is what left the vesting unapplied in the first place, and the cost of it
-            # was a wrong cost basis nothing reported.
+            # is what once left the vesting unapplied, and the cost of it was a wrong
+            # cost basis nothing reported.
             raise ProcessingError(
                 f"StockAwardProcessor has no handler for {event.event_type.name} on "
                 f"{event.event_date}. It reached the current-year dispatch, so it is "
                 f"expected to affect the ledger; leaving it unapplied would leave a "
                 f"holding or a cost basis that a later disposal is measured against.")
-
-        if event.event_type == FinancialEventType.STOCK_AWARD_GRANTED:
-            self._record_undeclared_receipt(event, context)
-        elif event.event_type == FinancialEventType.STOCK_AWARD_REVERSED:
-            self._record_undeclared_return(event, returned_unit_cost, context)
 
         # No RealizedGainLoss from any of the three. See the module docstring: the
         # receipt is Anlage SO income this engine does not yet declare, and the effect on
@@ -101,7 +91,7 @@ class StockAwardProcessor(EventProcessor):
         """Say, in the report, that a taxable receipt fell in this year and is not in it.
 
         **The gap exists because the omission is otherwise invisible and points one way.**
-        The engine takes the award value as the lot's Anschaffungskosten, which LOWERS
+        The engine takes the vesting-day value as the lot's Anschaffungskosten, which LOWERS
         the declared gain on a later disposal, and omits the matching § 22 Nr. 3 receipt
         ([GT-ESTG20-063]) because the reporting layer has no Anlage SO *Einkuenfte aus
         Leistungen* category -- issue #76. Taking the half that reduces a figure and
@@ -109,7 +99,7 @@ class StockAwardProcessor(EventProcessor):
         silence would produce a complete-looking declaration that is not complete.
 
         WARNING and not FAIL_FAST: the figures the engine does emit are correct under the
-        store's application ([GT-ESTG20-064]), and every other Kapitalertrag in the year is unaffected.
+        reading taken at [GT-ESTG20-064], and every other Kapitalertrag in the year is unaffected.
         Refusing the year would withhold sound figures over a line the engine has never
         been able to produce. What the severity asserts is exactly that -- the declared
         figures are safe, and something outside them is not computed here.
@@ -130,10 +120,10 @@ class StockAwardProcessor(EventProcessor):
         collector.record(
             STOCK_AWARD_RECEIPT_NOT_DECLARED,
             f"Anlage SO (Einkuenfte aus Leistungen), {event.event_date}",
-            f"Shares awarded under Interactive Brokers' Refer-A-Friend programme were booked "
-            f"into the account on {event.event_date}, which is where Zufluss falls "
-            f"([GT-ESTG20-064]). That receipt is a Leistung under § 22 Nr. 3 EStG "
-            f"([GT-ESTG20-063]) and belongs on Anlage SO for {event.event_date[:4]}; this "
+            f"The transfer restriction on shares awarded under Interactive Brokers' "
+            f"Refer-A-Friend programme on {event.award_date} lapsed on {event.event_date}, "
+            f"which is where Zufluss falls ([GT-ESTG20-064], Reading A of Q17). That receipt "
+            f"is a Leistung under § 22 Nr. 3 EStG ([GT-ESTG20-063]) and belongs on Anlage SO for {event.event_date[:4]}; this "
             f"engine has no line for it and has NOT declared it (issue #76). Its value at "
             f"Zufluss is "
             f"{'EUR ' + str(gross) if gross is not None else 'not computable here'}, "
@@ -144,46 +134,5 @@ class StockAwardProcessor(EventProcessor):
             f"here -- out of scope for the same reason as the § 23 Freigrenze "
             f"([GT-ESTG23-009]): a per-Kalenderjahr total across all Leistungen that one "
             f"broker's files cannot establish.",
-            severity=GapSeverity.WARNING,
-        )
-
-    @staticmethod
-    def _record_undeclared_return(event: StockAwardEvent, returned_unit_cost,
-                                  context: Dict[str, Any]) -> None:
-        """Say, in the report, that awarded shares were handed back this year and what that
-        is worth on Anlage SO.
-
-        A return after Zufluss is a negative Einnahme of the year it is made -- not a
-        correction of the award year -- and § 22 Nr. 3 Satz 3's loss restriction does not
-        reach it (EStH H 22.8, BFH IX R 26/14 Rn. 20, BFH VI R 6/18 Rn. 37-40). Its amount is
-        the value originally brought to account for the returned units, never their value
-        on the day of the return (BFH VI R 17/08) -- hence the lot's own unit cost, which the
-        ledger hands back, and not the return row's price. All at [GT-ESTG20-067].
-
-        WARNING and not FAIL_FAST, for the reason `_record_undeclared_receipt` gives: the
-        Kapitalertrag figures are complete and correct; what is missing is an Anlage SO
-        line the engine has never had (issue #76), and the reader is given what to enter.
-        This fires only for a return dated inside the processed year. One dated earlier is
-        applied by the historical replay, and its negative Einnahme belonged to that year.
-        """
-        collector = context.get('data_gap_collector')
-        if collector is None:
-            return
-        # Rounded to cents for the reason given on the receipt.
-        amount = (event.quantity * returned_unit_cost).quantize(
-            Decimal("0.01"), rounding=ROUND_HALF_UP)
-        collector.record(
-            STOCK_AWARD_RETURN_NOT_DECLARED,
-            f"Anlage SO (Einkuenfte aus Leistungen), {event.event_date}",
-            f"{event.quantity} share(s) of the Refer-A-Friend award of {event.award_date} "
-            f"were handed back to the broker on {event.event_date} under the programme's "
-            f"terms. Having zugeflossen at the award ([GT-ESTG20-064]), their return is a "
-            f"negative Einnahme under § 22 Nr. 3 EStG of {event.event_date[:4]}, the year of "
-            f"the return, in the amount originally brought to account for them: "
-            f"EUR {amount} ([GT-ESTG20-067]). It belongs on Anlage SO; this engine has no "
-            f"line for it and has NOT declared it (issue #76). Enter it yourself, or the "
-            f"return overstates. The Kapitalertrag side is complete: the returned units left "
-            f"the holding at that same cost, nothing was realised, and a later disposal is "
-            f"measured only against the shares retained.",
             severity=GapSeverity.WARNING,
         )
