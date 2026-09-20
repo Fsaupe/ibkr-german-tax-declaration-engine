@@ -273,44 +273,50 @@ it legal impossibility of disposal prevents Zufluss.
   Istprinzip)."* IX R 56/13 (v. 12.07.2016, a § 21 case on the general § 8/§ 11 frame), Rn. 25: a
   *"lediglich latente"* Rueckzahlungsverpflichtung cannot be netted against what was received.
 
-**Where the settled law ends.** Everything above is settled at Tier 1 and Tier 2: shares accrue on
-the day they are booked; a contractual Sperr- or Haltefrist and a resolutive reclaim do not defer
-that; legal impossibility of disposal does; and it is the effect of a restriction, not its origin in
-statute or contract, that decides. **No German source at any tier says on which side of that line a
-clause of these terms falls** -- a clause of a bilateral contract that declares a premature disposal
-*"void"*, which the custodian will not process, over shares held under foreign law. For such shares
-the effect of the restriction is a finding of the foreign law (VI R 37/09 Rn. 17, remanded for it),
-and that finding has not been made for these terms. The application is therefore an open question,
-recorded as **Q17** in `../research/open-legal-questions.md`, with two readings.
+**Application to the programme terms: Zufluss falls on the day the transfer restriction lapses (the
+vesting), and the value of that day is the receipt.** The German test is not a choice between two
+dates; it asks when the recipient obtains the power to dispose, and the terms answer it:
 
-**Reading B -- Zufluss on the day the shares are booked (the award date), at that day's value.** The
-grounds, each tied to a quoted clause:
+1. *The restriction goes to the effectiveness of a disposal, not merely to its permissibility.* The
+   terms do not only forbid a premature disposal; they declare any attempt *"void"*, authorise the
+   broker *"to reject any such attempt"*, and state that an attempt to sell *"through IBKR or any
+   other broker"* or to transfer the shares to another broker *"will not by [sic] processed"*. The
+   broker is also the custodian, so the recipient has no route to an effective voluntary
+   disposition while the restriction runs. That is the case of VI R 37/09 Rn. 15 and of BMF
+   01.06.2024 Rn. 26 first sentence, not the *obligatorische Veraeusserungssperre* of Rn. 12, under
+   which *"die Veraeusserung ... rechtlich moeglich"* remains.
+2. *That the restriction arises from a bilateral contract does not move it to the other side.*
+   VI R 37/09 Rn. 20: it makes no difference whether a restriction rests *"auf Gesetz oder
+   Vertrag"*; what decides is whether it is *"lediglich schuldrechtlicher Natur"* or determines
+   *"unmittelbar die Wirksamkeit der Uebertragung selbst"*. The administration's example of the
+   exception (*vinkulierte Namensaktien*, BMF Rn. 26) is an example, not its limit.
+3. *Dividends, votes and price risk from the award do not establish Zufluss.* The recipient is
+   *"entitled to receive any and all dividends"* and *"to vote the Shares"* from the award, and the
+   price risk is his. VI R 37/09 Rn. 17: drawing the income *"begruendet noch keine rechtlich
+   gesicherte Inhaberschaft"* while disposal is legally impossible.
+4. *The broker's margin power is not the recipient's power of disposal.* That the broker *"is
+   authorized to use Shares to satisfy obligations you owe"* is a right reserved to the creditor; it
+   gives the recipient no ability to make an effective disposition of his own.
+5. *The reclaim runs only while the restriction does.* Shares reclaimed *"prior to the Anniversary
+   Date"* are reclaimed before Zufluss; the resolutive-condition line (VI R 67/05 Ls. 3, IX R 56/13
+   Rn. 25) concerns a benefit that has already accrued and is not reached.
 
-1. *Essential rights* -- the recipient is *"entitled to receive any and all dividends or other
-   distributions"* and *"entitled to vote the Shares"* from the award (VI R 6/18 Rn. 27).
-2. *Risk and chance* -- the number of shares is fixed at the award by that day's price; every later
-   price movement is the recipient's. The shares also serve his own debts: the broker may *"use
-   Shares to satisfy obligations you owe ... in any IBKR margin account"* (Rn. 28).
-3. *The restriction is a contractual Sperrfrist* -- it arises from an agreement between customer and
-   broker over ordinary listed common stock, lapses by time alone, and is not a restriction carried
-   by the share itself, which is the administration's own example of the exception (*vinkulierte
-   Namensaktien*, BMF Rn. 26). That is Rn. 26 second sentence and VI R 37/09 Rn. 12.
-4. *The forfeiture is a resolutive condition* -- reclaim on account closure, loss of good standing,
-   or pro rata on withdrawals during the Award Period. VI R 67/05 Ls. 3 and IX R 56/13 Rn. 25: it
-   does not defer Zufluss, and the conditions lie largely in the recipient's own hands.
+Zufluss therefore falls on the lapse of the restriction, the receipt is the market value of the
+vested shares on that day (§ 8 Abs. 2 Satz 1; a restriction would not have reduced it, BMF Rn. 20),
+and the consequences follow at [GT-ESTG20-065] and [GT-ESTG20-067].
 
-**Reading A -- Zufluss on the day the restriction lapses, at that day's value.** The terms do not
-merely forbid a premature disposal; they call it *"void"*, and the broker, who is also the
-custodian, refuses to process one. If that makes a transfer **ineffective** and not merely a breach,
-the restriction goes to the *Wirksamkeit der Uebertragung* (VI R 37/09 Rn. 20) and the case is
-Rn. 15's; dividends and votes alone do not establish a *rechtlich gesicherte Inhaberschaft*
-(Rn. 17). The consequences reach [GT-ESTG20-065] and [GT-ESTG20-067]: the Anschaffungskosten would
-be the value of the lapse day, and shares reclaimed before it would never have accrued.
-
-**Neither reading contradicts Tier 1 or Tier 2.** Both apply BMF 01.06.2024 Rn. 25-26 as written and
-differ only on a fact about the terms that German law does not supply. That the grantor reports the
-value at the lapse as income to its domestic clients is its own country's tax law and no authority
-here.
+**The limits of this application, stated so it is not read as more than it is.** It applies the
+German test to the published programme terms quoted above; it is not a decision of a German court or
+a statement of the administration on this programme. Foreign law is relevant only to which rights
+the arrangement confers -- German law decides the tax consequence -- and the terms' choice of New
+York law is not by itself proof that that law governs every question of the issuer's and the
+intermediary's property relations. That the grantor reports the value at the lapse as income to its
+domestic clients is its own country's tax law and no authority here. The opposite application --
+Zufluss on the booking, on the footing that the clause is a mere contractual Sperrfrist (Rn. 26
+second sentence, VI R 37/09 Rn. 12) -- would require that a disposal during the restriction be
+legally effective despite the word *"void"* and the custodian's refusal; the terms give no support
+for that. An actual early release, a waiver, or a liquidation of restricted shares by the broker is
+a different event and needs its own facts.
 
 **What the cited units also contain, and the limit of the citations.** VI R 37/09, VI R 67/05, VI R
 6/18 and BMF 01.06.2024 concern § 19 -- shares from an employer. § 11 Abs. 1 Satz 1 is the same
@@ -368,9 +374,9 @@ Gegenleistung zu erbringen hat"* and speaks of *"die Zuteilung begruendenden Ant
 Kapitalmassnahme in favour of existing holders. An award that is the consideration for a Leistung is
 granted for a Gegenleistung by definition.
 
-**Dependency.** The amount is the value **on the day of Zufluss**, so it follows whichever
-reading of [GT-ESTG20-064] is applied (Q17). Applicable tax years: all open cases (BMF 14.05.2025 Rz. 324; BMF
-06.03.2025 Rn. 106).
+**Dependency.** The amount is the value **on the day of Zufluss**, which under the application at
+[GT-ESTG20-064] is the day the transfer restriction lapses. Applicable tax years: all open cases
+(BMF 14.05.2025 Rz. 324; BMF 06.03.2025 Rn. 106).
 
 ---
 
@@ -428,10 +434,10 @@ A later disposal is measured only against the shares retained. Which award's sha
 is fixed by the terms (*"using a first in, first out method"* across awards) and by what the
 grantor's record of the return states.
 
-**Boundary.** All of this presupposes Zufluss before the return, which is Reading B of
-[GT-ESTG20-064] (Q17). If Zufluss were deferred to the lapse of the restriction, shares reclaimed before
-it would never have accrued, and there would be neither a receipt nor a negative Einnahme -- the
-law does not know a receipt manufactured only to be repaid.
+**Boundary.** All of this presupposes Zufluss before the return. Under the application at
+[GT-ESTG20-064] the programme's own reclaim always precedes Zufluss, so for that programme the rule
+above is not what applies. Shares reclaimed before Zufluss never accrued: there is neither a receipt
+nor a negative Einnahme -- the law does not know a receipt manufactured only to be repaid.
 
 **What the cited units also contain.** H 22.8 also lists what is and is not a Leistung and, under
 *Werbungskosten*, directs a correction of the year of receipt under § 175 Abs. 1 Satz 1 Nr. 2 AO
