@@ -529,6 +529,44 @@ class TestTheAnlageSoAmountsReachTheRunsOutput(FifoTestCaseBase):
         assert "EUR 16.00" in returned.detail and "36" not in returned.detail
         assert "2023-06-01" in returned.subject and "Anlage SO" in returned.subject
 
+    def test_the_generated_pdf_carries_both_manual_entries(self, tmp_path):
+        # The gap collection reaching the pipeline output proved nothing about the PDF: it
+        # rendered only the reconciliation gaps, so the summary looked complete with both
+        # Anlage SO entries absent. Asserted on the file, built with main's own arguments.
+        import pymupdf
+        from src.engine.loss_offsetting import LossOffsettingEngine
+        from src.reporting.pdf_generator import PdfReportGenerator
+
+        out = self._run_pipeline(
+            tax_year=2023, positions_start_data=[],
+            positions_end_data=[position_row(ACCOUNT, ISIN, "6", "24", price="4")],
+            grants_data=[
+                grant_row("Stock Award Grant for Cash Deposit",
+                          "20230210", "20230210", "20240210", "10", "4"),
+                grant_row("Stock Award Return for Cash Withdrawal",
+                          "20230601", "20230210", "20240210", "-4", "9"),
+            ])
+        summary = LossOffsettingEngine(
+            realized_gains_losses=out.realized_gains_losses,
+            vorabpauschale_items=out.vorabpauschale_items,
+            current_year_financial_events=out.processed_income_events,
+            asset_resolver=out.asset_resolver, tax_year=2023,
+            apply_conceptual_derivative_loss_capping=False).calculate_reporting_figures()
+        pdf = tmp_path / "award.pdf"
+        PdfReportGenerator(
+            loss_offsetting_result=summary,
+            all_financial_events=out.processed_income_events,
+            realized_gains_losses=out.realized_gains_losses,
+            vorabpauschale_items=out.vorabpauschale_items,
+            assets_by_id=out.asset_resolver.assets_by_internal_id,
+            tax_year=2023, eoy_mismatch_details=[],
+            data_gaps=out.data_gaps).generate_report(str(pdf))
+        with pymupdf.open(pdf) as doc:
+            text = " ".join(" ".join(page.get_text() for page in doc).split())
+        assert "EUR 40.00" in text and "EUR 16.00" in text
+        assert "2023-02-10" in text and "2023-06-01" in text
+        assert "Anlage SO" in text and "manuell einzutragen" in text
+
     def test_an_award_and_a_return_before_the_year_state_nothing_but_still_set_the_basis(self):
         # Their Einnahmen belonged to 2022, which is not the year declared. What they leave
         # behind is the lot: 6 @4 = 24, against which the 2023 sale is measured.

@@ -324,9 +324,9 @@ settles it.
   date and its cost basis — so a later disposal is measured correctly on Anlage KAP. It does **not**
   declare the **receipt** as income in the year it accrued, nor the negative receipt of a return:
   both belong on Anlage SO under *Einkünfte aus Leistungen*, the reporting layer has no such
-  category, and this library holds no Zeilen for that half of the form. The run prints each with
-  its amount, year and destination (`STOCK_AWARD_RECEIPT_NOT_DECLARED`,
-  `STOCK_AWARD_RETURN_NOT_DECLARED`). Tracked as issue #76, which closes it for this and for the
+  category, and this library holds no Zeilen for that half of the form. The run states each with
+  its amount, year and destination, on the console and in the PDF's Anlage SO chapter
+  (`STOCK_AWARD_RECEIPT_NOT_DECLARED`, `STOCK_AWARD_RETURN_NOT_DECLARED`). Tracked as issue #76, which closes it for this and for the
   securities-lending fee together.
 - **Optional as a whole, but not per year.** A person whose broker has never awarded them shares
   has no rows. A window with a hole is different: a year of awards that does not arrive is a year
