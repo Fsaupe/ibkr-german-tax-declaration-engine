@@ -252,6 +252,31 @@ def test_an_unclassified_activity_kind_stops_the_run(tmp_path):
         parse_grants_csv(str(path))
 
 
+@pytest.mark.parametrize("description", [
+    # BMF 14.05.2025 Rz. 129b para 2: a premium conditioned on buying securities reduces
+    # their Anschaffungskosten and is no income -- not the supported programme.
+    "Stock Award Grant for Securities Purchase",
+    "Stock Award Return for Securities Sale",
+    "Stock Award Vesting Accelerated",
+])
+def test_a_row_of_another_programme_stops_the_run(tmp_path, description):
+    """[GT-ESTG20-063] is established for one programme. A row that merely CONTAINS a known
+    kind belongs to some other one, whose terms nobody has read; treating it as a § 22
+    Nr. 3 award would mis-state both the receipt and the basis. The match is on the whole
+    activity description."""
+    from src.domain.exceptions import DataIntegrityError
+    from src.parsers.grants_parser import parse_grants_csv
+    from tests.support.csv_creators import create_grants_csv_string
+
+    path = tmp_path / "grants.csv"
+    path.write_text(create_grants_csv_string([
+        grant_row(description, "20220302", "20220302", "20230302", "10", "4"),
+    ]), encoding="utf-8-sig")
+
+    with pytest.raises(DataIntegrityError, match="does not classify"):
+        parse_grants_csv(str(path))
+
+
 def test_an_award_of_zero_shares_stops_the_run():
     """A no-op award would leave the ledger disagreeing with the broker for a reason
     nothing recorded. Tested at the factory, for the reason above."""

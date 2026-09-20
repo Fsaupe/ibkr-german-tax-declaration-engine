@@ -1569,15 +1569,15 @@ class DomainEventFactory:
 
         for rg in raw_grants:
             what = f"{rg.symbol or rg.isin or 'unknown instrument'} on {rg.report_date}"
-            description = rg.activity_description
+            description = (rg.activity_description or "").strip()
 
-            if grants_parser.VESTING_MARKER in description:
+            if description == grants_parser.VESTING_ACTIVITY:
                 event_type = FinancialEventType.STOCK_AWARD_VESTED
                 raw_event_date = rg.vesting_date
-            elif grants_parser.REVERSAL_MARKER in description:
+            elif description == grants_parser.REVERSAL_ACTIVITY:
                 event_type = FinancialEventType.STOCK_AWARD_REVERSED
                 raw_event_date = rg.report_date
-            elif grants_parser.AWARD_MARKER in description:
+            elif description == grants_parser.AWARD_ACTIVITY:
                 event_type = FinancialEventType.STOCK_AWARD_GRANTED
                 raw_event_date = rg.award_date
             else:
