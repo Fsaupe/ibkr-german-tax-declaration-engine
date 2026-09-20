@@ -396,29 +396,27 @@ STOCK_AWARD_REVERSAL_ORDER_ASSUMED = "STOCK_AWARD_REVERSAL_ORDER_ASSUMED"
 
 def _report_reversal_ordering_assumption(
         events, asset_resolver, data_gap_collector, tax_year_end_date_obj) -> None:
-    """Warn when an award reversal and a disposal of the same security fall on one day.
+    """Note when an award reversal and a disposal of the same security fall on one day.
 
-    Which is applied first is not fixed by law (Q18, [GT-ESTG20-066]): § 20 Abs. 4 Satz 7
-    FIFO ([GT-ESTG20-012]) orders the lots of a single disposal, not a disposal against a
-    same-day non-disposal event, and the award report carries no intra-day id. A reversal
-    takes the lot-delivering sort band, so it is applied before the same-day sale -- Reading
-    A, the taxpayer's grey-area filing position of 2026-09-19. The choice moves a figure only
-    where the reversed lot is within the sale's FIFO reach, so it is surfaced rather than
-    left silent: a WARNING, because the figures are produced under a stated reading, not
-    withheld.
+    No Tier 1 or Tier 2 source fixes which of a same-day reversal and disposal applies first
+    (Q18, [GT-ESTG20-066]): § 20 Abs. 4 Satz 7 FIFO ([GT-ESTG20-012]) orders the lots of a
+    single disposal, not a disposal against a same-day non-disposal event, and the award
+    report carries no intra-day id. **But the order is figure-neutral here by construction.**
+    A reversal removes its own `(account, award_date)` lot at that lot's own cost and refuses
+    to take more than the lot holds; a disposal consumes FIFO. So when a same-day reversal
+    and disposal both complete, the declared figure is the same in either order -- the only
+    order-dependent outcome is that a disposal-first sequence aborts on over-reversal where a
+    reversal-first sequence completes. The engine applies the reversal first, which completes
+    wherever the input is consistent. Nothing is chosen between two figures.
 
-    Checked across every processed year -- a historical collision moves a carried basis, a
-    tax-year one moves the year's gain; events after the tax year are not processed and do
-    not warn. Zero incidence in the export today.
+    This records the coincidence so a filer can eyeball an unusual same-day pair; it is not a
+    grey-area figure disclosure. Checked across every processed year; zero incidence today.
 
-    **Bounded assumption (recorded, not guarded).** The disposal side matched here is
-    `TRADE_SELL_LONG` -- how awarded shares are actually disposed of. A same-day disposal of
-    the awarded stock through a non-sell path (a cash merger, an expiring dividend right)
-    would move a figure under Reading A with no warning, since the warning IS the disclosure.
-    It is not broadened to every long-lot-consuming kind because the sort band already fixes
-    the order regardless, the awarded stock's disposal in the data is always a sale, and a
-    set enumerated here could itself miss a kind -- a second blind spot for a shape at zero
-    incidence. Per CLAUDE.md's data-import rule this is written down, not built against.
+    The disposal side matched is `TRADE_SELL_LONG`, how awarded shares are actually disposed
+    of. A non-sell disposal of the awarded stock (a cash merger) shares the reversal's sort
+    band rather than following it, and is figure-neutral for the same reason, so it is not
+    matched here -- recorded, per CLAUDE.md's data-import rule, not built against a shape the
+    data never shows.
     """
     reversal_days: set = set()
     disposal_days: set = set()
@@ -448,14 +446,13 @@ def _report_reversal_ordering_assumption(
         subject = f"{name} am {day} [Konto {account}]"
         detail = (
             "On the same day, a reversal of awarded shares (Stock Award Reversal) and a "
-            "disposal of the same share coincided. Which event applies first is not fixed "
-            "by any Tier 1 or Tier 2 source (Q18, GT-ESTG20-066): the FIFO order "
-            "(§ 20 Abs. 4 Satz 7, GT-ESTG20-012) sequences the lots of a SINGLE disposal, "
-            "not a disposal against a same-day non-disposal event, and the grant report "
-            "carries no intra-day id. The reversal is applied FIRST (Reading A), a taxpayer "
-            "choice in a legal grey area made on 2026-09-19. This moves a figure only where "
-            "the reversed lot is within the disposal's FIFO reach; in that case check the "
-            "acquisition cost used before adopting the figure."
+            "disposal of the same share coincided. No Tier 1 or Tier 2 source fixes which "
+            "applies first (Q18, GT-ESTG20-066), but the order does not change a declared "
+            "figure: the reversal removes its own award lot at that lot's own cost and the "
+            "disposal consumes FIFO, so a completed run gives the same result either way -- "
+            "a disposal-first order would only ever abort on over-reversal, never yield a "
+            "different figure. The engine applied the reversal first. Recorded so an unusual "
+            "same-day pair can be eyeballed, not because a figure is in doubt."
         )
         if data_gap_collector is not None:
             data_gap_collector.record(

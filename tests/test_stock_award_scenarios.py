@@ -20,16 +20,19 @@ running this file:
 | EUR conversion in enrichment | yes -- 4 of 4 red |
 | parser's unclassified-kind refusal | yes |
 | factory's zero-quantity guard | yes |
-| **sort-key band in `get_event_sort_key`** | **no -- still green** |
+| **sort-key band in `get_event_sort_key`** | **no -- and the suite cannot** |
 | award dated on `ReportDate` instead of `AwardDate` | yes -- 1 red (acquisition date) |
 
-The sort-key band remains written up in CLAUDE.md's *Where the suite is blind*; the
-scenario aimed at it (`test_a_same_day_sale_is_measured_after_the_vesting_not_before_it`)
-asserts the right figures and passes, but passes with the code broken too, so it documents
-the intent without instrumenting it. Do not read it as a guard.
-`test_an_award_is_dated_on_its_award_date_not_the_broker_s_report_date` now asserts the
-acquisition date, which is the only figure the report-date mutation moves under a
-start-of-year snapshot, so it does instrument the choice.
+The sort-key band is written up in CLAUDE.md's *Where the suite is blind*, and deleting the
+`StockAwardEvent` branch is figure-neutral for award-versus-trade order: the award carries no
+broker transaction id, and in the secondary key an empty id sorts before every trade's id, so
+the award stays ahead of same-day trades with or without the branch. The branch's only real
+effect is award-versus-corporate-action precedence (both share the lot-delivering band), which
+no current scenario exercises. `test_a_same_day_award_and_sale_take_the_award_as_the_basis`
+documents the award-first intra-day order and its figure; it is not a guard for the branch, for
+the reason just given. `test_an_award_is_dated_on_its_award_date_not_the_broker_s_report_date`
+now asserts the acquisition date, the only figure the report-date mutation moves under a
+start-of-year snapshot, so it does instrument that choice.
 
 The award-inside-the-tax-year case is the one that motivated the file: an award or a
 reversal that goes unapplied is caught by the end-of-year quantity reconciliation, and
@@ -129,6 +132,26 @@ class TestAwardedSharesReachTheLedger(FifoTestCaseBase):
         rgl = self._sale_gain(results)
         assert rgl.total_cost_basis_eur == Decimal("40")
         assert rgl.acquisition_date == "2022-03-02"
+
+    def test_a_same_day_award_and_sale_take_the_award_as_the_basis(self):
+        """A grant and a sale of the awarded shares on the same day: the award is applied
+        first, so the lot exists when the sale consumes it, and the sale carries the award's
+        basis and date. This documents the intended intra-day order; it is NOT a guard for
+        the sort-band branch -- deleting that branch leaves the award ahead of the sale
+        anyway, because the award carries no broker transaction id and an empty id sorts
+        before every trade's id (CLAUDE.md's sort-band blind spot)."""
+        results = self._run_pipeline(
+            tax_year=TAX_YEAR,
+            grants_data=[
+                grant_row("Stock Award Grant for Cash Deposit",
+                          "20230301", "20230301", "20240301", "10", "4")],
+            trades_data=[
+                trade_row(ACCOUNT, ISIN, "2023-03-01", "-10", "10", "SELL", "C", "T_SELL")],
+            positions_start_data=[], positions_end_data=[],
+        )
+        rgl = self._sale_gain(results)
+        assert rgl.total_cost_basis_eur == Decimal("40"), "the sale takes the award basis"
+        assert rgl.acquisition_date == "2023-03-01", "dated on the award day, not the sale"
 
     def test_a_reversal_is_not_a_disposal(self):
         """It produces no RealizedGainLoss of its own, and leaves the survivors at the

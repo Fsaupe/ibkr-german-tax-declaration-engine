@@ -210,14 +210,18 @@ run.
   the tax year's. Written up in `docs/research_historical_replay_defects.md`.
 
 - **The intra-day sort band of a new event kind.** Deleting the stock-award branch from
-  `get_event_sort_key` leaves the suite green, including a scenario built to sort a
-  same-day disposal against it. The event falls to the unknown-type band, which orders it
-  after that day's trades. This is **not** harmless: a **reversal** takes this band too and
-  does change a lot -- it removes units, dated on the report day rather than the day the
-  shares arrived -- so a same-day reversal and disposal already depend on the band for their
-  order (reversal-first, Reading A, [GT-ESTG20-066]). Deleting the branch flips them to
-  Reading B and moves a figure silently; the collision's WARNING still fires, but it flags
-  the coincidence, not the order, so it does not stop the figure moving. Probe by mutation.
+  `get_event_sort_key` leaves the suite green -- and, for the stock award, that is not a
+  hidden figure risk but the truth of the key. A `StockAwardEvent` carries no broker
+  transaction id, and the secondary key sorts an empty id before every trade's id, so a
+  grant or a reversal stays ahead of same-day *trades* with or without the branch. The
+  branch's only real effect is precedence against same-day *corporate actions* (both share
+  the lot-delivering band). Even there the figure does not move: a reversal removes its own
+  `(account, award_date)` lot at that lot's own cost and refuses over-reversal, so a same-day
+  reversal and disposal that both complete give the same figure in either order -- the only
+  alternative is the run aborting on over-reversal ([GT-ESTG20-066]). The still-blind case is
+  therefore award-versus-corporate-action *ordering* of a kind that is not itself a disposal;
+  probe it by mutation if such a kind is ever added, but it is figure-neutral for the kinds
+  present today.
 - **Which date column an event is built from, where the export's columns agree.** Dating a
   stock award on the broker's report date instead of the award date moves only the
   acquisition date under a start-of-year snapshot -- quantity, cost basis, proceeds and gain

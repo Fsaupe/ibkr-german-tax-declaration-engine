@@ -352,8 +352,8 @@ dropped one would reconcile until the year the dropped kind mattered.
 - A **vesting** is dated on `VestingDate` and **has no ledger effect**. It is read so that an
   unrecognised kind can still be refused, and inert because the acquisition already happened.
 
-**The award creates the lot and the lot is final.** BFH VI R 37/09 Rn. 4 holds that a Sperr- or
-Haltefrist does not prevent Zufluss, and Leitsatz 2 that what does is a disposal being *rechtlich
+**The award creates the lot and the lot is final.** BFH VI R 37/09 Rn. 12 holds that a Sperr- or
+Haltefrist does not prevent Zufluss, and Leitsatz 2 (Rn. 15) that what does is a disposal being *rechtlich
 unmöglich* — so a contractual clawback does not postpone the acquisition. A reversal reduces the
 matching lot **at that lot's own unit cost** and realises nothing: it is not a disposal and
 produces no `RealizedGainLoss`.
