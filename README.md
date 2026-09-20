@@ -298,10 +298,10 @@ FLEX_QUERY_IDS: dict[str, int | None] = {
 that never arrives. Set the Transfers ID before you rely on a downloaded year: without it
 the download completes and looks fine, and the run then tells you which years it could not
 see a move in. The same applies to Grants. A year of awards that does not arrive is a year whose holding
-cannot be reconstructed — and whether that stops the run depends on where the gap falls:
-between two position snapshots it refuses, but in the earliest year of your input window it
-warns, invents an acquisition date and gives you a figure anyway. Set the ID rather than rely
-on being told.
+cannot be reconstructed. A hole inside the window you did download stops the run and names the
+year. A missing *earliest* year cannot be seen as a hole: the run then refuses as soon as a year
+sells those shares, but a year that only holds them completes with a warning. Set the ID rather
+than rely on being told.
 
 ### Query 8: Grants (needed if you received shares under IBKR's Refer-A-Friend programme)
 
@@ -321,12 +321,13 @@ not be right for them, and nothing will tell you.
 that those shares arrived and what they were worth. A year you do not export is a year the engine
 cannot reconstruct your holding for.
 
-Whether that stops the run depends on where the gap falls, and **one of the two cases is silent**:
-if the missing year sits between two position snapshots the engine refuses and produces nothing,
-but if it falls in the earliest year of your input window there is no snapshot before it to
-disagree with — so the engine takes the broker's quantity, invents an acquisition date of
-31 December, warns, and **gives you a figure anyway**. Export every year rather than rely on being
-told.
+What happens when a year is missing depends on where the gap falls. A hole *inside* the window you
+exported stops the run and names the year. A missing **earliest** year looks like an export that
+simply starts later, so it is not a hole: there the engine has the broker's quantity but no
+acquisition date or cost for those shares. **A year in which you sell them stops** — the run will
+not declare a sale against an acquisition it never saw. A year in which you only hold them
+**completes with a warning**; no declared figure depends on the missing award that year, but do not
+read the warning as harmless. Export every year rather than rely on being told.
 
 Select these fields:
 
@@ -348,7 +349,7 @@ Select these fields:
 | 14 | Quantity | Shares, negative on a return |
 | 15 | Price | Per-share value |
 | 16 | Value | Quantity x Price, to the cent. Requested so the column is accounted for; the engine computes from the unrounded Price and does not read it |
-| 17 | Serial Number | Blank in practice; requested so that its ever being filled is noticed |
+| 17 | Serial Number | Blank in practice; requested so the column is accounted for. The engine does not read it and would **not** notice if the broker started filling it |
 
 Do **not** select the rest. The engine checks the header against exactly this list and rejects a
 query offering more or fewer columns, rather than reading it half-heartedly. In particular leave
@@ -474,7 +475,7 @@ decided in `src/data_preparation.py`, and is deliberately not restated here.
 A run for tax year `Y` needs `Positions-{Y-1}-EoY.csv`: it is required, not
 optional, and the run stops with an explanation if it is missing.
 
-**Resolving queries by name.** If you gave your six Flex Queries a common
+**Resolving queries by name.** If you gave your Flex Queries a common
 naming prefix — `MyTax Trades`, `MyTax_Cash_Transactions`, and so on — set
 `FLEX_QUERY_NAME_PREFIX` in `src/config.py` and the downloader looks the IDs up
 in the portal. Case and separators do not matter. This survives recreating a

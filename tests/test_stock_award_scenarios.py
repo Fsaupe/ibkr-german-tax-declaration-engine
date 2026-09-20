@@ -120,8 +120,8 @@ class TestAwardedSharesReachTheLedger(FifoTestCaseBase):
         """Covers the historical bucket and the replay dispatch.
 
         Without the grant report the opening snapshot supplies the quantity and the
-        engine synthesises a lot; with it, the lot carries the award's own date and the
-        vested cost.
+        engine has no acquisition to measure a sale against; with it, the lot carries the
+        award's own date and the award-day cost ([GT-ESTG20-064], [GT-ESTG20-065]).
         """
         results = self._run_pipeline(
             tax_year=TAX_YEAR,

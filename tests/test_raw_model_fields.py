@@ -172,9 +172,9 @@ def test_the_models_that_deliberately_drop_a_requested_column_are_listed():
             "TransferAccountName", "UnderlyingConid", "UnderlyingSymbol",
         ],
         # `SerialNumber` is requested and arrives blank on every row of the export, so
-        # there is no identity to read from it. It stays in `GRANTS_COLUMNS` for the
-        # reason `RawTransferRecord`'s full-header declaration gives: if the broker ever
-        # starts populating it, that is caught at the boundary and not downstream.
+        # there is no identity to read from it. It stays in `GRANTS_COLUMNS` so that the
+        # column being removed or renamed is caught at the boundary. The boundary checks
+        # headers, not values: if the broker ever starts POPULATING it, nothing notices.
         "RawGrantRecord": ["SerialNumber"],
     }, (
         f"the set of requested-but-unmapped columns changed: {dropped}. If a column "

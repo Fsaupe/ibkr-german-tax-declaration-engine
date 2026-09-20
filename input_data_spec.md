@@ -303,10 +303,11 @@ settles it.
   - the interval **began at a reported snapshot** — `REPLAY_MARK_MISMATCH`, FAIL_FAST, and the run
     produces no figures at all;
   - the interval is the **earliest one**, with nothing confirming its start —
-    `REPLAY_MARK_UNCONFIRMED_START`, severity WARNING. The broker's quantity is taken, a lot is
-    synthesised dated `{tax_year-1}-12-31`, and **the run completes**. A user whose award falls in
-    the first year of their input window gets a figure, not a refusal, and the acquisition date
-    behind it is invented. This is the fallback rule's case, and the report is what avoids it.
+    `REPLAY_MARK_UNCONFIRMED_START`, severity WARNING, and the broker's quantity is taken without
+    an acquisition date or cost. What follows depends on the year: one that **disposes** of those
+    shares stops with `SECURITIES_ACQUISITION_HISTORY_UNKNOWN`, FAIL_FAST — no sale is declared
+    against an acquisition nobody observed; one that only **holds** them completes with the
+    warning, no declared figure depending on the missing award. The report is what avoids both.
 - **Supported programme: Interactive Brokers' Refer-A-Friend share award, and no other.** The
   treatment below is what `reference/tax-law/estg-22-nr3-leistungen.md` establishes by applying the
   law to that programme's terms. **The export does not name the programme.** The parser admits only
