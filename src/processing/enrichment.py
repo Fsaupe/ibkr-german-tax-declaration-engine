@@ -205,7 +205,7 @@ def enrich_financial_events(
         elif isinstance(event, StockAwardEvent):
             # The row's price converted at the ECB rate for the EVENT's own date. Only the
             # vesting's is used: § 8 Abs. 2 Satz 1 wants the price at Zufluss, which is the
-            # vesting day ([GT-ESTG20-064], Reading A of Q17). Never the broker's rate: the
+            # vesting day ([GT-ESTG20-064]). Never the broker's rate: the
             # export carries none here.
             #
             # A failed conversion is left as None rather than defaulted. The ledger

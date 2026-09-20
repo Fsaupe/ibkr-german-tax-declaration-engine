@@ -35,8 +35,8 @@ class FifoLot:
     # 31 December would cut a whole year's deemed income to one twelfth.
     acquisition_date_is_known: bool = True
     # True on awarded shares that sit in the account but have not zugeflossen: booked, so
-    # the broker's snapshots count them, and not yet acquired for tax ([GT-ESTG20-064],
-    # Reading A of Q17). Such a lot has NO cost and NO acquisition date -- the zero and the
+    # the broker's snapshots count them, and not yet acquired for tax ([GT-ESTG20-064]).
+    # Such a lot has NO cost and NO acquisition date -- the zero and the
     # booking date above are placeholders nothing may read. Only a vesting (which makes it
     # an ordinary lot) and a return (which removes it) may touch it; every disposal path
     # skips or refuses it.
@@ -389,7 +389,7 @@ class FifoLedger:
             elif isinstance(hist_event, StockAwardEvent):
                 # The award books the shares, a return takes unvested ones back, and the
                 # vesting is the Zufluss that gives the lot its acquisition date and cost
-                # ([GT-ESTG20-064], Reading A of Q17). An unrecognised kind still raises.
+                # ([GT-ESTG20-064]). An unrecognised kind still raises.
                 if hist_event.event_type == FinancialEventType.STOCK_AWARD_GRANTED:
                     self.add_lot_for_stock_award(hist_event)
                 elif hist_event.event_type == FinancialEventType.STOCK_AWARD_REVERSED:
@@ -1530,8 +1530,8 @@ class FifoLedger:
         waited for vesting would reconstruct a smaller holding and fail reconciliation at
         every mark in between.
 
-        **It is a holding, not yet an acquisition.** Under Reading A of Q17
-        ([GT-ESTG20-064]) the shares have not zugeflossen while the programme's transfer
+        **It is a holding, not yet an acquisition.** Under the application at
+        [GT-ESTG20-064] the shares have not zugeflossen while the programme's transfer
         restriction runs, so the lot is `zufluss_pending`: it carries no cost and no
         acquisition date, and the award row's `Price` is not used for anything.
         `vest_stock_award_lot` supplies both on the day the restriction lapses.
@@ -1559,7 +1559,7 @@ class FifoLedger:
         """The transfer restriction lapsed: the shares zufliessen, and the lot becomes an
         ordinary one acquired on the vesting day at that day's value.
 
-        Date, price and ECB rate are all the vesting row's own ([GT-ESTG20-064] Reading A,
+        Date, price and ECB rate are all the vesting row's own ([GT-ESTG20-064],
         [GT-ESTG20-065]); nothing of the award row survives except the identity and the
         units. The vesting must name exactly the units the lot still holds -- a row that
         vests more or fewer than remain after returns disagrees with the ledger about what

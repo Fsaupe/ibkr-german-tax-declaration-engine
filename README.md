@@ -370,13 +370,13 @@ tax on the day the restriction lapses, at that day's value: until then the progr
 declare any sale "void" and the broker, who holds the shares, will not process one, so you cannot
 dispose of them at all — and German law puts Zufluss at the point where that ends
 ([GT-ESTG20-064]). The vesting row therefore supplies the acquisition date and, with its price at
-that day's ECB rate, the cost basis. **This is a chosen reading, stated rather than hidden.** German
-law is clear on the rule and stops short of one fact: whether the "void" clause really makes an
-early sale legally ineffective under the law governing your holding is something no German source
-says. If it were only a contractual lock-up, the acquisition would fall on the award date at the
-award-day price. The maintainer decided to read the clause as doing what it says, as a defensible
-position; both readings are in `reference/research/open-legal-questions.md` (Q17) and the grounds
-in `docs/legal-implementation-map.md`. The position on your own return remains yours.
+that day's ECB rate, the cost basis. **What this rests on, stated rather than hidden.** It is the
+application of the German Zufluss test (§ 11 EStG, BMF 01.06.2024 Rn. 25–26, BFH VI R 37/09) to the
+programme's published terms, written out in `reference/tax-law/estg-22-nr3-leistungen.md` and
+approved by the maintainer. It is not a ruling of a German court or the tax administration on this
+programme; the reference says so and names what a different set of facts — an early release, a
+waiver, a liquidation of restricted shares — would need. The position on your own return remains
+yours.
 
 **What the engine does with it.** The vesting gives your shares a real acquisition date and cost,
 so when you eventually sell them the gain on **Anlage KAP** is measured properly instead of against
@@ -801,7 +801,7 @@ uv run pytest tests/test_group7_currency_fifo.py -v   # Currency FIFO
 ## Known Limitations
 
 *   **IBKR API history:** The Flex Web Service API only retains ~2 calendar years of data. Older years come from the Client Portal instead, either with the browser downloader or by hand (see [Client Portal Download](#client-portal-download-for-older-years)).
-*   **Awarded shares: one programme, and the sale is handled while the receipt is not.** The only share-award programme supported is **IBKR's Refer-A-Friend award**; the export does not name the programme, so you confirm it once by setting `STOCK_AWARD_PROGRAMME = "IBKR_REFER_A_FRIEND"` in `src/config.py`, and a run with grant rows and no confirmation stops. For that programme the engine gives the shares a real acquisition date and cost basis, so the **gain when you sell them** is computed correctly on Anlage KAP. The shares count as received on the day their one-year transfer restriction lapses (the vesting), at that day's value — a chosen reading of an open point, see the Grants query section. The engine does **not** declare that **receipt** as income: it is a *Leistung* under § 22 Nr. 3 EStG ([GT-ESTG20-063]), which belongs on **Anlage SO**, and the reporting layer has no line for it — the same gap as for a securities-lending fee, tracked as issue #76. The run states the amount, year and form on the console and in the PDF; **entering it is yours to do.** Shares handed back before they vested are no income and no negative income. A sale that would reach unvested shares stops the run.
+*   **Awarded shares: one programme, and the sale is handled while the receipt is not.** The only share-award programme supported is **IBKR's Refer-A-Friend award**; the export does not name the programme, so you confirm it once by setting `STOCK_AWARD_PROGRAMME = "IBKR_REFER_A_FRIEND"` in `src/config.py`, and a run with grant rows and no confirmation stops. For that programme the engine gives the shares a real acquisition date and cost basis, so the **gain when you sell them** is computed correctly on Anlage KAP. The shares count as received on the day their one-year transfer restriction lapses (the vesting), at that day's value — see the Grants query section for what that rests on. The engine does **not** declare that **receipt** as income: it is a *Leistung* under § 22 Nr. 3 EStG ([GT-ESTG20-063]), which belongs on **Anlage SO**, and the reporting layer has no line for it — the same gap as for a securities-lending fee, tracked as issue #76. The run states the amount, year and form on the console and in the PDF; **entering it is yours to do.** Shares handed back before they vested are no income and no negative income. A sale that would reach unvested shares stops the run.
 *   **No "Alt-Anteile":** Assumes all investment fund shares were acquired on or after January 1, 2018.
 *   **Foreign WHT:** Aggregates WHT paid (Anlage KAP Zeile 41) but does not calculate creditable WHT.
 *   **No loss carry-forward/backward:** Calculations are limited to the specified tax year.

@@ -655,11 +655,11 @@ class StockAwardEvent(FinancialEvent):
     account from the award, which is what the broker's snapshots count. They are acquired
     for tax on the vesting: the programme's clause calling a premature disposal "void" is
     read as making one legally ineffective, so Zufluss falls on the day the restriction
-    lapses ([GT-ESTG20-064]). That is Reading A of an open question (Q17), taken by the
-    maintainer's decision recorded in the map row. The award therefore books a lot
+    lapses ([GT-ESTG20-064]). That is the store's application of the German Zufluss test
+    to one programme's published terms, approved by the maintainer -- not a court ruling
+    on the programme, and the store states its limits. The award therefore books a lot
     without cost or acquisition date, and the vesting row supplies both
-    ([GT-ESTG20-065]). Under Reading B -- the clause being a mere contractual lock-up --
-    the acquisition would sit on the award row's date and price instead.
+    ([GT-ESTG20-065]).
 
     **A reversal realises nothing.** The condition failed and unvested shares are taken
     back, so there is no disposal and no `RealizedGainLoss`, and -- nothing having

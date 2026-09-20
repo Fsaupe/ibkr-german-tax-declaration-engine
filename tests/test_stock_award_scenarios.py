@@ -1,8 +1,8 @@
 """Awarded shares, end to end, through the real pipeline.
 
 legal_basis: established for ONE programme, Interactive Brokers' Refer-A-Friend award
-([GT-ESTG20-063]). Zufluss on the lapse of the transfer restriction is Reading A of Q17 at
-[GT-ESTG20-064], the reading the map records as taken: the award books a holding without
+([GT-ESTG20-063]). [GT-ESTG20-064] applies the Zufluss test to that programme's terms and
+puts Zufluss on the lapse of the transfer restriction: the award books a holding without
 cost or acquisition date, and the vesting is the receipt;
 [GT-ESTG20-065] makes the vesting day's value the Anschaffungskosten on a later disposal;
 [GT-ESTG20-067]'s boundary makes a return before Zufluss no tax event at all;
@@ -33,6 +33,7 @@ before this file existed.
 | factory: positive-vesting-price guard disabled | 2 |
 | factory: vesting dated on `ReportDate` | 6 |
 | enrichment of stock-award events disabled | 13 |
+| vesting price converted at the AWARD day's rate | 1 |
 | PDF manual-entry block deleted | 1 |
 | parser matching a substring instead of the whole description | 3 (measured earlier, code unchanged) |
 | **sort-key band in `get_event_sort_key`** | **0 -- and the suite cannot** |
@@ -85,7 +86,7 @@ class TestAwardedSharesReachTheLedger(FifoTestCaseBase):
         return rgls[0]
 
     def test_a_vesting_inside_the_tax_year_sets_the_date_and_the_cost(self):
-        """The vesting is the Zufluss ([GT-ESTG20-064], Reading A), so its day and its price
+        """The vesting is the Zufluss ([GT-ESTG20-064]), so its day and its price
         are the acquisition.
 
         The award is booked before the tax year at 4 and vests INSIDE the tax year at 7;
@@ -223,13 +224,17 @@ class TestAwardedSharesReachTheLedger(FifoTestCaseBase):
                 positions_start_data=[], positions_end_data=[],
             )
 
-    def test_a_currency_vesting_is_converted_at_the_event_date_not_left_foreign(self):
-        """Covers the enrichment link. A non-EUR vesting whose price is never converted
-        would reach the ledger with no EUR value and stop the run; one converted at the
-        wrong date would give a different basis."""
+    def test_a_currency_vesting_is_converted_at_the_vesting_days_rate(self):
+        """Covers the enrichment link, with the award and the vesting apart in price AND in
+        rate. A non-EUR vesting whose price is never converted would reach the ledger with no
+        EUR value and stop the run; one converted at the award day's rate, or an award price
+        relabelled as the vesting's, would each give a different basis."""
+        from datetime import date
         results = self._run_pipeline(
             tax_year=TAX_YEAR,
-            custom_rate_provider=MockECBExchangeRateProvider(Decimal("2")),
+            # 1 USD = 2 EUR on the award day, 3 EUR from the vesting day on.
+            custom_rate_provider=MockECBExchangeRateProvider(rate_schedule=[
+                (date(2022, 1, 1), Decimal("2")), (date(2022, 9, 2), Decimal("3"))]),
             grants_data=[
                 grant_row("Stock Award Grant for Cash Deposit",
                           "20220302", "20220302", "20220902", "10", "4", currency="USD"),
@@ -245,11 +250,12 @@ class TestAwardedSharesReachTheLedger(FifoTestCaseBase):
             positions_end_data=[],
         )
         rgl = self._sale_gain(results)
-        # 1 USD = 2 EUR (fixed provider): 10 shares vested at 6 USD -> 60 USD -> 120 EUR.
-        # A deterministic rate lets the exact basis be asserted; the live ECB rate could not.
-        assert rgl.total_cost_basis_eur == Decimal("120"), (
-            "basis is the vesting-day USD price converted at the vesting-date rate, not the "
-            "foreign figure (60) taken as EUR nor the award price (4 USD -> 80)")
+        # 10 shares vested at 6 USD at the vesting day's 3 EUR/USD = 180 EUR.
+        assert rgl.total_cost_basis_eur == Decimal("180"), (
+            "120 is the vesting price at the award day's rate, 80 the award price at the award "
+            "day's rate, 60 the foreign figure taken as EUR")
+        assert rgl.total_realization_value_eur == Decimal("300"), (
+            "sale proceeds are the actual proceeds at the sale day's rate, untouched by this")
         assert rgl.acquisition_date == "2022-09-02", "the lot is dated on the vesting date"
 
 

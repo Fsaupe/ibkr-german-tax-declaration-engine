@@ -379,8 +379,8 @@ class RawGrantRecord(RawBaseRecord):
     * a **reversal** ("... Return ...") takes some back when the condition fails, with a
       negative `Quantity` and the ORIGINAL award's `AwardDate`;
     * a **vesting** ("... Vesting ...") moves no shares. It records the lapse of the
-      transfer restriction, which is where Zufluss falls ([GT-ESTG20-064], Reading A of
-      Q17): it gives the award's lot its acquisition date and cost, and a consumer that
+      transfer restriction, which is where Zufluss falls ([GT-ESTG20-064]): it gives the
+      award's lot its acquisition date and cost, and a consumer that
       added its `Quantity` to the position would count the same shares twice.
 
     The third is why `parse_grants_csv` refuses an `ActivityDescription` it does not
@@ -391,7 +391,7 @@ class RawGrantRecord(RawBaseRecord):
     **Why both dates are mapped.** `AwardDate` is the day the shares enter the account --
     what the broker's snapshots count -- and, with the grant account, the matching key.
     `VestingDate` is the day the transfer restriction lapses, which is where Zufluss falls
-    under the reading taken at [GT-ESTG20-064] (Reading A of Q17): the acquisition date,
+    under the application at [GT-ESTG20-064]: the acquisition date,
     and the day whose ECB rate converts the vesting row's `Price`. `ReportDate` is the
     broker's booking day; it dates a return and nothing else.
 

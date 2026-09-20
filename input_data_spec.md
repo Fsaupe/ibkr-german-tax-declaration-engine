@@ -318,9 +318,9 @@ settles it.
   "IBKR_REFER_A_FRIEND"` in `src/config.py`; grant rows without it stop the run.
 - **Legal ground, for that programme:** the award is a *Leistung* under § 22 Nr. 3 EStG, not
   Kapitalertrag ([GT-ESTG20-063]). Zufluss falls on the day the programme's transfer restriction
-  lapses — the vesting ([GT-ESTG20-064], Reading A of the open question Q17: whether the terms'
-  clause calling an early disposal "void" makes one legally ineffective is not settled by any German
-  source, and the map records the maintainer's choice). The value that day is the
+  lapses — the vesting: the terms declare an early disposal "void" and the custodian refuses one,
+  so the recipient cannot dispose of the shares before it ([GT-ESTG20-064], which also states the
+  limits of that application). The value that day is the
   Anschaffungskosten on a later disposal, whether or not the receipt was taxed ([GT-ESTG20-065]).
   Shares handed back before vesting never accrued: neither a receipt nor a negative Einnahme
   ([GT-ESTG20-067], Boundary).

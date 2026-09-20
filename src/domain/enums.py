@@ -66,7 +66,7 @@ class FinancialEventType(Enum):
     # member would let a dispatch confuse them:
     #   * AWARD books the shares in. They are in the account from this day, which is what
     #     the broker's snapshot reports -- a holding, not yet an acquisition: no cost, no
-    #     acquisition date ([GT-ESTG20-064], Reading A of Q17).
+    #     acquisition date ([GT-ESTG20-064]).
     #   * REVERSAL takes unvested shares back when the condition fails. It is NOT a
     #     disposal and realises nothing, and since nothing had zugeflossen it is no
     #     negative Einnahme either ([GT-ESTG20-067], Boundary).

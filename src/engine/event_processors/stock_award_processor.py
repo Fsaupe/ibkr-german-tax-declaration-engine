@@ -19,11 +19,12 @@ The three kinds do here what they do in the replay, and the two paths call the s
 Refer-A-Friend share award ([GT-ESTG20-063] to [GT-ESTG20-067]); `grants_parser` refuses rows
 of anything else, and the user confirms the programme in config.
 
-**The vesting is the receipt.** Which day the shares zufliessen is an open question (Q17 at
-[GT-ESTG20-064]): the law is settled, and what no German source supplies is whether the
-programme's clause calling a premature disposal "void" makes one legally ineffective. The
-maintainer decided on 2026-09-20 to take Reading A -- it does, so Zufluss falls on the day
-the restriction lapses. The grounds are in the map row; this processor implements it:
+**The vesting is the receipt.** The programme's terms declare a premature disposal "void"
+and the custodian refuses one, so the recipient cannot dispose of the shares while the
+restriction runs, and Zufluss falls on the day it lapses ([GT-ESTG20-064], BFH VI R 37/09
+Rn. 15 and 20). That is the store's application of the German test to the published terms,
+approved by the maintainer on 2026-09-20; its limits are stated there. This processor
+implements it:
 
 * the **award** books the shares as a holding without cost or acquisition date;
 * the **vesting** is the § 22 Nr. 3 receipt ([GT-ESTG20-063]) at the vesting row's price and
@@ -122,7 +123,7 @@ class StockAwardProcessor(EventProcessor):
             f"Anlage SO (Einkuenfte aus Leistungen), {event.event_date}",
             f"The transfer restriction on shares awarded under Interactive Brokers' "
             f"Refer-A-Friend programme on {event.award_date} lapsed on {event.event_date}, "
-            f"which is where Zufluss falls ([GT-ESTG20-064], Reading A of Q17). That receipt "
+            f"which is where Zufluss falls ([GT-ESTG20-064]). That receipt "
             f"is a Leistung under § 22 Nr. 3 EStG ([GT-ESTG20-063]) and belongs on Anlage SO for {event.event_date[:4]}; this "
             f"engine has no line for it and has NOT declared it (issue #76). Its value at "
             f"Zufluss is "

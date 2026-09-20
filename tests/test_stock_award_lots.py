@@ -5,8 +5,8 @@ public-repo rule; what is reproduced is the SHAPE the broker's export has -- an 
 a partial reversal of it, and the vesting of what is left -- because that shape is what
 the operations are built for.
 
-legal_basis: Reading A of Q17 at [GT-ESTG20-064], the reading the map records as taken:
-the shares zufliessen when the programme's transfer restriction lapses. The award books
+legal_basis: the application at [GT-ESTG20-064] to the Refer-A-Friend terms: the shares
+zufliessen when the programme's transfer restriction lapses. The award books
 a holding without cost or acquisition date; the vesting supplies both at the vesting
 day's value ([GT-ESTG20-065]); a return before vesting is no tax event ([GT-ESTG20-067],
 Boundary).
