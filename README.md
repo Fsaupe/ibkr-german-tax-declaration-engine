@@ -367,10 +367,13 @@ shares are acquired for tax purposes on the day they are booked into your accoun
 value: you vote them, receive their dividends and carry their price risk from that day, and a
 contractual lock-up or a promise to give them back does not delay Zufluss — only being *legally
 unable* to dispose of them would ([GT-ESTG20-064]). So a vesting row changes nothing the engine
-computes. **One dependency is stated rather than hidden:** the terms call an early sale "void".
-The engine reads that as the contractual lock-up it is on its face. If it were established that
-under the law governing the programme such a sale is legally ineffective, the acquisition would
-move to the vesting date and the vesting-day price, and the figures here would be wrong.
+computes. **This is a chosen reading, stated rather than hidden.** German law is clear on the
+rule and stops short of one fact: the terms call an early sale "void", and whether that makes such
+a sale legally ineffective under the law governing your holding is something no German source
+says. If it does, the acquisition would fall on the vesting date at the vesting-day price. The
+maintainer decided to read the clause as the contractual lock-up it is on its face, as a
+defensible position; both readings are in `reference/research/open-legal-questions.md` (Q17) and
+the grounds in `docs/legal-implementation-map.md`. The position on your own return remains yours.
 
 **What the engine does with it.** The award gives your shares a real acquisition date and cost, so
 when you eventually sell them the gain on **Anlage KAP** is measured properly instead of against an

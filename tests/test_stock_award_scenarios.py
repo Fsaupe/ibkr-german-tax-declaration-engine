@@ -1,8 +1,9 @@
 """Awarded shares, end to end, through the real pipeline.
 
 legal_basis: established for ONE programme, Interactive Brokers' Refer-A-Friend award
-([GT-ESTG20-063]). [GT-ESTG20-064] puts Zufluss on the booking -- the holding period and
-the reclaim condition do not defer it, only a disposal being rechtlich unmoeglich would;
+([GT-ESTG20-063]). Zufluss on the booking is Reading B of Q17 at [GT-ESTG20-064], the
+reading the map records as chosen -- the holding period and the reclaim condition do not
+defer it, only a disposal being rechtlich unmoeglich would;
 [GT-ESTG20-065] makes that day's value the Anschaffungskosten on a later disposal;
 [GT-ESTG20-067] makes a return a negative Einnahme of its own year at that original value;
 [GT-ESTG20-066] says no rule of law orders a same-day return against a sale. All in

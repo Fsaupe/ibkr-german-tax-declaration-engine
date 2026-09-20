@@ -657,10 +657,10 @@ class StockAwardEvent(FinancialEvent):
     too: a contractual holding period and a reclaim condition do not postpone it, only a
     disposal being *rechtlich unmoeglich* would ([GT-ESTG20-064]). So the award creates the
     lot with its final date and cost ([GT-ESTG20-065]) and a vesting has nothing to
-    change. The one thing that would displace this -- the programme's clause calling a
-    premature disposal "void" turning out to make a transfer ineffective under the law
-    governing it -- is stated at [GT-ESTG20-064] and in its map row; it would move the
-    acquisition to the vesting row's date and price.
+    change. This is Reading B of an open question (Q17 at [GT-ESTG20-064]), taken by the
+    maintainer's decision recorded in the map row. Under Reading A -- the programme's
+    clause calling a premature disposal "void" making a transfer ineffective under the
+    law governing it -- the acquisition would move to the vesting row's date and price.
 
     **A reversal realises nothing.** The condition failed and the award is undone, so
     there is no disposal and no `RealizedGainLoss`. It carries no proceeds for that

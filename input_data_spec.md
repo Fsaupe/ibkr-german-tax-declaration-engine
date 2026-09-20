@@ -315,8 +315,9 @@ settles it.
   programme writing the same three could not be told apart — a stated limit, not a guarded one.
 - **Legal ground, for that programme:** the award is a *Leistung* under § 22 Nr. 3 EStG, not
   Kapitalertrag ([GT-ESTG20-063]). Zufluss falls on the booking into the account: the holding period
-  and the reclaim condition do not postpone it ([GT-ESTG20-064], with the one dependency that would
-  — the terms' clause calling an early disposal "void"). The value that day is the
+  and the reclaim condition do not postpone it ([GT-ESTG20-064] — Reading B of the open question Q17:
+  whether the terms' clause calling an early disposal "void" makes one legally ineffective is not
+  settled by any German source, and the map records the maintainer's choice). The value that day is the
   Anschaffungskosten on a later disposal, whether or not the receipt was taxed ([GT-ESTG20-065]).
   Shares handed back are a negative Einnahme of the year of the return at that same original value
   ([GT-ESTG20-067]).

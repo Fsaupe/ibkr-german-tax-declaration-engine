@@ -29,11 +29,12 @@ year and destination. The value at the award is the Anschaffungskosten of the lo
 ([GT-ESTG20-065]), and that reaches a declared figure through the disposal, not through
 this processor.
 
-The application at [GT-ESTG20-064] has one stated dependency -- the effect, under the law
-governing the programme, of its clause calling a premature disposal "void". Were that
-clause to make a transfer ineffective, Zufluss would move to the vesting and this processor
-would be wrong about date, value and returns alike. It is recorded in the store and the
-map; nothing here guards it.
+Booking-day Zufluss is Reading B of an open question (Q17 at [GT-ESTG20-064]). The law is
+settled; what no German source supplies is whether the programme's clause calling a
+premature disposal "void" makes a transfer ineffective under the law governing the
+holding. Were it to, Zufluss would move to the vesting, and date, value and returns here
+would all change (Reading A). The maintainer decided on 2026-09-20 to take Reading B as
+defensible; the grounds are in the map row, and this processor implements that choice.
 """
 import logging
 from decimal import Decimal, ROUND_HALF_UP
