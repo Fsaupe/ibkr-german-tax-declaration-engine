@@ -16,8 +16,9 @@ area table itself and is left to a `ks-maint`.
 
 - **Tier 1 -- § 22 Nr. 3 EStG**, retrieved 2026-08-13 from
   [gesetze-im-internet.de/estg/__22.html](https://www.gesetze-im-internet.de/estg/__22.html)
-- **Tier 1 -- § 11 Abs. 1 EStG**, retrieved 2026-08-13 from
-  [gesetze-im-internet.de/estg/__11.html](https://www.gesetze-im-internet.de/estg/__11.html)
+- **Tier 1 -- § 11 Abs. 1 EStG**, retrieved 2026-08-13, and **§ 11 Abs. 2 Satz 1 EStG** (*"Ausgaben
+  sind fuer das Kalenderjahr abzusetzen, in dem sie geleistet worden sind."*), retrieved 2026-09-20,
+  from [gesetze-im-internet.de/estg/__11.html](https://www.gesetze-im-internet.de/estg/__11.html)
 - **Tier 1 -- § 8 Abs. 1, Abs. 2 EStG**, retrieved 2026-08-13 from
   [gesetze-im-internet.de/estg/__8.html](https://www.gesetze-im-internet.de/estg/__8.html)
 - **Tier 1 -- § 20 Abs. 1 Nr. 7 EStG**, retrieved 2026-09-20 from
@@ -26,25 +27,103 @@ area table itself and is left to a `ks-maint`.
   against § 22 Nr. 3 turns on.
 - **Tier 2 -- BMF-Schreiben vom 14.05.2025 (Einzelfragen zur Abgeltungsteuer), Rz. 129b**, retrieved
   2026-09-20; index and retrieval record in `../bmf-guidance/abgeltungsteuer-einzelfragen.md`.
-  Supports the § 22 Nr. 3 reading of a premium for a Wertpapierdepot transfer (¶1); it does not
-  address a premium for a cash deposit left in place, so it does not settle the classification here.
-- **Tier 4 -- BFH v. 15.11.2022 -- VIII R 18/20**, retrieved 2026-09-20 from
-  [bundesfinanzhof.de](https://www.bundesfinanzhof.de/en/entscheidungen/entscheidungen-online/decision-detail/STRE202310054/).
-  Cited for the § 20 Abs. 1 Nr. 7 reading: a Bonuszins that accrues for leaving capital on deposit is
-  an *Entgelt fuer die Ueberlassung von Kapitalvermoegen zur Nutzung*. Tier 4, never alone -- it
-  supports one side of the open classification question, not a settled position.
-- **Tier 4 -- BFH v. 30.06.2011 -- VI R 37/09**, retrieved 2026-08-13 from
-  [bundesfinanzhof.de](https://www.bundesfinanzhof.de/en/entscheidungen/entscheidungen-online/decision-detail/STRE201110231/).
-  Cited for the Zufluss test only, alongside § 11 Abs. 1 Satz 1, never alone --
-  Validation Protocol item 1.
-- **Tier 5 -- Littmann/Bitz/Pust, Das Einkommensteuerrecht, EStG § 22** (Rueckzahlung von Einnahmen),
-  and **Tier 4 -- BFH** on Leistungen for which § 22 Nr. 3 Satz 3 does not apply, retrieved 2026-09-20.
-  Cited only for the open question [GT-ESTG20-067] on the return of a taxed benefit -- both are
-  Tier 4/5, they do not settle it, and no Tier 1/2 source on the point was located.
+  ¶1 puts a Geldpraemie for a Depotuebertrag under § 22 Nr. 3; ¶2 is the distinct
+  purchase-conditioned case. Cited at [GT-ESTG20-063] for the neighbouring case, with its limit.
+- **Tier 4 -- BFH v. 22.10.2024 -- VIII R 7/23**, Rn. 20, read 2026-09-20 in the court's PDF at
+  [bundesfinanzhof.de](https://www.bundesfinanzhof.de/de/entscheidung/entscheidungen-online/detail/STRE202510021/).
+  The Veranlassung test for § 20 Abs. 1 Nr. 7, cited beside the statutory charging element.
+- **Tier 4 -- BFH v. 15.11.2022 -- VIII R 18/20**, Rn. 34, read 2026-09-20 in the court's PDF at
+  [bundesfinanzhof.de](https://www.bundesfinanzhof.de/de/entscheidung/entscheidungen-online/detail/STRE202310054/).
+  The contrast case: a Bonuszins is remuneration for the use of the balance itself.
+- **Tier 1 -- § 20 Abs. 4 Satz 1, Satz 6, Abs. 4a Satz 5 EStG**, retrieved 2026-09-20 from
+  gesetze-im-internet.de/estg/__20.html; **§ 255 Abs. 1 Satz 1 HGB**, retrieved 2026-09-20 from
+  [gesetze-im-internet.de/hgb/__255.html](https://www.gesetze-im-internet.de/hgb/__255.html);
+  **§ 39 Abs. 2 Nr. 1 and § 175 Abs. 1 Satz 1 Nr. 2 AO**, retrieved 2026-09-20 from
+  gesetze-im-internet.de/ao_1977/.
+- **Tier 2 -- BMF-Schreiben vom 06.03.2025, IV C 1 - S 2256/00042/064/043** (Einzelfragen zur
+  ertragsteuerrechtlichen Behandlung bestimmter Kryptowerte), **Rn. 45, 75, 106**, retrieved
+  2026-09-20 from
+  [bundesfinanzministerium.de](https://www.bundesfinanzministerium.de/Content/DE/Downloads/BMF_Schreiben/Steuerarten/Einkommensteuer/2025-03-06-einzelfragen-kryptowerte-bmf-schreiben.pdf?__blob=publicationFile&v=2)
+  (Rn. 45 on PDF page 16, Rn. 75 on pages 24-25). Cited at [GT-ESTG20-065] as an analogy, labelled there.
+- **Tier 4 -- BFH v. 26.08.2020 -- VI R 6/18** (NV), Rn. 23-28 and 37-40;
+  **BFH v. 16.06.2015 -- IX R 26/14**, Rn. 18-21; **BFH v. 12.07.2016 -- IX R 56/13**, Rn. 24-25 --
+  each read 2026-09-20 in the court's PDF, which carries the Randnummern, under
+  bundesfinanzhof.de/de/entscheidung/entscheidungen-online/detail/ with the identifiers
+  STRE202050273, STRE201510245 and STRE201610270.
+- **Tier 1 -- § 19a Abs. 1 Satz 4 EStG**, retrieved 2026-09-20 from
+  [gesetze-im-internet.de/estg/__19a.html](https://www.gesetze-im-internet.de/estg/__19a.html).
+  Inserted by the Zukunftsfinanzierungsgesetz vom 11.12.2023 (BGBl. 2023 I Nr. 354). Cited only
+  a contrario at [GT-ESTG20-064]; the BMF letter of 01.06.2024 cites the same sentence as Satz 3.
+- **Tier 2 -- BMF-Schreiben vom 01.06.2024, IV C 5 - S 2347/24/10001 :001, BStBl 2024 I S. 946**
+  (Ueberlassung von Vermoegensbeteiligungen ab 2024), **Rn. 20, 25, 26**. Read 2026-09-20 in the
+  reproduction at [datenbank.nwb.de/Dokument/1045625](https://datenbank.nwb.de/Dokument/1045625/);
+  the official copy is Anhang 29a of the Amtliches Lohnsteuer-Handbuch
+  (lsth.bundesfinanzministerium.de), which refuses automated retrieval. The letter is addressed to
+  § 19 EStG; what is borrowed is its statement of the general Zufluss rule of § 11.
+- **Tier 2 -- BMF-Schreiben vom 14.05.2025 (Einzelfragen zur Abgeltungsteuer), Rz. 87**, retrieved
+  2026-09-20 (PDF page 39-40); retrieval record in `../bmf-guidance/abgeltungsteuer-einzelfragen.md`.
+  The administration's statement of the Anschaffungskosten of shares received as a benefit in kind.
+- **Tier 2 -- EStH H 22.8 "Rueckzahlung von Einnahmen"**, read 2026-09-20 in the reproduction at
+  [steuerschroeder.de](https://www.steuerschroeder.de/steuergesetze/estg/22/esth/22.8); the official
+  text is at esth.bundesfinanzministerium.de under § 22, which refuses automated retrieval. It
+  adopts **BFH v. 26.01.2000 -- IX R 87/95, BStBl II 2000 S. 396** (Tier 4).
+- **Tier 4 -- BFH v. 30.06.2011 -- VI R 37/09, BStBl II 2011 S. 923**, read in full 2026-09-20 from
+  [bundesfinanzhof.de](https://www.bundesfinanzhof.de/de/entscheidung/entscheidungen-online/detail/STRE201110231/).
+  Cited for the Zufluss test, alongside § 11 Abs. 1 Satz 1 and BMF 01.06.2024 Rn. 26, never alone.
+- **Tier 4 -- BFH v. 30.09.2008 -- VI R 67/05, BStBl II 2009 S. 282**, Leitsaetze read 2026-09-20 at
+  [datenbank.nwb.de/Dokument/322251](https://datenbank.nwb.de/Dokument/322251/). Adopted by BMF
+  01.06.2024 Rn. 20 and Rn. 26.
+- **Tier 4 -- BFH v. 17.09.2009 -- VI R 17/08, BStBl II 2010 S. 299** (Fundstelle as cited by IX R
+  26/14 Rn. 20), Leitsaetze read 2026-09-20 at
+  [datenbank.nwb.de/Dokument/354767](https://datenbank.nwb.de/Dokument/354767/). Cited at
+  [GT-ESTG20-067] for the amount of a benefit returned in kind; Tier 4, alongside H 22.8.
+- **Contract terms, not law -- Interactive Brokers' "Refer-A-Friend" Program Terms and Conditions**,
+  form 4051, version dated 6/03/2022, as archived 2022-08-19 at
+  [web.archive.org](http://web.archive.org/web/20220819040105/https://ndcdyn.interactivebrokers.com/aces/Agreement/AgreementVersion/4051),
+  and form 4841, version dated 2 July 2026, retrieved 2026-09-20 from
+  [ndcdyn.interactivebrokers.com](https://ndcdyn.interactivebrokers.com/aces/Agreement/AgreementVersion/4841).
+  The four clauses quoted below were compared 2026-09-20 and are identical in both versions apart
+  from capitalisation; the award ratio differs (one dollar of shares per 100 dollars of Deposit
+  Value in 2022, per 300 in 2026). They carry no tier: they are the facts the law is applied to,
+  and they are quoted because [GT-ESTG20-064] turns on them. **These are the terms of one
+  programme of one broker; a benefit granted under other terms has to be read against its own.**
 
 Applicable tax years: unrestricted within the Abgeltungsteuer regime. None of the three provisions
 carries a first year of application relevant here, and the 256-Euro figure in Nr. 3 Satz 2 is not
 year-parameterised.
+
+---
+
+## The fact pattern: what the programme terms grant and withhold
+
+Quoted from the contract terms named under Sources. They are facts, not law, and carry no claim ID.
+
+- **What is granted, and for what.** Shares of the broker's own listed parent are granted *"based on
+  cash or the net fair market value of assets deposited"*, in a fixed ratio to the Deposit Value,
+  up to a cap, and are removed again in proportion to withdrawals during the Award Period. The
+  benefit is therefore measured by the amount of capital brought, **cash or securities alike**, and
+  not by the time it stays or by any yield on it.
+- **The restriction.** *"Shares awarded ... may not be sold, exchanged, transferred, assigned or
+  otherwise disposed of in any manner (including through the use of any derivative instrument) for
+  one year from the award date ... Any attempt to transfer, sell, exchange, assign or dispose of
+  Shares in violation of the Transfer Restriction is **void** and Referred Client authorizes IBKR to
+  reject any such attempt. ... any attempt to sell Shares through IBKR or any other broker or to
+  transfer Shares to another broker is a violation of the Transfer Restriction and **will not by
+  [sic] processed** by IBKR."*
+- **Forfeiture.** *"If, prior to the Anniversary Date, either the Referred Client's account is closed
+  for any reason or no longer in good standing, any unvested Shares ... are forfeited and IBKR shall
+  reclaim these Shares for no additional consideration."*
+- **What the recipient does have.** *"Referred Clients will be entitled to receive any and all
+  dividends or other distributions paid with respect to the Shares ..., although the tax treatment
+  of such distributions may differ from the treatment if the Transfer Restriction had not been in
+  effect"*; *"Referred Clients will be entitled to vote the Shares"*; and the broker *"is authorized
+  to use Shares to satisfy obligations you owe to IBKR in any IBKR margin account at any time"*.
+- **The grantor's own tax treatment, for its domestic clients.** *"For Referred Client accounts owned
+  by U.S. tax residents, IBKR shall treat the fair market value of the Shares on the date the
+  Transfer Restrictions lapse as ordinary taxable income."* This is foreign tax law and decides
+  nothing under the EStG; it shows only that the grantor itself regards the lapse, not the grant,
+  as the moment the benefit is complete.
+- **Governing law.** *"the laws of the State of New York"*.
 
 ---
 
@@ -73,75 +152,71 @@ across all Leistungen of that year taken together**, not per single receipt.
 **What the cited unit also contains.** Satz 3 bars a loss from Leistungen from being offset against
 other income or carried under § 10d. Satz 4 lets such a loss reduce Leistungen income of the
 immediately preceding and the following assessment periods, § 10d Abs. 4 applying accordingly.
-Neither is reached by a benefit received, which cannot be negative.
+A receipt cannot be negative, but its **return** can produce negative Einnahmen, and Satz 3 does
+not reach those -- it presupposes Werbungskosten exceeding Einnahmen (BFH IX R 26/14 Rn. 20,
+[GT-ESTG20-067]).
 
 ---
 
-## [GT-ESTG20-063] A benefit granted for placing capital is a Leistung, not Kapitalertrag
+## [GT-ESTG20-063] A reward for bringing assets to a broker is a Leistung, not Kapitalertrag
 
-Where a bank or broker grants a benefit **in return for the customer transferring or leaving funds
-with it**, the order of enquiry fixed by [GT-ESTG20-049] and [GT-ESTG20-050] runs as follows.
+**Scope.** This claim, and [GT-ESTG20-064] to [GT-ESTG20-067] with it, are established for **one
+programme: Interactive Brokers' "Refer-A-Friend" share award under the terms quoted above.** They
+apply the general tests below to those terms. A benefit granted under other terms -- another
+broker's, or another promotion of the same broker -- has to be read against its own terms before any
+of these results is carried over; nothing here decides it.
 
-**Step 1 -- § 20 Abs. 3 fails.** Abs. 3 requires the benefit to be granted *neben* or *an deren
-Stelle* of Einnahmen under Abs. 1 or Abs. 2. A benefit owed for the act of transferring funds is
-owed **whether or not the funds go on to yield anything**, so there is no Einnahme of a particular
-Kapitalanlage for it to stand alongside or replace. That is precisely the test [GT-ESTG20-050]
-states, and the reason it gives -- both worked Randziffern of the administration combine Abs. 3
-with a Nummer of Abs. 1 -- applies unchanged.
+**The test is what the payment is for (Veranlassung), not whether a money claim exists.** § 20
+Abs. 1 Nr. 7 Satz 1 charges an *"Entgelt fuer die Ueberlassung des Kapitalvermoegens zur Nutzung"*
+([GT-ESTG20-003]). BFH v. 22.10.2024 -- VIII R 7/23, Rn. 20: *"Massgeblich ist auch bei den
+Einkuenften gemaess § 20 Abs. 1 Nr. 7 EStG, ob das Entgelt nach dem Veranlassungsprinzip, das heisst
+bei wertender Beurteilung des ausloesenden Moments, durch die Kapitalueberlassung veranlasst ist"*;
+there a fee was *"nach der objektiv verstandenen Zwecksetzung der Beteiligten ... nicht fuer eine
+Ueberlassung von Kapital zur Nutzung gezahlt"* although a bank balance was involved. So the
+existence of a credit balance at the broker does not by itself make a related payment interest.
 
-**Step 2 -- whether § 20 Abs. 1 Nr. 7 applies is not settled by a located source; the question is
-open.** A credit balance is a Kapitalforderung, so the Nr. 7 gate that stopped the
-Wertpapierdarlehen fee (a Sachforderung, [GT-ESTG20-046]) is passed here, and the question turns on
-the charging element. Nr. 7 Satz 1 taxes *"Ertraege aus sonstigen Kapitalforderungen jeder Art,
-**wenn die Rueckzahlung des Kapitalvermoegens oder ein Entgelt fuer die Ueberlassung des
-Kapitalvermoegens zur Nutzung** zugesagt oder geleistet worden ist, auch wenn die Hoehe ... von
-einem ungewissen Ereignis abhaengt"* ([GT-ESTG20-003]). Whether a benefit granted for **depositing
-capital and leaving it in place** is such an Entgelt is not settled by a located Tier 1 or Tier 2
-source; both readings are live:
+**The order of enquiry** is the one fixed by [GT-ESTG20-049] and [GT-ESTG20-050]:
 
-- **Toward Nr. 7.** The benefit is conditioned on the capital remaining with the bank, which is the
-  *Ueberlassung ... zur Nutzung* the Entgelt would pay for. BFH v. 15.11.2022 -- VIII R 18/20 treats
-  a Bonuszins that accrues for leaving capital on deposit as an *"Entgelt fuer die Ueberlassung von
-  Kapitalvermoegen zur Nutzung i.S. des § 20 Abs. 1 Nr. 7 Satz 1 EStG"*. That Satz 1 admits an
-  Entgelt whose amount depends on an uncertain event answers the objection that a one-off grant is
-  too unlike interest.
-- **Toward § 22 Nr. 3.** The administration treats a Geldpraemie for the **transfer of a
-  Wertpapierdepot** as a § 22 Nr. 3 Leistung (BMF 14.05.2025 Rz. 129b ¶1), and its stated practice
-  treats a Kontoeroeffnungs- or Startguthaben-Praemie the same way; on this reading the grant is
-  consideration for the customer's conduct, not an Entgelt for the use of the capital.
+- **§ 20 Abs. 3 fails.** It requires a benefit *neben* or *an deren Stelle* of Einnahmen under Abs. 1
+  or 2. The award is owed for the deposit whether or not the assets yield anything; there is no
+  Einnahme of a particular Kapitalanlage for it to accompany or replace ([GT-ESTG20-050]).
+- **§ 20 Abs. 1 Nr. 7 fails on Veranlassung.** Under the terms the award is a fixed fraction of the
+  **net value of cash or other assets** brought to the broker, and is reduced on withdrawals during
+  the Award Period. A customer qualifies by transferring securities, which places no
+  Kapitalforderung with the broker at all; the award is measured by the amount brought, not by the
+  time a money balance is left for use or by any yield on it. What triggers it is becoming and
+  remaining a funded customer. Contrast BFH v. 15.11.2022 -- VIII R 18/20, Rn. 34, where a
+  Bonuszins was *"eine Erhoehung der ... fuer die Ueberlassung des Bausparguthabens gewaehrten
+  Guthabenzinsen"* -- remuneration for the use of the balance itself.
+- **§ 22 Nr. 3 takes it** by its subsidiarity clause ([GT-ESTG20-062]): the customer's conduct is a
+  *Leistung* and the award its consideration.
 
-**Neither limb of Rz. 129b is this fact pattern.** ¶1 is a securities-depot transfer, which places
-no capital at the bank's disposal; ¶2 is a premium *"unter der Bedingung ..., dass Wertpapiere ...
-erworben werden"*, which reduces the Anschaffungskosten of those securities and is a third case, not
-this benefit. So the § 22 Nr. 3 classification of a Sachpraemie for a cash deposit left in place
-rests on analogy, not on a located source. The question is recorded as open in
-`../research/open-legal-questions.md` (Nr. 7 versus § 22 Nr. 3); which reading is applied is the
-taxpayer's filing choice, recorded against this claim in the map, not settled here.
+**The administration reaches the same category for the neighbouring case (Tier 2).** BMF 14.05.2025
+Rz. 129b ¶1: a Geldpraemie for transferring a Wertpapierdepot *"stellt ... Einkuenfte aus sonstigen
+Leistungen im Sinne des § 22 Nummer 3 EStG dar"*. **The limit of the citation:** ¶1 speaks of a
+Geldpraemie for a Depotuebertrag, not of shares awarded for deposits of cash or assets; it is cited
+as the same principle applied to the closest case the administration addresses, not as a ruling on
+this programme. ¶2 is a different case and is **not** this one: a premium paid *"unter der Bedingung
+..., dass Wertpapiere ... erworben werden"* reduces the Anschaffungskosten of those securities and
+is no income. The programme terms attach no purchase condition.
 
-**Step 3 -- under the § 22 Nr. 3 reading, § 22 Nr. 3 applies.** On that reading its subsidiarity
-clause is satisfied once § 20 is exhausted, the customer's conduct -- transferring funds and leaving
-them in place -- is a *Leistung*, and the benefit is its consideration.
+**Form of the benefit.** That the award is in shares rather than money changes only its valuation
+([GT-ESTG20-064]), not the category.
 
-**The supported fact pattern.** This claim is for a benefit granted **for the deposit or retention
-of the customer's own capital and not conditioned on the acquisition of securities**. Two boundaries
-fix its edges. Where the benefit is a security rather than a cash amount, only its **valuation**
-differs under either reading -- a Sachbezug is brought to tax at the ueblicher Endpreis on the day
-of Zufluss (§ 8 Abs. 2 Satz 1, [GT-ESTG20-064]); the form it takes does not decide the income
-category. Where the benefit is instead paid *on the condition that the customer acquires securities*,
-it is the Rz. 129b ¶2 case -- a reduction of the Anschaffungskosten of those securities, not income
-under Nr. 3 -- and is outside this claim.
+**Consequences.** § 22 Nr. 3 income is not Kapitalertrag: no Kapitalertragsteuer, no
+Sparer-Pauschbetrag, no § 20 Abs. 6 pot. It belongs on Anlage SO, not Anlage KAP. The Zeilen of
+that part of Anlage SO are not held in this library.
 
-**This is the same three-step result the store already reached for the Wertpapierdarlehen fee**
-(open-legal-questions.md Q14, retired 2026-08-09, at [GT-ESTG20-049]); the fee failed Step 2 on the
-gate, this benefit fails it on the element. Both land in Nr. 3.
-
-**Consequence for Kapitalertragsteuer.** § 22 Nr. 3 income is not Kapitalertrag, so no domestic
-Kapitalertragsteuer arises on it and it does not enter the Sparer-Pauschbetrag or the § 20 Abs. 6
-loss pots. It is declared on Anlage SO, not Anlage KAP.
+**What the cited units also contain.** VIII R 7/23 concerns a fee for pledging a bank balance as
+security for a third party's credit, not a broker reward; what is borrowed is its statement of the
+Veranlassung test for Nr. 7. Rz. 129b ¶1 adds *"sofern sie nicht einer anderen Einkunftsart (§§ 13,
+15, 18 oder 21 EStG) zugeordnet werden kann"* -- a business account is outside this claim -- and
+obliges the paying institution to point the customer to the tax liability. Applicable tax years:
+all open cases (BMF 14.05.2025 Rz. 324).
 
 ---
 
-## [GT-ESTG20-064] Valuation and Zufluss of a benefit granted in kind
+## [GT-ESTG20-064] Valuation and Zufluss of a benefit granted in shares
 
 **Valuation -- § 8 Abs. 1 Satz 1 and Abs. 2 Satz 1 EStG.**
 
@@ -152,136 +227,203 @@ loss pots. It is declared on Anlage SO, not Anlage KAP.
 > Sachbezuege), sind mit den um uebliche Preisnachlaesse geminderten ueblichen Endpreisen am
 > Abgabeort anzusetzen."*
 
-§ 22 Nr. 3 income falls under § 2 Abs. 1 Satz 1 Nr. 7, so § 8 reaches it. A benefit granted in
-securities rather than money is a *sonstiger Sachbezug* and is valued at the **ueblicher Endpreis
-am Abgabeort** -- for an exchange-traded share, its market price.
+§ 22 Nr. 3 income falls under § 2 Abs. 1 Satz 1 Nr. 7, so § 8 reaches it. A listed share is valued
+at its market price **on the day of Zufluss**. A restriction on disposal does not reduce that value
+(BMF 01.06.2024 Rn. 20: *"Veraeusserungssperren mindern den Wert der Vermoegensbeteiligung nicht"*).
 
 **Zufluss -- § 11 Abs. 1 Satz 1 EStG.**
 
 > *"Einnahmen sind innerhalb des Kalenderjahres bezogen, in dem sie dem Steuerpflichtigen
 > zugeflossen sind."*
 
-Satz 1 fixes the year by Zufluss and does not define it. **The test is wirtschaftliche
-Verfuegungsmacht, and BFH VI R 37/09 states both halves of it.**
+**The rule, both halves, as the administration states it (Tier 2).** BMF 01.06.2024 Rn. 25:
+*"Zeitpunkt des Zuflusses ist der Tag der Erfuellung des Anspruchs ... auf Verschaffung der
+wirtschaftlichen Verfuegungsmacht ... Bei Aktien ist dies der Zeitpunkt der Einbuchung der Aktien in
+das Depot"*. Rn. 26: *"Ein Zufluss ... liegt nicht vor, solange es dem Arbeitnehmer rechtlich
+unmoeglich ist, ueber die Vermoegensbeteiligung zu verfuegen (BFH-Urteil vom 30. Juni 2011 - VI R
+37/09 -, BStBl 2011 II S. 923 zu vinkulierten Namensaktien). Vertragliche Sperr- und Haltefristen
+hemmen den Zufluss hingegen nicht (BFH-Urteil vom 30. September 2008 - VI R 67/05 -, BStBl II 2009
+S. 282)."*
 
-Leitsatz 1, verbatim:
+**The statute confirms the exception a contrario (Tier 1).** § 19a Abs. 1 Satz 4 EStG deems a
+benefit zugeflossen *"auch dann ..., wenn es dem Arbeitnehmer rechtlich unmoeglich ist, ueber die
+Vermoegensbeteiligung zu verfuegen"* -- a fiction confined to § 19a, which presupposes that outside
+it legal impossibility of disposal prevents Zufluss.
 
-> *"Dem Arbeitnehmer fliesst der geldwerte Vorteil in Form verbilligter Aktien in dem Zeitpunkt
-> zu, in dem er die wirtschaftliche Verfuegungsmacht ueber die Aktien erlangt."*
+**The decisions behind it (Tier 4), each read in full on bundesfinanzhof.de with its Randnummern:**
 
-Leitsatz 2, verbatim:
+- **VI R 37/09.** Rn. 12: a Sperr- or Haltefrist does not prevent Zufluss, *"Denn eine obligatorische
+  Veraeusserungssperre hindert den Erwerber von Aktien nicht, sie zu veraeussern. Die Veraeusserung
+  ist rechtlich moeglich, wenngleich sie auch Sanktionen ausloesen kann."* Rn. 15: shares have not
+  zugeflossen *"solange dem Arbeitnehmer eine Verfuegung darueber rechtlich unmoeglich ist."* Rn. 20:
+  it makes no difference *"ob diese auf Gesetz oder Vertrag ... beruhen. Entscheidend ist allerdings,
+  ob die Verfuegungsbeschraenkungen lediglich schuldrechtlicher Natur sind oder ob sie ...
+  unmittelbar die Wirksamkeit der Uebertragung selbst bestimmen."* Rn. 17: drawing the income alone
+  *"begruendet noch keine rechtlich gesicherte Inhaberschaft"*, and for shares under foreign law the
+  point is a finding of that law, for which the case was remanded.
+- **VI R 6/18** (v. 26.08.2020), Rn. 23: Zufluss is the moment the recipient obtains *"das
+  zivilrechtliche oder zumindest das wirtschaftliche Eigentum"*. Rn. 25-28: wirtschaftliches
+  Eigentum (§ 39 Abs. 2 Nr. 1 AO) in a share passes when the acquirer has (1) a legally protected
+  position that can no longer be withdrawn against his will, (2) *"die mit dem Anteil verbundenen
+  wesentlichen Rechte"* and (3) *"das Risiko einer Wertminderung und die Chance einer
+  Wertsteigerung"*.
+- **A possible later return does not defer Zufluss.** VI R 67/05 Leitsatz 3: the benefit accrues
+  *"auch dann mit der Verschaffung der Verfuegungsmacht ..., wenn die Aktien unter der aufloesenden
+  Bedingung einer Rueckzahlungsverpflichtung ueberlassen werden und diese Bedingung eintritt (sog.
+  Istprinzip)."* IX R 56/13 (v. 12.07.2016, a § 21 case on the general § 8/§ 11 frame), Rn. 25: a
+  *"lediglich latente"* Rueckzahlungsverpflichtung cannot be netted against what was received.
 
-> *"Ein solcher Zufluss liegt nicht vor, solange dem Arbeitnehmer eine Verfuegung ueber die
-> Aktien rechtlich unmoeglich ist."*
+**Application to the programme terms: Zufluss falls on the day the shares are booked (the award
+date), and the value of that day is the receipt.** The grounds, each tied to a quoted clause:
 
-And the point that decides a restricted benefit, Rn. 12 (restated on the facts at Rn. 23):
+1. *Essential rights* -- the recipient is *"entitled to receive any and all dividends or other
+   distributions"* and *"entitled to vote the Shares"* from the award (VI R 6/18 Rn. 27).
+2. *Risk and chance* -- the number of shares is fixed at the award by that day's price; every later
+   price movement is the recipient's. The shares also serve his own debts: the broker may *"use
+   Shares to satisfy obligations you owe ... in any IBKR margin account"* (Rn. 28).
+3. *The restriction is a contractual Sperrfrist* -- it arises from an agreement between customer and
+   broker over ordinary listed common stock, lapses by time alone, and is not a restriction carried
+   by the share itself, which is the administration's own example of the exception (*vinkulierte
+   Namensaktien*, BMF Rn. 26). That is Rn. 26 second sentence and VI R 37/09 Rn. 12.
+4. *The forfeiture is a resolutive condition* -- reclaim on account closure, loss of good standing,
+   or pro rata on withdrawals during the Award Period. VI R 67/05 Ls. 3 and IX R 56/13 Rn. 25: it
+   does not defer Zufluss, and the conditions lie largely in the recipient's own hands.
 
-> *"Einem solchen Zufluss im vorgenannten Sinne steht nicht entgegen, dass der Arbeitnehmer
-> aufgrund einer Sperr- bzw. Haltefrist die Aktien fuer eine bestimmte Zeit nicht veraeussern
-> kann."*
+**The factual dependency, stated and not resolved here.** The terms declare a premature disposal
+*"void"* and have the broker, who is also the custodian, refuse to process it; New York law
+governs. If under that law a transfer to a third party were not merely a breach but **ineffective**,
+the restriction would go to the *Wirksamkeit der Uebertragung* (VI R 37/09 Rn. 20), the case would
+be Rn. 15's, and Zufluss would fall on the day the restriction lapses, valued at that day's price.
+No source located establishes that effect for these terms, and the wording of a bilateral contract
+does not by itself bind a third-party acquirer; the application above therefore treats the clause as
+the contractual restraint it is on its face. **A finding of New York law to the contrary displaces
+this application** -- for every consequence drawn from it in [GT-ESTG20-065] and [GT-ESTG20-067].
+That the grantor reports the value at the lapse as income to its domestic clients is its own
+country's tax law and no authority here.
 
-**So the line is not restricted versus unrestricted, but obligatorisch versus dinglich.** A
-contractual restraint -- a holding period, a promise to give the shares back on some future
-event -- does **not** postpone Zufluss. What postpones it is the disposal being *rechtlich
-unmoeglich*: Rn. 15, *"Aktien sind daher nicht zugeflossen, solange dem Arbeitnehmer eine
-Verfuegung darueber rechtlich unmoeglich ist."*
-
-**Applied to a benefit in shares booked into the recipient's account:** Zufluss falls on the
-booking, and a condition under which the grantor may later reclaim the shares does not defer it,
-**unless the recipient is legally unable to dispose of them until the condition lapses**, which
-is Leitsatz 2's case.
-
-**What the cited unit also contains, and the limit of the citation.** VI R 37/09 is decided
-under § 19 Abs. 1 Satz 1 Nr. 1 in Verbindung mit § 8 Abs. 1 and § 11 Abs. 1 Satz 1 EStG -- an
-employee receiving shares from an employer. § 11's Zufluss concept is general and is what is
-borrowed here; **no located source applies the test to a benefit granted by a broker under
-§ 22 Nr. 3**, and that step is recorded as the residual uncertainty in
-`../research/open-legal-questions.md` under Q17. The decision itself did not settle its own facts:
-Rn. 17 and Rn. 20 remand to the Finanzgericht to establish whether, under the foreign law governing
-the shares, a disposal was rechtlich moeglich in the year in dispute -- so whether Zufluss had
-occurred was left open on the facts. Rn. numbering verified 2026-09-20 against the full text at
-urteile-gesetze.de/rechtsprechung/vi-r-37-09, which carries the court's own Randnummern.
-
-**What the cited unit also contains.** § 11 Abs. 1 has five sentences: Satz 2 on regularly
-recurring income falling either side of the year end, Satz 3 on spreading income from a
-Nutzungsueberlassung over the advance period, Satz 4 cross-referring provisions for
-non-employment income, and Satz 5 preserving the profit-determination rules. None is reached by a
-one-off benefit in kind.
-
----
-
-## [GT-ESTG20-065] The amount taxed on receipt becomes the Anschaffungskosten
-
-Where the benefit consists of securities, the value brought to tax under [GT-ESTG20-064] is the
-recipient's **Anschaffungskosten** for those securities on a later disposal under § 20 Abs. 2
-Satz 1 Nr. 1 EStG. Taxing the receipt and then taxing the whole disposal proceeds again would tax
-the same accretion twice; the acquisition is entgeltlich to the extent it has been taxed, and
-§ 20 Abs. 4 Satz 1 measures the gain against the Anschaffungskosten.
-
-**This claim does not depend on the benefit having actually been declared.** The Anschaffungskosten
-follow from the value that fell to be taxed under § 11 and § 8, not from what appeared on a return.
-
-**What grounds it, and the limit of the citation.** The proposition rests on the
-Korrespondenzprinzip -- an accretion taxed once on receipt is not taxed again on disposal -- to
-which § 20 Abs. 4 Satz 1 gives effect by measuring the gain against the Anschaffungskosten. § 20
-Abs. 4 Satz 1 states the measurement, **not** the Anschaffungskosten of a benefit received in kind;
-no located Tier 1 or Tier 2 source states those in a sentence for a § 22 Nr. 3 benefit. This is the
-general principle applied, and its only alternative -- a nil basis that taxes the same accretion
-twice -- is not a viable reading, so it is not an open question; but the claim rests on the principle,
-not on a quoted provision, and is marked so rather than left to read as directly sourced.
-
-**Where the sources run out.** Whether a receipt left untaxed by the Freigrenze of Nr. 3 Satz 2
-nonetheless supplies Anschaffungskosten at its full value is **not settled** by any Tier 1 or
-Tier 2 source located. Recorded in `../research/open-legal-questions.md`.
-
-## [GT-ESTG20-066] The order of a same-day award reversal and a disposal is not fixed by law
-
-An award reversal removes the awarded lot ([GT-ESTG20-064]); a disposal of the same security
-consumes lots in the FIFO order § 20 Abs. 4 Satz 7 fixes ([GT-ESTG20-012]), the earliest-acquired
-first, with lot selection by instruction disregarded. **Satz 7 fixes which lot a disposal consumes;
-it does not fix the sequence of two distinct events -- a reversal and a disposal -- that fall on the
-same day.** Where both touch one security on one day, which is applied first decides whether the
-disposal is measured before or after the awarded lot has been removed, and so which lot's
-Anschaffungskosten the gain is measured against.
-
-**No Tier 1 or Tier 2 source located settles that sequence.** Satz 7 speaks to the consumption
-order within a disposal, not to the ordering of a disposal against a same-day event that is not
-itself a disposal; and § 11's Zufluss/Abfluss concept fixes the year an item falls in, not the
-intra-day order of two events already in the same year. The two readings, and what the choice
-between them moves, are recorded in `../research/open-legal-questions.md` as Q18.
-
-This has to be decided for a figure only where an award reversal and a disposal of the same
-security fall on one day and the awarded lot is within the disposal's FIFO reach. The reading
-chosen, and the evidence that each grey-area condition is met, are recorded against this claim ID
-in `docs/legal-implementation-map.md` -- not here, where only the law belongs.
+**What the cited units also contain, and the limit of the citations.** VI R 37/09, VI R 67/05, VI R
+6/18 and BMF 01.06.2024 concern § 19 -- shares from an employer. § 11 Abs. 1 Satz 1 is the same
+sentence for every Ueberschusseinkunftsart and is what is borrowed; no located source applies it to
+a broker's award, and none suggests it means something else under § 22 Nr. 3. VI R 6/18 is an
+unpublished (NV) decision. BMF 01.06.2024 Rn. 27-29 add that a fall in price after Zufluss is not
+negative income. § 11 Abs. 1 has five sentences: Satz 2 on recurring income around the year end,
+Satz 3 on advance payments for a Nutzungsueberlassung, Satz 4 and 5 cross-references; none is
+reached by a one-off benefit in kind. Applicable tax years: unrestricted; § 19a Abs. 1 Satz 4 was
+inserted with effect from 2024 and is cited only a contrario.
 
 ---
 
-## [GT-ESTG20-067] The return of a benefit already taxed under § 22 Nr. 3
+## [GT-ESTG20-065] The value at Zufluss is the Anschaffungskosten of the shares received
 
-Where a benefit that zufloss and was brought to tax under § 22 Nr. 3 ([GT-ESTG20-063],
-[GT-ESTG20-064]) is later returned because its condition failed -- an awarded share clawed back --
-the return has a § 22 Nr. 3 income consequence that no located Tier 1 or Tier 2 source settles.
+Shares received as consideration for a Leistung are **acquired for consideration**. On a later
+disposal under § 20 Abs. 2 Satz 1 Nr. 1, § 20 Abs. 4 Satz 1 measures the gain as *"der Unterschied
+zwischen den Einnahmen aus der Veraeusserung ... und den Anschaffungskosten"*. Anschaffungskosten
+are *"die Aufwendungen, die geleistet werden, um einen Vermoegensgegenstand zu erwerben"* (§ 255
+Abs. 1 Satz 1 HGB, the definition the EStG uses without one of its own). What the recipient expends
+is the Leistung; its value is that of the shares received for it, measured under § 8 Abs. 2 Satz 1
+on the day of Zufluss ([GT-ESTG20-064]).
 
-The disposal side is separate: § 20 Abs. 2 taxes a *Veraeusserung*, an entgeltliche Uebertragung,
-and a clawback when the condition fails is an unentgeltliche Rueckgewaehr to the grantor -- not a
-Veraeusserung, so it yields no § 20 Abs. 2 gain. The returned shares leave the holding, and a later
-disposal is measured only against the shares retained, at their own Anschaffungskosten (§ 20 Abs. 2,
-[GT-ESTG20-065]). That a Veraeusserung is an entgeltliche Uebertragung is the settled meaning of the
-term across § 17, § 20 and § 23 rather than a sentence quoted here. What is open is the treatment of
-the return itself as a § 22 Nr. 3 item. The two readings and their authorities are in
-`../research/open-legal-questions.md`; in outline:
+**The administration states this rule twice for neighbouring cases (Tier 2), and both passages say
+it does not depend on the receipt having been taxed:**
 
-- **Reading A -- a negative Leistungseinnahme in the year of return.** § 11 books an item in the year
-  of its Abfluss, so the value returned is negative § 22 Nr. 3 income in the year the return occurs;
-  the loss-offset restriction of § 22 Nr. 3 Satz 3 ([GT-ESTG20-062]) is held not to reach a loss
-  caused by repaying previously-taxed income, so it may be set against other income.
-- **Reading B -- a retroactive reduction of the receipt.** For a one-off Leistung the return is a
-  rueckwirkendes Ereignis (§ 175 Abs. 1 Satz 1 Nr. 2 AO) that reduces the receipt in the year of
-  Zufluss, correcting the original assessment rather than recognising a later loss.
+- **BMF 06.03.2025, IV C 1 - S 2256/00042/064/043 (Kryptowerte), Rn. 75 Satz 1 to 3:** *"Erfolgt die
+  Zuteilung von Kryptowerten aufgrund einer Leistung im Sinne des § 22 Nummer 3 EStG, liegt auch
+  eine Anschaffung vor. Die Anschaffungskosten sind mit dem Wert der hingegebenen Daten oder der
+  vorgenommenen Handlung anzusetzen. Dabei kann widerlegbar vermutet werden, dass der Wert ... dem
+  Marktkurs der Gegenleistung entspricht"*. The same letter recognises the Freigrenze (Rn. 45) and
+  does not make Rn. 75 depend on it.
+- **BMF 14.05.2025 (Abgeltungsteuer), Rz. 87:** for shares from an employer's option the
+  Anschaffungskosten include *"der Wert ..., der als geldwerter Vorteil ... angesetzt wird. Auch in
+  den Faellen, in denen der geldwerte Vorteil -- beispielsweise durch die Anwendung des Freibetrags
+  im Sinne von § 8 Absatz 3 Satz 2 EStG -- nicht der Besteuerung unterworfen wurde ..., liegen
+  Anschaffungskosten in Hoehe dieses (steuerfreien ...) geldwerten Vorteils vor."*
 
-Only Tier 4 and Tier 5 sources address the repayment of Leistungseinnahmen, and none addresses the
-return of a benefit in kind of this kind, so the point is recorded as open, not resolved. Which
-reading is applied, and the evidence for it, are recorded against this claim ID in
-`docs/legal-implementation-map.md`. Applicable tax years: unrestricted within the regime; § 22 Nr. 3
-Satz 3-4 are not year-parameterised.
+**Both are analogies and are labelled so.** Rn. 75 governs Kryptowerte and Rz. 87 governs § 19;
+neither names shares received for a § 22 Nr. 3 Leistung. They are cited because each applies the
+ordinary consideration-based acquisition principle at exactly the boundary in question -- Rn. 75 for
+the same Einkunftsart, Rz. 87 for the same asset -- and no located source states a different rule.
+The special concessions of the Krypto letter (a Tageskurs, nil value where no Marktkurs exists,
+Rn. 43, 73, 91) are **not** carried over: a listed share has a price.
+
+**So the Freigrenze of § 22 Nr. 3 Satz 2 does not touch the Anschaffungskosten.** It exempts the
+income; it does not turn the customer's consideration into a gift. Nor would a gift produce a nil
+basis: an unentgeltlicher Erwerb takes the predecessor's acquisition under § 20 Abs. 4 Satz 6. A
+reading under which an untaxed receipt supplies no Anschaffungskosten has no located support at any
+tier.
+
+**Not reached.** § 20 Abs. 4a Satz 5 (text retrieved 2026-09-20) sets Ertrag and Anschaffungskosten
+at nil where a foreign Koerperschaft allots shares *"ohne dass der Steuerpflichtige eine
+Gegenleistung zu erbringen hat"* and speaks of *"die Zuteilung begruendenden Anteile"* -- a
+Kapitalmassnahme in favour of existing holders. An award that is the consideration for a Leistung is
+granted for a Gegenleistung by definition.
+
+**Dependency.** The amount is the value **on the day of Zufluss**, so it stands or falls with the
+application at [GT-ESTG20-064]. Applicable tax years: all open cases (BMF 14.05.2025 Rz. 324; BMF
+06.03.2025 Rn. 106).
+
+---
+
+## [GT-ESTG20-066] No rule of law orders a same-day award return against a disposal
+
+§ 20 Abs. 4 Satz 7 ([GT-ESTG20-012]) fixes which shares a disposal is deemed to consume -- the
+earliest acquired first. It orders the lots **within** a disposal. It does not order a disposal
+against another event of the same day that is not a disposal, and no other provision located does.
+**That absence is not a disputed point of law and gives the taxpayer no election.** What the law
+requires is that each event be given its own legal effect -- a return removes the returned shares at
+the Anschaffungskosten they came in with ([GT-ESTG20-067]), a disposal consumes the earliest lots --
+and that the holding and its basis afterwards are the ones those effects produce.
+
+---
+
+## [GT-ESTG20-067] The return of awarded shares after Zufluss
+
+Where awarded shares that had zugeflossen ([GT-ESTG20-064]) are reclaimed by the grantor under the
+terms of the award:
+
+**1. The return does not undo the Zufluss, and the year of receipt is not reopened.** BFH VI R 6/18,
+Rn. 39: *"Fuer die Ueberschusseinkuenfte kommt es ... allein auf die tatsaechlichen Zu- und
+Abfluesse von Einnahmen und Ausgaben an. Diese tatsaechlichen Vorgaenge koennen nicht durch spaeter
+bewirkte Rueckzahlungen ungeschehen gemacht werden"*; Rn. 40 extends this expressly beyond laufender
+Arbeitslohn to a one-off benefit, citing VI R 67/05 on the *"Rueckuebertragung von Aktien"*, because
+§ 11 Abs. 1 Satz 1 and Abs. 2 Satz 1 apply *"sofern nicht eine abweichende gesetzliche
+Ausnahmeregelung greift"*. Rn. 37-38: such a return is no rueckwirkendes Ereignis under § 175 Abs. 1
+Satz 1 Nr. 2 AO, which needs a provision of substantive law giving the later event retroactive tax
+effect; none exists here.
+
+**2. It is a negative Einnahme of the year of the return (Tier 2).** EStH H 22.8 "Rueckzahlung von
+Einnahmen", verbatim: *"Die Rueckzahlung von Einnahmen i. S. d. § 22 Nr. 3 EStG in einem spaeteren VZ
+ist im Abflusszeitpunkt in voller Hoehe steuermindernd zu beruecksichtigen. Das
+Verlustausgleichsverbot und Verlustabzugsverbot des § 22 Nr. 3 Satz 3 EStG steht nicht entgegen (BFH
+vom 26.1.2000 - BStBl II S. 396)."* BFH v. 16.06.2015 -- IX R 26/14, Rn. 20, gives the reason and
+the condition: Satz 3 *"setzt voraus, dass die Werbungskosten die Einnahmen uebersteigen"* and so
+does not reach negative Einnahmen; and *"Negative Einnahmen liegen vor, wenn die Rueckzahlung einer
+Einnahme durch das der Auszahlung zugrunde liegende Rechtsverhaeltnis veranlasst ist ... [und] die
+Einnahmen an den zuvor Zahlenden zurueckerstattet werden"*. **Both conditions are met by the
+programme's reclaim:** it is made under the award terms themselves, to the grantor. (In IX R 26/14
+itself they were not -- the payment went to a third party as damages, Rn. 21 -- and Satz 3 applied.)
+A return within the year of receipt reduces that year's Einnahmen in the same way.
+
+**3. The amount is the value originally brought to account, not the value on the day of return.**
+BFH v. 17.09.2009 -- VI R 17/08, BStBl II 2010 S. 299, Leitsatz 2, for shares given back to the
+grantor: *"Die Hoehe des Erwerbsaufwands bemisst sich ... nach dem urspruenglich gewaehrten
+geldwerten Vorteil; zwischenzeitlich eingetretene Wertveraenderungen der Aktien sind unbeachtlich."*
+Tier 4 and decided under § 19; cited beside H 22.8, which fixes the year, for the measure H 22.8
+does not state, and relied on as negative-Einnahmen authority by IX R 26/14 Rn. 20 for § 22 Nr. 3.
+
+**4. Consequence for the shares.** The returned shares leave the holding at the Anschaffungskosten
+they came in with ([GT-ESTG20-065]). The return is not a Veraeusserung under § 20 Abs. 2: nothing
+is received for it, and the change in their value between receipt and return is recognised nowhere.
+A later disposal is measured only against the shares retained. Which award's shares a reclaim takes
+is fixed by the terms (*"using a first in, first out method"* across awards) and by what the
+grantor's record of the return states.
+
+**Boundary.** All of this presupposes Zufluss before the return, which is the application at
+[GT-ESTG20-064]. If Zufluss were deferred to the lapse of the restriction, shares reclaimed before
+it would never have accrued, and there would be neither a receipt nor a negative Einnahme -- the
+law does not know a receipt manufactured only to be repaid.
+
+**What the cited units also contain.** H 22.8 also lists what is and is not a Leistung and, under
+*Werbungskosten*, directs a correction of the year of receipt under § 175 Abs. 1 Satz 1 Nr. 2 AO
+for Werbungskosten not foreseeable in that year (BFH vom 3.6.1992 - BStBl II S. 1017) -- for
+Werbungskosten, not for a Rueckzahlung von Einnahmen, which has its own entry. Applicable tax years:
+unrestricted; § 22 Nr. 3 Satz 3 and 4 are not year-parameterised.

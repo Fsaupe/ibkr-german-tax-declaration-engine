@@ -21,11 +21,6 @@ An unresolved question recorded is ground truth. An unresolved question silently
 | Q9 | [GT-FX-007], [GT-FX-001] | Is a currency movement embedded in another transaction a separate disposal, measured in EUR? Two instances: the leg of a securities trade, and a balance spent on a fee or withholding. | `../bmf-guidance/fremdwaehrung-konten.md` |
 | Q11 | [GT-ESTG20-038] | How is unallocated spot precious metal held at a broker taxed -- Termingeschaeft, privates Veraeusserungsgeschaeft, or sonstige Kapitalforderung? | this file |
 | Q15 | [GT-FX-010] | Rz. 131 makes an Umbuchung between two foreign-currency accounts a Veraeusserung. What is the Veraeusserungspreis, when nothing is paid? | `../bmf-guidance/fremdwaehrung-konten.md` |
-| Q17 | [GT-ESTG20-064] | Does a benefit booked into the recipient's account but revocable until a condition lapses zufliessen on the booking, or on the lapse? | this file |
-| Q16 | [GT-ESTG20-065] | Does a benefit in kind left untaxed by the Freigrenze of § 22 Nr. 3 Satz 2 still supply Anschaffungskosten at its full value on the later disposal? | this file |
-| Q18 | [GT-ESTG20-066] | Where a same-day award reversal and a disposal of the same security fall on one day, which applies first? (Unsettled by law, but figure-neutral by construction -- see the entry below.) | this file |
-| Q19 | [GT-ESTG20-063] | Is a benefit granted for depositing cash and leaving it in place a § 22 Nr. 3 Leistung, or an Entgelt für die Überlassung des Kapitalvermögens zur Nutzung under § 20 Abs. 1 Nr. 7? | this file |
-| Q20 | [GT-ESTG20-067] | When a benefit already taxed under § 22 Nr. 3 is later returned (the condition failed), is the return a negative Leistungseinnahme in the year of return, or a retroactive reduction of the receipt? | this file |
 
 **Retired on the same terms, and for the same reason -- a source that settles the point was found,
 or the point was never one.** Numbers are never reused. Each line says what answered it; the
@@ -37,12 +32,17 @@ reasoning lives once, against the claim, which is where a reader acts on it.
 | Q12 | The day whose Ruecknahmepreis begins the Vorabpauschale year | Rz. 18.3 -- the same figure serves as the Satz 2 base and the Satz 3 cap's lower bound. Retired 2026-08-06 | [GT-INVSTG-010] |
 | Q13 | The Abs. 2 reduction on a holding acquired in several instalments | Rz. 18.11's worked example applies the reduction to the *per-Anteil* amount, before any unit count enters -- which was the whole of the opposing reading. Retired 2026-08-07 | [GT-INVSTG-011] |
 | Q14 | The Einkunftsart of a Wertpapierdarlehen fee in Privatvermoegen | The order of enquiry runs out. **20 Abs. 3 is accessory** -- both limbs presuppose Einnahmen of Abs. 1 or 2 for the payment to attach to or replace, and both worked Randziffern combine it with a Nummer ([GT-ESTG20-050]); a fee owed for the loan period whether or not the securities yield anything has none. **Nr. 7's gate is a Kapitalforderung**, and a lender holds a Sachforderung; BFH VIII R 7/23 refused Nr. 7 for such a fee even where the asset *was* one. 22 Nr. 3 takes it by its own subsidiarity clause. Retired 2026-08-09 | [GT-ESTG20-049] |
+| Q16 | Anschaffungskosten of awarded shares where the Freigrenze of § 22 Nr. 3 Satz 2 left the receipt untaxed | The shares are acquired for consideration, so § 20 Abs. 4 Satz 1 with § 255 Abs. 1 Satz 1 HGB gives them the value of that consideration. The administration says so without regard to taxation of the receipt, twice: BMF 06.03.2025 (Kryptowerte) Rn. 75 for assets received for a § 22 Nr. 3 Leistung, and BMF 14.05.2025 Rz. 87 for shares received as Arbeitslohn, *"auch in den Faellen, in denen der geldwerte Vorteil ... nicht der Besteuerung unterworfen wurde"*. Both are analogies and are labelled so at the claim. The nil-basis reading had no located support at any tier. Retired 2026-09-20 | [GT-ESTG20-065] |
+| Q17 | Whether shares awarded under a one-year transfer restriction and a reclaim condition zufliessen on the booking or on the lapse | **Not a question of law.** The law is settled on both sides of one line -- BMF 01.06.2024 Rn. 25-26, § 19a Abs. 1 Satz 4 EStG a contrario, BFH VI R 37/09, VI R 67/05, VI R 6/18, IX R 56/13 -- and what remains is its application to one programme's terms. That application, its grounds clause by clause, and the one factual dependency that would displace it (the effect under New York law of the clause declaring a premature disposal *"void"*) are stated at the claim. Retired 2026-09-20 | [GT-ESTG20-064] |
+| Q19 | § 22 Nr. 3 or § 20 Abs. 1 Nr. 7 for shares awarded for bringing assets to a broker | The Veranlassung test of BFH VIII R 7/23 Rn. 20 applied to the programme terms: the award is measured by the net value of **cash or other assets** brought, so it is not remuneration for the use of a money balance, which the Bonuszins of BFH VIII R 18/20 Rn. 34 was. BMF 14.05.2025 Rz. 129b ¶1 reaches § 22 Nr. 3 for the neighbouring Depotuebertrag premium. An application to one programme, not an election. Retired 2026-09-20 | [GT-ESTG20-063] |
+| Q20 | The § 22 Nr. 3 consequence of returning a benefit that had zugeflossen | **EStH H 22.8 "Rueckzahlung von Einnahmen"** (adopting BFH vom 26.1.2000, BStBl II S. 396): deducted in full *"im Abflusszeitpunkt"*, Satz 3's loss restriction not standing in the way. BFH IX R 26/14 Rn. 20 gives the conditions of a negative Einnahme (same Rechtsverhaeltnis, returned to the payer); BFH VI R 6/18 Rn. 37-40 excludes a retroactive correction under § 175 AO; BFH VI R 17/08 Ls. 2 fixes the amount at the value originally brought to account. The run that listed it had located only Tier 4/5. Retired 2026-09-20 | [GT-ESTG20-067] |
 
 Two were retired without being answered, which is a different act and is recorded as such:
 
 | # | Question | Why it left | Recorded at |
 |---|----------|-------------|-------------|
 | Q3 | Were Zeilen 21/24/25 physically removed from the VZ 2025 Anlage KAP, or retained and left unused? | **It decides no figure under either reading**, and this file admits only points that do. Nothing is entered on those lines either way, so the answer cannot change a declaration. It was filed as a legal question because the VZ 2025 form itself could not be retrieved; the evidence is now a note in `../tax-forms/anlage-kap-zeilen.md`. Retired 2026-08-07 | [GT-FORM-005] |
+| Q18 | The order of a same-day award return and a disposal of the same security | **It was never a question of law.** § 20 Abs. 4 Satz 7 orders the lots within a disposal and nothing orders a disposal against a same-day event that is not one; the absence of such a rule is not a disputed reading and gives no election. What the law does require -- each event given its own effect -- is stated at the claim. Retired 2026-09-20 | [GT-ESTG20-066] |
 | Q10 | Is a balance spent on a cash-flow item a separate disposal? | **Not answered -- merged.** It is one instance of Q9, turns on the same finding, and was accumulating the same reasoning twice. Retired into Q9 on 2026-08-07 | [GT-FX-001] |
 
 **Two things Q13's closure does not settle**, recorded so they are not read into it. Which units
@@ -272,127 +272,6 @@ weigh a reading. Nor is the practice of brokers and the firms preparing their re
 such amounts on Anlage KAP; that is habit, not authority, and it is the likeliest source of a wrong
 answer here.
 
-## Q17 -- when a revocable benefit in kind zufliesst
-
-**What is settled.** § 11 Abs. 1 Satz 1 fixes the year by Zufluss ([GT-ESTG20-064]) and § 8
-Abs. 2 Satz 1 values a Sachbezug at the ueblicher Endpreis. **What no located Tier 1 or Tier 2
-source settles is when a benefit that the grantor may still take back is zugeflossen.**
-
-**Reading A (at the lapse of the condition).** Zufluss requires wirtschaftliche
-Verfuegungsmacht, and a holding the grantor can reclaim is not held unconditionally. On this
-reading the benefit accrues when the condition lapses, and § 8 Abs. 2 values it that day --
-which is later, and normally at a different price.
-**Against it:** no located source applies the doctrine to this configuration; it is reasoning
-from the general requirement rather than a rule about conditional benefits.
-
-**Reading B (at the booking).** The benefit is in the recipient's account from the booking and
-is theirs to dispose of; a condition that merely *might* undo it is resolutive, and what has
-accrued is not postponed by the possibility of its being reversed.
-**Against it:** it attributes to the recipient a benefit they may have to give back, and the
-possibility is not hypothetical -- a reclaim is a real feature of such conditional benefits.
-
-**What the choice moves.** The two readings put the acquisition date roughly a vesting period
-apart and take the Anschaffungskosten from two different days' prices, so both the declared gain
-on a later disposal and the size of the untaxed receipt move with it. The direction is not fixed:
-it depends on which way the price moved between the two days.
-
-**Research run 2026-08-13, and it points at Reading B.** A search of Tier 4 (bundesfinanzhof.de)
-and Tier 1/2 domains for Zufluss of shares subject to a Sperrfrist, a Verfallklausel or a
-return obligation returns a consistent line of BFH decisions on *verbilligte Aktien*, of which
-the closest read in full is **BFH VI R 30/07 of 29.07.2010**: the advantage accrues *"erst, wenn
-der Arbeitnehmer auch die wirtschaftliche Verfuegungsmacht ueber die Aktien erlangt"*, and that
-is the delivery of the shares, not the grant of a right to them. Summaries of the neighbouring
-decisions state that a Sperr- or Verfallklausel does **not** postpone Zufluss, and that a
-possible obligation to give the shares back does not either, because the recipient obtains
-Verfuegungsmacht first. **On that line, shares actually booked into the recipient's account
-zufliessen on the booking, and a resolutive condition does not defer it** -- which is Reading B.
-
-**Why this is recorded and not applied.** Three things stand in the way of treating it as
-settled:
-
-1. **Tier 4 never stands alone** (Validation Protocol item 1), and VI R 30/07 decides the
-   valuation date of a capital increase; it does not analyse the repurchase right its own
-   Tatbestand mentions. The passages that would settle the point are known here only from
-   search summaries, not from the decisions read in full and cited to the Randnummer.
-2. **Every located decision is § 19 EStG** -- Arbeitslohn, an employee receiving shares from an
-   employer. § 11's Zufluss concept is general, but whether the same result carries to a
-   § 22 Nr. 3 benefit from a broker is the step no located source takes.
-3. **The distinction the cases turn on is delivery versus expectancy**, and this fact pattern
-   sits on the delivered side: the shares are the recipient's from the booking, with the economic
-   rights that attach to ownership, not a mere expectancy. That is an argument for Reading B, and it is an argument, not a
-   citation.
-
-**What it moves, if applied:** the acquisition date of every awarded lot returns to the award
-day, the Anschaffungskosten to the award price, and the declared gain on a later disposal rises
-correspondingly. The size of that movement on any actual position is implementation state and is
-recorded against [GT-ESTG20-064] in the map, not here.
-
-## Q18 -- the order of a same-day award reversal and a disposal of the same security
-
-**What is settled.** § 20 Abs. 4 Satz 7 fixes FIFO for a disposal's lot consumption
-([GT-ESTG20-012]): the earliest-acquired lots are treated as sold first, and a taxpayer
-instruction selecting another lot is disregarded. An award reversal removes the specific awarded
-lot ([GT-ESTG20-064]).
-
-**What no located Tier 1 or Tier 2 source settles** is, where a reversal and a disposal of the same
-security fall on the same day, which is applied first. FIFO orders the lots a disposal consumes; it
-does not order a disposal against a same-day event that is not itself a disposal.
-
-**Reading A (reversal before disposal).** A share the grantor has clawed back was never
-unconditionally the taxpayer's, so the disposal is measured after the awarded lot has left the
-ledger; a same-day sale does not realise a gain on shares returned the same day.
-**Against it:** no located source; it reasons from the resolutive character of the clawback, not
-from a rule about event ordering.
-
-**Reading B (disposal before reversal).** § 20 Abs. 4 Satz 7 governs the disposal's consumption
-unconditionally, so the sale consumes oldest-first regardless, and the reversal then removes what
-remains of the awarded lot.
-**Against it:** it can leave the reversal without enough of its own lot to remove, an outcome the
-clawback's terms do not contemplate; and it too has no source on the event ordering.
-
-**What the choice moves -- nothing, in a completed run.** Where the awarded lot holds enough units
-for both the reversal and the same-day disposal, the disposal consumes FIFO oldest-first under either
-order and the reversal removes its own lot at its own cost, so the declared figure is identical.
-Where it does not, disposal-first (Reading B) leaves the reversal short and the run aborts, while
-reversal-first (Reading A) completes. The two readings therefore never yield two different declared
-figures -- the same figure, or a figure versus an abort on inconsistent input. This is measured, not
-assumed; the working is in the [GT-ESTG20-066] map row.
-
-**The question is one of law, not only of evidence.** § 20 Abs. 4 Satz 7 orders a disposal's own
-lots and does not order a disposal against a same-day event that is not a disposal, so even a known
-sequence would leave the tax order unfixed. Whether the sequence is observable at all is a separate,
-data-side matter, recorded in the map rather than here.
-
-Because the order is figure-neutral, no filing position turns on it. Which order is applied, how it
-is disclosed, and how often it arises are implementation state, recorded against [GT-ESTG20-066] in
-the map, not here.
-
-## Q16 -- Anschaffungskosten from a receipt the Freigrenze left untaxed
-
-**What is settled.** A benefit in kind granted for placing capital is a Leistung under § 22 Nr. 3
-([GT-ESTG20-063]), valued at the ueblicher Endpreis on the day of Zufluss ([GT-ESTG20-064]), and
-the amount brought to tax is the Anschaffungskosten of the securities received ([GT-ESTG20-065]).
-**What no located Tier 1 or Tier 2 source settles is what happens when Satz 2's Freigrenze means
-no amount is brought to tax at all** -- because the year's Leistungen together stayed below
-256 Euro.
-
-**Reading A (full value regardless).** The Freigrenze exempts the *Einkuenfte*; it does not say the
-receipt was worth nothing. § 20 Abs. 4 Satz 1 measures a later gain against the Anschaffungskosten,
-and what was acquired had a value, ascertained under § 8 Abs. 2 on the day it accrued. On this
-reading the exemption is a relief on the receipt and leaves the acquisition side untouched.
-**Against it:** nothing located states it for a receipt that never entered an assessment.
-
-**Reading B (no taxed amount, no Anschaffungskosten).** [GT-ESTG20-065]'s ground is that taxing the
-receipt and then the whole disposal proceeds would tax one accretion twice. Where the Freigrenze
-means the receipt was never taxed, that ground does not arise, and the acquisition is unentgeltlich
-in substance. On this reading the whole disposal proceeds are the gain.
-**Against it:** it makes the Anschaffungskosten of an asset depend on the taxpayer's *other*
-Leistungen in the year of receipt, which no provision located ties together.
-
-**Why it is open rather than decided.** The two readings diverge only in a year whose Leistungen
-total stayed below the Freigrenze, and neither § 22 Nr. 3, § 8 nor § 20 Abs. 4 addresses the
-interaction. The Freigrenze itself is recorded at [GT-ESTG23-009].
-
 ## Q15 -- what a currency Umbuchung between the taxpayer's own accounts is worth
 
 **The disposal itself is not in question.** BMF 14.05.2025 Rz. 131 ¶2 lists it among the disposing
@@ -439,64 +318,3 @@ Veraeusserungsbegriff without valuing anything. **No Tier 1 or Tier 2 statement 
 been located.** The asymmetry between the two readings is one of authority, not of plausibility:
 Reading A extends what the administration says everywhere else, Reading B contradicts what it says
 here.
-
-## Q19 -- § 22 Nr. 3 or § 20 Abs. 1 Nr. 7 for a benefit granted to deposit and keep capital
-
-**What is settled.** A credit balance is a Kapitalforderung, so the § 20 Abs. 1 Nr. 7 gate is passed
-([GT-ESTG20-063] Step 2). Nr. 7 Satz 1 charges an *"Entgelt fuer die Ueberlassung des
-Kapitalvermoegens zur Nutzung ... auch wenn die Hoehe ... von einem ungewissen Ereignis abhaengt"*
-([GT-ESTG20-003]). § 22 Nr. 3 is subsidiary and reached only once § 20 is exhausted.
-
-**What no located Tier 1 or Tier 2 source settles** is whether a benefit a bank or broker grants for
-**depositing capital and leaving it in place** -- clawed back if the capital is withdrawn within a
-period -- is such an Entgelt (Nr. 7, Kapitalertrag, Anlage KAP) or the consideration for the
-customer's conduct (§ 22 Nr. 3, sonstige Leistung, Anlage SO).
-
-**Reading A -- § 20 Abs. 1 Nr. 7.** The benefit is conditioned on the capital remaining with the
-bank, which is the *Ueberlassung ... zur Nutzung* the Entgelt pays for. **BFH v. 15.11.2022 -- VIII
-R 18/20** treats a Bonuszins that accrues for leaving capital on deposit as an Entgelt under
-Nr. 7 Satz 1; that Satz 1 admits an Entgelt of uncertain amount removes the objection that a one-off
-grant is unlike interest. (Tier 4, never alone.)
-**Against it:** VIII R 18/20 is a Bonuszins -- interest expressly measured on the balance -- not a
-one-off Sachpraemie; nothing located carries the reasoning to a promotional grant.
-
-**Reading B -- § 22 Nr. 3.** The administration treats a Geldpraemie for a Wertpapierdepot transfer
-as a § 22 Nr. 3 Leistung (BMF 14.05.2025 Rz. 129b ¶1), and its stated practice treats a
-Kontoeroeffnungs- or Startguthaben-Praemie the same way; the grant is consideration for the
-customer's conduct, not an Entgelt for the use of the capital.
-**Against it:** Rz. 129b ¶1 is a *depot* transfer, which places no capital at the bank's disposal,
-and the Startguthaben practice is Tier 5; neither addresses a premium for a cash balance left in
-place, so § 22 Nr. 3 here rests on analogy.
-
-**Why it is open.** Rz. 129b addresses only a depot transfer (¶1) and a securities-conditioned cash
-premium (¶2), not a premium for a cash deposit left in place; and VIII R 18/20 addresses a Bonuszins,
-not a Sachpraemie. No located source is on the fact pattern. The reading applied is a filing choice,
-recorded against [GT-ESTG20-063] in the map.
-
-## Q20 -- the return of a benefit already taxed under § 22 Nr. 3
-
-**What is settled.** A benefit that zufloss and was taxed under § 22 Nr. 3 supplies the
-Anschaffungskosten of the securities received ([GT-ESTG20-065]); a returned share is no longer the
-taxpayer's and is not available for a later Veraeusserung, so a disposal is measured only against the
-shares retained (§ 20 Abs. 2). § 22 Nr. 3 Satz 3 ring-fences a loss from Leistungen; Satz 4 lets it
-reduce Leistungen income of the adjacent years ([GT-ESTG20-062]).
-
-**What no located Tier 1 or Tier 2 source settles** is the § 22 Nr. 3 income consequence when the
-benefit is returned because its condition failed.
-
-**Reading A -- a negative Leistungseinnahme in the year of return.** § 11 books an item in the year
-of its Abfluss, so the value returned is negative § 22 Nr. 3 income in the year the return occurs.
-Tier 5 commentary (Littmann/Bitz/Pust, EStG § 22) holds that Satz 3's loss-offset restriction does
-not reach a loss caused by repaying previously-taxed income, so it may be set against other income.
-**Against it:** Tier 5; and it leaves the receipt year's assessment standing while the return falls
-in a later year.
-
-**Reading B -- a retroactive reduction of the receipt.** For a one-off Leistung the return is a
-rueckwirkendes Ereignis (§ 175 Abs. 1 Satz 1 Nr. 2 AO) reducing the receipt in the year of Zufluss,
-correcting the original assessment rather than recognising a later loss.
-**Against it:** no located Tier 1/2 source directs § 175 AO to this case.
-
-**Why it is open.** Only Tier 4/5 sources address the repayment of Leistungseinnahmen, and none
-addresses the return of a benefit in kind of this kind; the two readings put the reduction in
-different years and differ on whether an offset against other income is allowed. The reading applied,
-how it is disclosed, and how often it arises are recorded against [GT-ESTG20-067] in the map.

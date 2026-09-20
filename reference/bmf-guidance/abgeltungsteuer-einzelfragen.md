@@ -72,6 +72,15 @@ cited anywhere in this library are from the 14.05.2025 version unless stated oth
 
 ### Specific interpretations
 
+#### Anschaffungskosten of shares received as a benefit in kind (Rz. 87)
+
+Supporting authority for [GT-ESTG20-065]; the normative claim is defined there, with the verbatim
+text. Under the heading *"Anschaffung von Aktien durch Ausuebung von Arbeitnehmer-Optionen"*,
+Rz. 87 (14.05.2025, PDF pages 39-40, read 2026-09-20) puts the Anschaffungskosten at the value
+*"der als geldwerter Vorteil ... angesetzt wird"* and keeps them at that value *"auch in den
+Faellen, in denen der geldwerte Vorteil ... nicht der Besteuerung unterworfen wurde"*. It is written
+for § 19 EStG and refers on to the BMF-Schreiben vom 1. Juni 2024 (BStBl I S. 946).
+
 #### A premium for moving or retaining capital (Rz. 129b)
 
 Supporting authority for the subsumption at GT-ESTG20-063; the normative claim is defined there.
@@ -90,12 +99,10 @@ and read 2026-09-20 (PDF pages 59-60, URL and query string in the Source block a
   die Anschaffungskosten** of those securities, offset in the order of their acquisition. It is not
   income under Nr. 3.
 
-¶1 addresses a **securities-depot transfer** and ¶2 a **cash premium conditioned on a securities
-purchase**; **neither addresses a premium for a cash deposit left in place**, which is the fact
-pattern at [GT-ESTG20-063]. So Rz. 129b supports the § 22 Nr. 3 reading there by analogy (¶1) and
-rules out the ¶2 cost-reduction case, but does not settle the classification -- that question is open
-(Q19), the § 20 Abs. 1 Nr. 7 side resting on BFH VIII R 18/20. The distinction between ¶1 and ¶2 is
-worked at GT-ESTG20-063. Rz. 129/129a concern unrelated matters (negative Einlagezinsen); Rz. 130 is
+¶1 addresses a **Geldpraemie for a Depotuebertrag** and ¶2 a **cash premium conditioned on a
+securities purchase**. Neither is verbatim a share award for deposits of cash or assets; ¶1 is cited
+at [GT-ESTG20-063] as the administration's category for the closest case, with that limit stated
+there, and ¶2 is the case the claim excludes. Rz. 129/129a concern unrelated matters (negative Einlagezinsen); Rz. 130 is
 *"Nicht besetzt"*.
 
 #### [GT-ESTG20-038] What counts as a Termingeschaeft (Rz. 9)
