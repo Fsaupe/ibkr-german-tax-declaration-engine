@@ -27,6 +27,7 @@ running this file:
 | return disclosure call site / return priced at the return row's price | yes -- 1 red each |
 | a return forced to sort after the day's trades | yes -- 4 of 4 red, each a refusal, never a second figure |
 | factory's zero-quantity guard | yes |
+| factory's positive-award-price guard | yes -- 2 of 2 red |
 | **sort-key band in `get_event_sort_key`** | **no -- and the suite cannot** |
 | award dated on `ReportDate` instead of `AwardDate` | yes -- 1 red (acquisition date) |
 
@@ -304,6 +305,52 @@ def test_an_award_of_zero_shares_stops_the_run():
 
     with pytest.raises(DataIntegrityError, match="zero shares"):
         factory.create_events_from_grants([row])
+
+
+@pytest.mark.parametrize("price", ["0", "-4"])
+def test_an_award_without_a_positive_value_stops_the_run(price):
+    """[GT-ESTG20-064] values the award at the market price of a listed share on the day of
+    Zufluss, and [GT-ESTG20-065] makes that the Anschaffungskosten. A listed share has a
+    price, so an award row at zero carries no valuation at all -- and read as one, it gives
+    the lot a nil basis and declares the whole later proceeds as gain, with nothing to tell
+    that figure from a measured one. Tested at the factory, where every row-level refusal
+    is collected."""
+    from unittest.mock import MagicMock
+    from src.domain.enums import AssetCategory
+    from src.domain.exceptions import DataIntegrityError
+    from src.identification.asset_resolver import AssetResolver
+    from src.parsers.domain_event_factory import DomainEventFactory
+    from src.parsers.raw_models import RawGrantRecord
+    from src.parsers.column_validator import GRANTS_COLUMNS
+
+    classifier = MagicMock()
+    classifier.preliminary_classify.return_value = (AssetCategory.STOCK, None)
+    factory = DomainEventFactory(AssetResolver(classifier))
+    row = RawGrantRecord(**dict(zip(GRANTS_COLUMNS, grant_row(
+        "Stock Award Grant for Cash Deposit", "20220302", "20220302", "20230302", "10", price))))
+
+    with pytest.raises(DataIntegrityError, match="positive per-share value"):
+        factory.create_events_from_grants([row])
+
+
+def test_a_return_or_vesting_row_may_carry_any_price():
+    """Their `Price` is never used -- a return leaves at the award's own unit cost
+    ([GT-ESTG20-067]) and a vesting is inert -- so nothing is demanded of it."""
+    from unittest.mock import MagicMock
+    from src.domain.enums import AssetCategory
+    from src.identification.asset_resolver import AssetResolver
+    from src.parsers.domain_event_factory import DomainEventFactory
+    from src.parsers.raw_models import RawGrantRecord
+    from src.parsers.column_validator import GRANTS_COLUMNS
+
+    classifier = MagicMock()
+    classifier.preliminary_classify.return_value = (AssetCategory.STOCK, None)
+    factory = DomainEventFactory(AssetResolver(classifier))
+    rows = [RawGrantRecord(**dict(zip(GRANTS_COLUMNS, grant_row(
+        kind, "20220601", "20220302", "20230302", qty, "0"))))
+        for kind, qty in [("Stock Award Return for Cash Withdrawal", "-4"),
+                          ("Stock Award Vesting", "6")]]
+    assert len(factory.create_events_from_grants(rows)) == 2
 
 
 class TestTheGuardsAreObserved(FifoTestCaseBase):

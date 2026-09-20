@@ -379,7 +379,7 @@ reversal left ([GT-ESTG20-066]).
 | Which account and instrument | `ClientAccountID`; `ISIN` / `Conid` / `Symbol` | Resolved like any other instrument; an unresolvable one stops the run |
 | Acquisition date (= day of Zufluss) | award row `AwardDate` | Unparseable: run stops |
 | Units | `Quantity` (absolute value; the row kind carries the direction) | Zero: run stops |
-| Value per unit at Zufluss | award row `Price`, in `CurrencyPrimary` | Required column; the day it was struck is not stated (see Notes) |
+| Value per unit at Zufluss | award row `Price`, in `CurrencyPrimary` | Blank, zero or negative: run stops — a listed share has a price, so a zero is a missing valuation, not a value. The day it was struck is not stated (see Notes). `Price` on a reversal or vesting row is never used |
 | EUR value | ECB rate of `AwardDate` | No rate: no EUR cost, and the ledger refuses to create the lot — run stops |
 | Which award a reversal undoes | reversal row `AwardDate` + account | No such lot, or more units than it holds: run stops |
 | Amount of a reversal's negative receipt | the lot's own unit cost × units — **never** the reversal row's `Price` | follows from the two rows above |

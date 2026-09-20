@@ -383,7 +383,7 @@ class RawGrantRecord(RawBaseRecord):
       changes no lot, and a consumer that added its `Quantity` to the position would
       count the same shares twice.
 
-    The third is why `GrantsParser` refuses an `ActivityDescription` it does not
+    The third is why `parse_grants_csv` refuses an `ActivityDescription` it does not
     recognise instead of skipping it. A dispatch that falls through without an `else`
     would silently drop a future kind, and the drop would reconcile against the broker's
     snapshot only until the kind was one that moved the position.
@@ -435,11 +435,12 @@ class RawGrantRecord(RawBaseRecord):
         """Blank becomes absent; anything else is handed to pydantic to parse or reject.
 
         Deliberately NOT the `safe_decimal(v, default=Decimal("0.0"))` pattern of the
-        older models. A quantity, price or value of zero here is a real statement -- an
-        award of nothing, or one worth nothing -- so defaulting an unparseable figure to
-        zero would put an invented acquisition cost on a lot, which is the substitution
-        CLAUDE.md's fallback rule forbids. `quantity`, `price` and `value` are required,
-        so a blank one still raises; `multiplier` is optional.
+        older models. Defaulting an unparseable figure to zero would put an invented
+        acquisition cost on a lot, which is the substitution CLAUDE.md's fallback rule
+        forbids. `quantity`, `price` and `value` are required, so a blank one still raises;
+        `multiplier` is optional. A zero that IS in the file is parsed as zero here and
+        refused where the row's meaning is known: `create_events_from_grants` stops on a
+        zero quantity and on an award whose price is not positive.
         """
         if v is None or str(v).strip() == "":
             return None

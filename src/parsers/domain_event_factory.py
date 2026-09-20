@@ -1616,6 +1616,21 @@ class DomainEventFactory:
                     f"reason nothing recorded.")
                 continue
 
+            # Only the award row's price is ever used: it is the value at Zufluss and so the
+            # Anschaffungskosten ([GT-ESTG20-064], [GT-ESTG20-065]). That value is the market
+            # price of a listed share, which is never zero -- so a zero here is a missing
+            # valuation, and reading it as one gives the lot a nil basis and declares the
+            # whole later proceeds as gain, indistinguishable from a measured figure. A
+            # return leaves at the award's own unit cost and a vesting is inert, so nothing
+            # is demanded of their price.
+            if event_type == FinancialEventType.STOCK_AWARD_GRANTED and rg.price <= Decimal(0):
+                data_errors.append(
+                    f"Grant row for {what} awards shares at a price of {rg.price}. An award "
+                    f"must carry a positive per-share value: it is the market value on the "
+                    f"day the shares arrived, which becomes their acquisition cost, and "
+                    f"without it the later sale would be declared with no cost at all.")
+                continue
+
             asset = self.asset_resolver.get_or_create_asset(
                 raw_isin=rg.isin, raw_conid=rg.conid, raw_symbol=rg.symbol,
                 raw_currency=rg.currency_primary,
