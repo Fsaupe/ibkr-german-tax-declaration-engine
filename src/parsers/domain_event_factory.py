@@ -13,14 +13,15 @@ from src.domain.events import (
     OptionLifecycleEvent, OptionExerciseEvent, OptionAssignmentEvent,
     OptionExpirationWorthlessEvent, OptionCashSettlementEvent,
     CurrencyConversionEvent, FeeEvent, InternalTransferEvent, InternalCashTransferEvent,
-    TransferLot
+    TransferLot, StockAwardEvent
 )
 from src.domain.enums import FinancialEventType, AssetCategory, InvestmentFundType
 from src.identification.asset_resolver import AssetResolver
 from src.parsers.raw_models import (
     RawTradeRecord, RawCashTransactionRecord, RawCorporateActionRecord,
-    RawOptionsEAERecord, RawTransferRecord
+    RawOptionsEAERecord, RawTransferRecord, RawGrantRecord
 )
+from . import grants_parser
 from src.domain.exceptions import DataIntegrityError
 from src.utils.type_utils import parse_ibkr_date, safe_decimal
 
@@ -1532,3 +1533,132 @@ class DomainEventFactory:
             f"row(s) ({skipped_eur_cash_rows} EUR cash row(s) carrying no currency gain)."
         )
         return moves + cash_moves
+    def create_events_from_grants(
+        self, raw_grants: List[RawGrantRecord]
+    ) -> List[StockAwardEvent]:
+        """Turn the grant export's rows into the three stock-award events.
+
+        **Each kind takes its date from a different column, and the choice is load-bearing.**
+
+        * An **award** is dated on `AwardDate`. That is the day the shares entered the
+          account, which is what the broker's snapshot counts and therefore what the
+          ledger must reconcile against.
+        * A **reversal** is dated on `ReportDate` -- the day the shares were taken back.
+          Its `AwardDate` names the ORIGINAL award and, with the grant account, is the
+          matching key, not its own date.
+        * A **vesting** is dated on `VestingDate`, NOT `ReportDate` -- the day the
+          condition actually lapses, not the day the broker books the row a day or more
+          later. The vesting has no ledger effect (Zufluss fell on the award, so the
+          acquisition already happened, [GT-ESTG20-064]), but it is dated on the legal
+          event rather than the booking so the event carries the real date it stands for.
+
+        **Valuation input.** The award row's positive `Price` supplies the award value;
+        enrichment converts it on `AwardDate` ([GT-ESTG20-064]). The contributor's
+        measured award rows have equal `ReportDate` and `AwardDate` (input_data_spec §8).
+        A vesting row's price is not used for receipt or basis, so uncertainty about
+        its price date does not affect this award-date computation.
+
+        Every offending row is collected before raising, so one run names the whole
+        problem.
+        """
+        events: List[StockAwardEvent] = []
+        data_errors: List[str] = []
+
+        for rg in raw_grants:
+            what = f"{rg.symbol or rg.isin or 'unknown instrument'} on {rg.report_date}"
+            description = (rg.activity_description or "").strip()
+
+            if description == grants_parser.VESTING_ACTIVITY:
+                event_type = FinancialEventType.STOCK_AWARD_VESTED
+                raw_event_date = rg.vesting_date
+            elif description == grants_parser.REVERSAL_ACTIVITY:
+                event_type = FinancialEventType.STOCK_AWARD_REVERSED
+                raw_event_date = rg.report_date
+            elif description == grants_parser.AWARD_ACTIVITY:
+                event_type = FinancialEventType.STOCK_AWARD_GRANTED
+                raw_event_date = rg.award_date
+            else:
+                # Unreachable while `parse_grants_csv` is the only way in -- it raises on
+                # an unclassified kind. Kept because this method is reachable from a test
+                # or a future caller that did not go through the parser, and a silent
+                # `else`-less fall-through here is the exact shape of the defect the
+                # parser's guard exists to prevent.
+                data_errors.append(
+                    f"Grant row for {what} has activity '{description}', which is none "
+                    f"of the three known kinds.")
+                continue
+
+            parsed = parse_ibkr_date(raw_event_date)
+            if not parsed:
+                data_errors.append(
+                    f"Grant row for {what} has an unparseable date '{raw_event_date}' "
+                    f"for a {event_type.name} row. The award is applied in "
+                    f"chronological order and cannot be placed without one.")
+                continue
+
+            parsed_award = parse_ibkr_date(rg.award_date)
+            if not parsed_award:
+                data_errors.append(
+                    f"Grant row for {what} has an unparseable AwardDate "
+                    f"'{rg.award_date}'. With the grant account it is the key tying a "
+                    f"vesting or a reversal to the lot its award created -- SerialNumber is "
+                    f"blank on every row of this export, so there is no per-row id instead.")
+                continue
+
+            if rg.quantity == Decimal(0):
+                data_errors.append(
+                    f"Grant row for {what} moves zero shares. An award, a reversal and "
+                    f"a vesting of nothing are all meaningless, and reading one as a "
+                    f"no-op would leave the ledger disagreeing with the broker for a "
+                    f"reason nothing recorded.")
+                continue
+
+            # Only the award row's price is ever used: it is the value at Zufluss and so the
+            # Anschaffungskosten ([GT-ESTG20-064], [GT-ESTG20-065]). That value is the market
+            # price of a listed share, which is never zero -- so a zero here is a missing
+            # valuation, and reading it as one gives the lot a nil basis and declares the
+            # whole later proceeds as gain, indistinguishable from a measured figure. A
+            # return leaves at the award's own unit cost and a vesting is inert, so nothing
+            # is demanded of their price.
+            if event_type == FinancialEventType.STOCK_AWARD_GRANTED and rg.price <= Decimal(0):
+                data_errors.append(
+                    f"Grant row for {what} awards shares at a price of {rg.price}. An award "
+                    f"must carry a positive per-share value: it is the market value on the "
+                    f"day the shares arrived, which becomes their acquisition cost, and "
+                    f"without it the later sale would be declared with no cost at all.")
+                continue
+
+            asset = self.asset_resolver.get_or_create_asset(
+                raw_isin=rg.isin, raw_conid=rg.conid, raw_symbol=rg.symbol,
+                raw_currency=rg.currency_primary,
+                raw_ibkr_asset_class=rg.asset_class, raw_description=rg.description,
+                description_source_type="grant",
+                raw_multiplier=rg.multiplier,
+            )
+
+            events.append(StockAwardEvent(
+                asset.internal_asset_id,
+                parsed.isoformat(),
+                event_type=event_type,
+                award_date=parsed_award.isoformat(),
+                # Absolute: the export writes a reversal negative, and the event type
+                # carries the direction so no consumer has to infer one from the other.
+                quantity=rg.quantity.copy_abs(),
+                unit_price_foreign=rg.price,
+                currency=(rg.currency_primary or "").strip().upper(),
+                # The account the broker awarded into, so the lot is created in and
+                # reversed from THAT account's ledger. Dropping it would put the lot in
+                # the DEFAULT pot, which a single-account export would never notice.
+                account_id=rg.client_account_id,
+                local_currency=(rg.currency_primary or "").strip().upper(),
+                ibkr_activity_description=description,
+            ))
+
+        if data_errors:
+            raise DataIntegrityError(
+                f"{len(data_errors)} grant row(s) could not be turned into an award "
+                f"event:\n  " + "\n  ".join(data_errors))
+
+        logger.info("Created %d stock-award event(s) from %d grant row(s).",
+                    len(events), len(raw_grants))
+        return events

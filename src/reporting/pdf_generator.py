@@ -1355,6 +1355,36 @@ class PdfReportGenerator:
             else: 
                 self.story.append(Paragraph("Keine nicht steuerpflichtigen Veräußerungen nach §23 EStG zu berichten.", self.styles['BodyText']))
 
+        self._add_so_leistungen_manual_entries()
+
+    def _add_so_leistungen_manual_entries(self):
+        """The § 22 Nr. 3 receipt and return of awarded shares, which this report cannot
+        put on a line (issue #76) and must therefore hand to the reader in full.
+
+        The processor states each with amount, year and destination as a data gap, and the
+        console prints every gap. This PDF rendered only the reconciliation gaps, so a run
+        with an award produced a complete-looking declaration summary with the Anlage SO
+        entries silently absent."""
+        for gap in self.data_gaps:
+            if gap.code == "STOCK_GRANT_TAX_POSITION":
+                self.story.append(Paragraph("Steuerliche Behandlung zugeteilter Aktien",
+                                            self.styles['H3']))
+                self.story.append(Paragraph(gap.detail, self.styles['BodyText']))
+        gaps = [g for g in self.data_gaps
+                if g.code in ("STOCK_AWARD_RECEIPT_NOT_DECLARED",
+                              "STOCK_AWARD_RETURN_NOT_DECLARED")]
+        if not gaps:
+            return
+        self.story.append(Paragraph(
+            "Einkünfte aus Leistungen (§ 22 Nr. 3 EStG) – manuell einzutragen", self.styles['H3']))
+        self.story.append(Paragraph(
+            f"ACHTUNG: {len(gaps)} Vorgang/Vorgänge mit zugeteilten Aktien gehören in die Anlage SO "
+            "(Einkünfte aus Leistungen). Dieser Bericht enthält dafür keine Zeile; die Beträge sind "
+            "in keiner der oben ausgewiesenen Summen enthalten und müssen von Hand in die Erklärung "
+            "übernommen werden.", self.styles['BodyText']))
+        for gap in gaps:
+            self.story.append(Paragraph(f"• {gap.subject}: {gap.detail}", self.styles['BodyText']))
+
     def _prepare_wht_data(self):
         wht_by_country_data: Dict[str, Dict[str, Decimal]] = {}
         wht_individual_transactions = []

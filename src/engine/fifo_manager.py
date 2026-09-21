@@ -6,13 +6,14 @@ import uuid
 from datetime import date as date_obj, datetime
 
 from src.domain.assets import Asset, Option, PositionSnapshot
-from src.domain.events import FinancialEvent, TradeEvent, CorpActionSplitForward, CorpActionMergerCash, CorpActionStockDividend, CorpActionMergerStock, OptionLifecycleEvent, CorporateActionEvent, CorpActionExpireDividendRights, OptionDeliveryLink
+from src.domain.events import FinancialEvent, TradeEvent, CorpActionSplitForward, CorpActionMergerCash, CorpActionStockDividend, CorpActionMergerStock, OptionLifecycleEvent, CorporateActionEvent, CorpActionExpireDividendRights, StockAwardEvent, OptionDeliveryLink
 from src.domain.results import RealizedGainLoss
 from src.domain.enums import AssetCategory, FinancialEventType, TaxReportingCategory, RealizationType, InvestmentFundType
 from src.domain.exceptions import DataIntegrityError, ProcessingError
 from src.utils.currency_converter import CurrencyConverter
 from src.utils.exchange_rate_provider import ECBExchangeRateProvider
 from src.utils.type_utils import parse_ibkr_date, safe_decimal
+from src.utils.account_utils import account_key
 from src.utils.tax_utils import get_teilfreistellung_rate_for_fund_type
 from src.tax_law.holding_period import is_within_section23_speculation_period 
 import src.config as global_config
@@ -378,6 +379,24 @@ class FifoLedger:
                         self.add_short_lot(sub)
                     elif sub.event_type == FinancialEventType.TRADE_BUY_SHORT_COVER:
                         self.consume_short_lots_for_cover(sub, is_historical_simulation=True)
+            elif isinstance(hist_event, StockAwardEvent):
+                # Two kinds move the ledger and one deliberately does not. A vesting is
+                # the lapse of a contractual condition, and BFH VI R 37/09 puts Zufluss
+                # at the booking regardless of one ([GT-ESTG20-064]) -- so by the time a
+                # vesting is reported the acquisition has already happened and there is
+                # nothing left for it to change. Read and inert, which is not the same as
+                # dropped unseen: an unrecognised kind still raises.
+                if hist_event.event_type == FinancialEventType.STOCK_AWARD_GRANTED:
+                    self.add_lot_for_stock_award(hist_event)
+                elif hist_event.event_type == FinancialEventType.STOCK_AWARD_REVERSED:
+                    self.reverse_stock_award_lot(hist_event)
+                elif hist_event.event_type == FinancialEventType.STOCK_AWARD_VESTED:
+                    pass
+                else:
+                    raise ProcessingError(
+                        f"Historical replay has no handler for stock-award kind "
+                        f"{hist_event.event_type.name} on "
+                        f"{asset.get_classification_key()} at {hist_event.event_date}.")
             elif isinstance(hist_event, CorpActionSplitForward):
                 self.adjust_lots_for_split(hist_event)
             elif isinstance(hist_event, CorpActionStockDividend):
@@ -1462,6 +1481,123 @@ class FifoLedger:
         logger.info(f"Added new lot for stock dividend event {event.event_id} for asset {self.asset_internal_id}: Qty={new_lot.quantity}, Cost/Unit={new_lot.unit_cost_basis_eur} (FMV)") # Renamed
 
 
+    # --- Stock awards: shares a broker granted for capital placed with it ---
+    #
+    # Three operations on one lot, keyed by the account the award was granted in *and*
+    # the award date. The grant report carries no per-row id tying a vesting or a reversal
+    # back to its award, so (grant account, award date) is the only stable identity the
+    # export supplies -- and it must be stable through a transfer: once one account's award
+    # and another account's same-date award sit in one ledger, the award date alone no
+    # longer tells them apart, and a reversal keyed on the date would take the wrong lot's
+    # basis. `_STOCK_AWARD_SOURCE_PREFIX` puts the composite identity into the lot's
+    # `source_transaction_id`, which the lot carries when it is moved.
+    _STOCK_AWARD_SOURCE_PREFIX = "STOCK_AWARD:"
+
+    def _stock_award_source_id(self, account_id, award_date: str) -> str:
+        return f"{self._STOCK_AWARD_SOURCE_PREFIX}{account_key(account_id)}:{award_date}"
+
+    def _find_stock_award_lot(self, account_id, award_date: str) -> Optional[FifoLot]:
+        """The lot the award (grant account, award date) created, or None.
+
+        Matches the composite originating identity, not the date alone. Two awards with the
+        same identity cannot coexist -- the creation check below refuses a same-account,
+        same-date duplicate -- so more than one match means the ledger disagrees with that
+        invariant; refuse rather than pick the first and reverse an unknown basis.
+        """
+        wanted = self._stock_award_source_id(account_id, award_date)
+        matches = [lot for lot in self.lots if lot.source_transaction_id == wanted]
+        if len(matches) > 1:
+            raise ProcessingError(
+                f"More than one lot on asset {self.asset_internal_id} carries the award "
+                f"identity {wanted}. A reversal cannot choose between them without taking a "
+                f"basis that may not be the one awarded."
+            )
+        return matches[0] if matches else None
+
+    def add_lot_for_stock_award(self, event: StockAwardEvent):
+        """Book an award into the ledger on the day the shares entered the account.
+
+        The lot is created here and not at vesting because the shares are in the account
+        from this day: the broker's year-end snapshot counts them, and a ledger that
+        waited for vesting would reconstruct a smaller holding and fail reconciliation at
+        every mark in between.
+
+        Its acquisition date and cost basis are FINAL. Zufluss falls on the booking --
+        a contractual condition under which the grantor may reclaim the shares does not
+        postpone it, only a disposal being *rechtlich unmoeglich* would ([GT-ESTG20-064],
+        BFH VI R 37/09 Leitsatz 2 and Rn. 12) -- and the value at Zufluss is the
+        Anschaffungskosten ([GT-ESTG20-065]). A later vesting therefore changes nothing.
+        """
+        if event.unit_cost_basis_eur is None:
+            raise ProcessingError(
+                f"Stock award {event.event_id} on asset {self.asset_internal_id} reached "
+                f"the ledger without a EUR cost basis. The award price is a foreign "
+                f"amount and the enrichment step converts it; a lot created without one "
+                f"would carry an invented acquisition cost into a later disposal."
+            )
+        quantity = event.quantity.quantize(global_config.PRECISION_QUANTITY, context=self.ctx)
+        source_id = self._stock_award_source_id(event.account_id, event.award_date)
+        if self._find_stock_award_lot(event.account_id, event.award_date) is not None:
+            raise ProcessingError(
+                f"Two stock awards on asset {self.asset_internal_id} in account "
+                f"{account_key(event.account_id)} share the award date {event.award_date}. "
+                f"That identity is the only key a vesting or a reversal has to find its lot "
+                f"by, so a duplicate would let one restate or reverse the wrong award's shares."
+            )
+        self.lots.append(FifoLot(
+            acquisition_date=event.event_date, quantity=quantity,
+            unit_cost_basis_eur=event.unit_cost_basis_eur,
+            total_cost_basis_eur=self.ctx.multiply(quantity, event.unit_cost_basis_eur),
+            source_transaction_id=source_id,
+        ))
+        self.lots.sort(key=lambda lot: (parse_ibkr_date(lot.acquisition_date) or datetime.min.date(),
+                                        lot.source_transaction_id))
+        logger.info("Stock award %s: added lot on %s, qty %s, cost/unit %s",
+                    event.award_date, event.event_date, quantity, event.unit_cost_basis_eur)
+
+    def reverse_stock_award_lot(self, event: StockAwardEvent) -> Decimal:
+        """Take back part or all of an award whose condition failed.
+
+        **Realises nothing.** A return to the grantor is not a Veraeusserung -- nothing is
+        received for it -- so no `RealizedGainLoss` is produced. The units leave at the
+        lot's own unit cost, the value originally brought to account; what the shares are
+        worth on the day of the return is recognised nowhere ([GT-ESTG20-067], BFH VI R
+        17/08). The return row's own `Price` is therefore never used.
+
+        Returns that unit cost, so the caller can state the negative Einnahme the return
+        gives rise to without reaching into the lot.
+        """
+        lot = self._find_stock_award_lot(event.account_id, event.award_date)
+        if lot is None:
+            raise ProcessingError(
+                f"A stock award reversal on asset {self.asset_internal_id} names the award "
+                f"of {event.award_date} in account {account_key(event.account_id)}, and no "
+                f"lot with that originating identity is in this ledger. The reversal cannot "
+                f"be applied to some other lot: it would take units at a cost basis that was "
+                f"never awarded -- including another account's same-date award."
+            )
+        quantity = event.quantity.quantize(global_config.PRECISION_QUANTITY, context=self.ctx)
+        if quantity > lot.quantity:
+            raise ProcessingError(
+                f"A stock award reversal on asset {self.asset_internal_id} would take "
+                f"{quantity} units from the award of {event.award_date}, which holds "
+                f"{lot.quantity}. Either the export returns more than it awarded, or "
+                f"earlier sales have already consumed units of this award: FIFO "
+                f"([GT-ESTG20-012]) deems the oldest shares sold first, so a sale of "
+                f"separately bought shares of the same stock takes the award's units if "
+                f"the award is older. How a return is measured once that has happened is "
+                f"not established in reference/ ([GT-ESTG20-067]), and the units are not "
+                f"taken from another lot instead."
+            )
+        if quantity == lot.quantity:
+            self.lots.remove(lot)
+        else:
+            lot.quantity = lot.quantity - quantity
+            lot.total_cost_basis_eur = self.ctx.multiply(lot.quantity, lot.unit_cost_basis_eur)
+        logger.info("Stock award %s: reversed %s units, no gain realised",
+                    event.award_date, quantity)
+        return lot.unit_cost_basis_eur
+
     def consume_long_option_get_cost(self, quantity_contracts_to_consume: Decimal) -> List[ConsumedLotDetail]:
         if self.asset_category != AssetCategory.OPTION:
             raise TypeError(f"consume_long_option_get_cost called on non-option asset {self.asset_internal_id} (Category: {self.asset_category.name})")
@@ -1586,7 +1722,7 @@ class FifoLedger:
         """
         if repayment_amount_eur <= Decimal('0') or not self.lots:
             return repayment_amount_eur
-            
+
         remaining_repayment = repayment_amount_eur
         
         for lot in self.lots:

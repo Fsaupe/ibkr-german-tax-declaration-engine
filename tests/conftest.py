@@ -296,6 +296,16 @@ def default_tax_year():
 
 
 @pytest.fixture(autouse=True)
+def _stock_award_programme_confirmed(monkeypatch):
+    """Scenarios with grant rows are Refer-A-Friend scenarios, and say so the way a user
+    does: through config.STOCK_AWARD_PROGRAMME. The template leaves it None, which stops a
+    run holding grant rows; the test of that stop sets it back to None itself."""
+    from src import config as app_config
+    monkeypatch.setattr(app_config, "STOCK_AWARD_PROGRAMME", "IBKR_REFER_A_FRIEND",
+                        raising=False)
+
+
+@pytest.fixture(autouse=True)
 def _global_config_leak_tripwire(_hermetic_cache_paths):
     """No test may leak a mutated global config value past its own teardown.
 

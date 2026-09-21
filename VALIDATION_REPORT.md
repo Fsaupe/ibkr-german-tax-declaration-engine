@@ -1,5 +1,17 @@
 # Test Suite Validation Report
 
+## 2026-09-21 — PR #90 award-date acceptance
+
+The maintainer selected award-date receipt/acquisition and requested merge,
+superseding the vesting instruction recorded below. The existing `121a176`
+award-date implementation is restored with current/historical report disclosure.
+Full clean suite: **1,432 passed, 1 skipped**; copied-export schemas: **10 passed**;
+saved acceptance probes: **5 passed** (5 failed on the vesting head); new disclosure
+tests: **2 passed** (2 failed before the disclosure). Fresh VZ **2023–2025**
+console/PDF parity against accepted main and same-tree controls is exact.
+See [decision, reasoning and validation](docs/reviews/pr-90-merge-decision.md).
+Earlier vesting measurements below are historical, not the accepted timing model.
+
 **Date:** 2026-04-04
 **Scope:** Complete test suite cross-checked against curated reference library (`reference/`)
 **Method:** Every test file's assertions compared against authoritative German tax law sources (EStG, InvStG, BMF-Schreiben, official form instructions)
@@ -667,6 +679,42 @@ trade regardless of transaction id (previously a smaller-id trade could precede 
 intended dependency, declared. The full suite (every currency/FX/option figure test) is green
 and VZ 2024 is byte-identical to the baseline, consistent with no unintended movement.
 
+## 2026-09-02 — PR-E: the share-grant report read, real-data effect
+
+**Base = the per-account train (snapshot+fifo+transfers+currency), no grants.** On the real
+export, VZ 2023 aborts at `EOY_RECONCILIATION_FAILED` naming three positions: the share grant
+`ISIN:US45841N1072` (short by the granted units, and given a synthesised fallback lot dated
+`{tax_year-1}-12-31` via `REPLAY_MARK_UNCONFIRMED_START`) and `ISIN:DE000LEG1110` in each of two
+accounts. VZ 2024 / VZ 2025 abort at `REPLAY_MARK_MISMATCH` on the same two instruments.
+
+**With PR-E, the grant half is resolved.** The awarded shares reconcile against the broker
+snapshot at every checkpoint mark — VZ 2023 (1 mark), VZ 2024 (2), VZ 2025 (3), all kept — and
+**zero** fallback lots are synthesised where the base synthesised one; the lot keeps its real
+acquisition date instead of an invented 31 December. `ISIN:US45841N1072` drops out of the
+reconciliation failure entirely. The § 22 Nr. 3 receipt is reported as a data gap
+(`STOCK_AWARD_RECEIPT_NOT_DECLARED`) in VZ 2023 — the one year an award is dated inside the
+processed year — naming the year and the amount; nothing is silently declared or omitted
+([GT-ESTG20-063], issue #76).
+
+**The remaining `DE000LEG1110` abort is the Transfers re-export completeness gap already
+recorded under PR-C, not PR-E's.** Measured cause: the 2023 Transfers re-export's date window
+began after the own-account move's date, so the move — and a same-day currency Umbuchung — were
+dropped; the surviving rows are all from three days later. The move survives in the maintainer's
+earlier export. Restoring it (the securities move's own side is enough — the parser de-duplicates
+the two sides) makes **all three years — VZ 2023, VZ 2024, VZ 2025 — reconcile at every mark and
+produce a declaration PDF**, "Every ledger agreed with the reported snapshot at every checkpoint
+mark", the only residual data gaps being the intended § 22 Nr. 3 receipt notice and the ordinary
+Vorabpauschale / KESt notices. The Transfers export is input, gitignored, and not part of this
+change.
+
+**Suite:** 1278 passed, 1 deselected (the pre-existing `test_the_column_tuples_match_the_real_exports`,
+the Cash_Balance 35-vs-tuple mismatch, failing identically on the base). **Mutation probes** on the
+eight sites PR-E adds, grant test files, failing ids recorded, no `-x`: seven RED (observable) —
+current-year dispatch entry (1), historical bucket entry (2), enrichment EUR conversion (6),
+parser unclassified-kind refusal (1), zero-quantity guard (1), over-reversal guard (1),
+undeclared-receipt recording (1); the eighth, the stock-award sort band, is GREEN when deleted and
+is the documented blind spot recorded under *Where the suite is blind* in `CLAUDE.md`.
+
 ## 2026-09-17 — PR #86 correctness review and fixes
 
 **Category:** `fix-func`. The maintainer authorized correction and merge after an
@@ -775,3 +823,115 @@ with `8b7e49f`, the known refund currency bug changes two VZ 2024 form lines;
 the currency mismatch disappears and the refund no longer appears as capital
 repayment. Private differences remain in the review captures. Original export
 and cache hashes are unchanged. This is not an all-years byte-parity claim.
+
+## 2026-09-19 — PR #90 grants re-measured on the merged tree (onto merged main)
+
+Re-ran the share-grant real-data check on the merged candidate `01ebea5` (grants re-applied onto
+merged main = per-account currency #89 + corrected #86/#87/#88/#93) against base `origin/main`
+`7d27755`, on the contributor's own exports, VZ 2023–2025. Trades used the pre-`Taxes`-column export
+(PR #91's `Taxes` column is not parsed by main or #90, so both sides are fed the same parseable
+input; the swap isolates the grant). `scripts/parity_check.sh`; same-tree control identical
+(console/log/PDF), so the comparison is reliable.
+
+The grant instrument is the **sole** reconciliation blocker in every supported year. On base each
+year aborts on it alone and produces no declaration — VZ 2023 `EOY_RECONCILIATION_FAILED`, VZ 2024
+and VZ 2025 `REPLAY_MARK_MISMATCH` (the reconstructed opening quantity is short by the awarded
+units). On the merged tree all three years complete and produce a declaration: the awarded shares
+reconcile at every checkpoint mark, no fallback lot is synthesised, and VZ 2023 records exactly one
+`STOCK_AWARD_RECEIPT_NOT_DECLARED` WARNING. The `DE000LEG1110` transfers-completeness abort recorded
+on 2026-09-02 is no longer present, so the grant is now the only blocker.
+
+This confirms the 2026-09-02 measurement on the merged architecture. It is a Band A feature
+movement, not output-neutral — base cannot declare these years and the merged tree can — so it is
+the maintainer's to approve, named to VZ 2023, VZ 2024 and VZ 2025. That no non-grant figure moved
+is not shown by a real-data figure diff (base produces no declaration to diff); it rests on the
+merged tree differing from main by exactly the grant change and on the green clean-clone suite.
+
+## 2026-09-20 — PR #90 maintainer-review rework, real-data parity
+
+Re-measured after the rework answering the maintainer's review (award provenance through transfers;
+awarded acquisitions in the same-day transfer dependencies; the reversal-ordering warning keyed by
+account; the § 22 Nr. 3 classification re-grounded on § 20 Abs. 1 Nr. 7's charging element and BMF
+Rz. 129b; Q16 recorded as the taxpayer's Reading A; the BFH VI R 37/09 Randnummern corrected to
+Rn. 12 and Rn. 15). Head = the reworked tree; base = the reviewed head before the rework. Contributor
+exports, VZ 2023–2025, `scripts/parity_check.sh`; same-tree control identical (console/log/PDF), so
+the comparison is reliable.
+
+**base vs head is byte-identical in all three years** — console (normalized), log (normalized) and
+metadata-stripped PDF. The rework moves no declared figure: the changed award-lot identity, the
+same-day ordering dependency and the account-keyed warning are all output-neutral on this data, which
+carries one grant, no cross-account award collision, no same-day grant-and-transfer of the awarded
+security, and no award reversal in a result year. This is the compatibility/parity gate for the
+rework itself; it does not restate the separate Band A feature approval owed for the grant feature
+(above, 2026-09-19), which the maintainer approves named to VZ 2023/2024/2025.
+
+## 2026-09-20 — PR #90 acceptance rework: store re-audit, one supported programme, real-data parity
+
+Measured after the rework answering the maintainer's acceptance requirements: the share-award
+claims re-grounded in `reference/` for one named programme (Q16–Q20 retired); the grant parser
+matching the supported programme's three whole activity descriptions; the same-day
+return/disposal warning removed; a return of awarded shares stated as a negative § 22 Nr. 3
+receipt with amount, year and destination; both Anlage SO lines asserted on the pipeline output.
+This entry supersedes the framing of the entry above where it speaks of "Q16 recorded as the
+taxpayer's Reading A" and of a reversal-ordering warning: neither exists any more.
+
+Head = the reworked tree; base = the reviewed head before it. Contributor exports, VZ 2023–2025,
+`scripts/parity_check.sh`; same-tree control on the base identical (console/log/PDF).
+
+- **VZ 2024 and VZ 2025: byte-identical** — console (normalized), log (normalized),
+  metadata-stripped PDF.
+- **VZ 2023: PDF byte-identical; the console differs in exactly one line** — the text of the
+  `STOCK_AWARD_RECEIPT_NOT_DECLARED` note, which now names the programme and the year. The amount
+  in that line is unchanged (compared, not printed). No declared figure moves.
+- The exact-match parser admits every row of the contributor's Grants files (measured by parsing
+  them); the removed warning and the return line have no occurrence in the processed years, so
+  their change is exercised by the synthetic scenarios only, which is where it is calibrated.
+
+Clean-clone suite (`cp src/config_example.py src/config.py && uv run pytest -q`, throwaway
+worktree): **1408 passed, 1 skipped**.
+
+**After the cold review of that tree (same day).** Four further commits: an award row whose `Price`
+is not positive now stops the run (a zero had given the lot a nil basis and declared the whole
+later proceeds as gain — reproduced on invented figures, zero occurrence in the contributor's
+files); both production ends of every optional export's path are asserted; the over-return refusal
+names both of its causes and the ledger tool passes the Grants missing-years string; and doc
+statements about a `SerialNumber` guard and an earliest-year fallback that do not exist are
+corrected. Re-measured on the final tree against the tree measured above: **VZ 2023, VZ 2024 and
+VZ 2025 byte-identical** in console and metadata-stripped PDF; same-tree control identical. The
+log differs in VZ 2023 by one line in both the comparison and the control, and it is ambient: an
+award dated on an ECB holiday has no cached rate, so each run asks the live ECB service, and one
+run received an empty answer where the other timed out. Both fall back to the preceding business
+day's rate, and no figure differs. Clean-clone suite: **1426 passed, 1 skipped**.
+
+## 2026-09-20 — PR #90: Zufluss moved to the vesting day (Q17, Reading A), real-data measurement
+
+Assessment years **VZ 2023, VZ 2024, VZ 2025**, contributor exports, `scripts/parity_check.sh
+capture`, compared against the last award-day captures of the same day. No amounts are printed
+here; differences were read with every figure masked, and directions computed without displaying
+values. This is a **measured correction**, not a parity result: the maintainer decided on
+2026-09-20 that the shares zufliessen when the programme's transfer restriction lapses
+(`docs/legal-implementation-map.md`, GT-ESTG20-064), and the figures are expected to move.
+
+- **All three years reconcile and complete.** The unvested lots count towards the holding at every
+  snapshot and mark, as before.
+- **VZ 2023: 3 console lines differ, none a declared figure.** The award-day receipt note for the
+  award of that year is gone; two receipt notes appear, one per vesting of that year, each dated on
+  its `VestingDate` and valued at the vesting row's price and that day's ECB rate.
+- **VZ 2024: 1 console line differs, not a declared figure.** One receipt note appears for that
+  year's vesting.
+- **VZ 2025: 8 console lines differ, and these are declared figures.** The year disposes of awarded
+  shares. Anlage KAP Zeile 19, Zeile 20, the instrument's line and *Saldo Aktien* each move **down
+  by one and the same amount** (the four deltas compared for equality, not printed): the vested
+  lots carry the higher vesting-day Anschaffungskosten, so the gain is lower by exactly the
+  difference in basis. No receipt note: nothing vested in 2025.
+- The 2022 return precedes its award's vesting. It reduces the unvested lot and states nothing,
+  in any year.
+- The contributor's three vesting rows each name exactly the units their award still held
+  (the run would have stopped otherwise); on 2 of the 3 the broker's `ReportDate` is later than
+  the `VestingDate` the event is dated on.
+
+Suite in the developer checkout: **1436 passed, 1 failed** — the failure is
+`test_the_column_tuples_match_the_real_exports`, which reads the local `data_import/` and is
+skipped on a clean clone. Red-first for the change: **30** of the award tests written for the
+award-day reading failed against the vesting-day engine before they were rewritten to the new
+requirement; the mutation table is in `tests/test_stock_award_scenarios.py`.

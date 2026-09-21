@@ -16,6 +16,7 @@ from src.domain.events import (
     OptionExpirationWorthlessEvent, OptionCashSettlementEvent,
     OptionLifecycleEvent, CashFlowEvent, FeeEvent,
     WithholdingTaxEvent, CurrencyConversionEvent, InternalTransferEvent,
+    StockAwardEvent,
     InternalCashTransferEvent
 )
 from src.domain.assets import (
@@ -60,6 +61,9 @@ from .event_processors.currency_conversion_processor import CurrencyConversionPr
 from .event_processors.transfer_processor import (
     InternalTransferProcessor, InternalCashTransferProcessor, apply_internal_transfer,
     _coordinate_cash_umbuchung)
+from src.engine.event_processors.stock_award_processor import (
+    StockAwardProcessor
+)
 
 
 logger = logging.getLogger(__name__)
@@ -437,6 +441,55 @@ def _require_a_complete_transfers_window(accounts, transfers_file_supplied: bool
         raise DataGapError(f"[{TRANSFERS_WINDOW_INCOMPLETE}] {subject}: {detail}")
 
 
+GRANTS_WINDOW_INCOMPLETE = "GRANTS_WINDOW_INCOMPLETE"
+
+
+def _require_a_complete_grants_window(grants_file_supplied: bool,
+                                      grants_missing_years: str,
+                                      data_gap_collector) -> None:
+    """A Grants export that covers some years and not others stops the run.
+
+    A hole is not the same as an absence, and only the hole is refused -- the same rule the
+    Transfers window uses. A person whose broker never awarded them shares has no Grants
+    file at all, and that stays legitimate: the feature does not fire and nothing is
+    missing. A person whose export covers some years of the replayed window but not others
+    plainly HAS the report, so a year of it is simply missing -- and an award in that year
+    is not booked, so the awarded lot is rebuilt from the position snapshot with an invented
+    acquisition date, or, where the interval began at a reported snapshot, the
+    reconciliation refuses the year. Exporting the year is cheap and the basis it protects
+    is not recoverable afterwards.
+
+    Unlike Transfers this needs no second account: an award belongs to a single account, so
+    a missing year gets a single account's lot wrong -- there is no multi-account condition.
+
+    The years are named because the reader's next action is to export exactly those.
+    """
+    missing = (grants_missing_years or "").strip()
+    if not grants_file_supplied or not missing:
+        return
+
+    subject = f"Grants export missing for: {missing}"
+    detail = (
+        f"The Grants (Stock Grant Activity) export covers some years of the replayed window "
+        f"and not {missing}. Shares awarded in an uncovered year are not booked: the ledger "
+        f"is rebuilt from the position snapshot -- the broker's quantity with an invented "
+        f"acquisition date -- or, where the interval began at a reported snapshot, the "
+        f"reconciliation refuses the year. The acquisition date decides the holding period "
+        f"(§ 23 EStG), the cost basis a later sale is measured against, and which units that "
+        f"sale consumes. Because the export exists for other years, the query exists too: "
+        f"export {missing} as well (see README), even if no shares were awarded that year, "
+        f"and this stops. An export absent for every year is a different case -- the feature "
+        f"simply does not fire -- and is not reported here."
+    )
+    if data_gap_collector is not None:
+        data_gap_collector.record(
+            code=GRANTS_WINDOW_INCOMPLETE, subject=subject, detail=detail,
+            severity=GapSeverity.FAIL_FAST,
+        )  # records, logs CRITICAL and raises DataGapError
+    else:
+        raise DataGapError(f"[{GRANTS_WINDOW_INCOMPLETE}] {subject}: {detail}")
+
+
 TRANSFER_COUNTERPARTY_UNKNOWN = "TRANSFER_COUNTERPARTY_UNKNOWN"
 
 
@@ -555,6 +608,10 @@ def run_main_calculations(
     # Years in the replayed window for which no Transfers file was offered, comma-joined
     # and in order. Only meaningful when a report WAS supplied (a hole, not an absence).
     transfers_missing_years: str = "",
+    # Grants counterparts, same meaning: whether a Grants export was offered at all, and the
+    # years missing from a supplied one (a hole). Drive `_require_a_complete_grants_window`.
+    grants_file_supplied: bool = False,
+    grants_missing_years: str = "",
 ) -> Tuple[List[RealizedGainLoss], List[VorabpauschaleData], List[FinancialEvent], int]:
     """
     Runs the main calculation logic:
@@ -629,7 +686,7 @@ def run_main_calculations(
                 historical_transfer_events.append(event)
             elif isinstance(event, (TradeEvent, CorpActionSplitForward, CorpActionStockDividend,
                                     OptionLifecycleEvent, CorpActionMergerCash,
-                                    CorpActionExpireDividendRights)):
+                                    CorpActionExpireDividendRights, StockAwardEvent)):
                 # OptionLifecycleEvent joined this bucket when checkpointing exposed what its
                 # absence cost: an option opened and closed inside the historical window kept
                 # its lots forever, because nothing removed them. Nine option ledgers on the
@@ -795,6 +852,10 @@ def run_main_calculations(
     _require_a_complete_transfers_window(
         _known_accounts, transfers_file_supplied, transfers_missing_years,
         data_gap_collector)
+    # A Grants export with a per-year hole is refused for the same reason, and needs no
+    # second account -- an award belongs to one.
+    _require_a_complete_grants_window(
+        grants_file_supplied, grants_missing_years, data_gap_collector)
     _report_multi_account_limitations(
         _known_accounts, data_gap_collector, transfers_file_supplied)
 
@@ -1317,6 +1378,7 @@ def run_main_calculations(
     option_assignment_processor = OptionAssignmentProcessor()
     option_expiration_processor = OptionExpirationWorthlessProcessor()
     option_cash_settlement_processor = OptionCashSettlementProcessor()
+    stock_award_processor = StockAwardProcessor()
 
     # Currency conversion processor for FX trades
     currency_conversion_processor = CurrencyConversionProcessor(
@@ -1343,6 +1405,13 @@ def run_main_calculations(
         FinancialEventType.OPTION_CASH_SETTLEMENT: option_cash_settlement_processor,
         FinancialEventType.INTERNAL_TRANSFER: internal_transfer_processor,
         FinancialEventType.INTERNAL_CASH_TRANSFER: internal_cash_transfer_processor,
+        # All three; the award is the one that carries a figure. An award or a reversal
+        # dated inside the tax year is caught by the EoY reconciliation if it goes
+        # unapplied; a vesting moves no shares and is inert (Zufluss fell on the award),
+        # so it is dispatched here only to be handled explicitly rather than fall through.
+        FinancialEventType.STOCK_AWARD_GRANTED: stock_award_processor,
+        FinancialEventType.STOCK_AWARD_REVERSED: stock_award_processor,
+        FinancialEventType.STOCK_AWARD_VESTED: stock_award_processor,
     }
 
     logger.info(f"Processing {len(current_year_events)} current tax year events using dispatch table...")
