@@ -651,25 +651,25 @@ class StockAwardEvent(FinancialEvent):
     other in a single ledger the date no longer tells them apart. On an award row
     `award_date` equals the day the lot is created.
 
-    **The position and the tax acquisition do NOT coincide.** The shares sit in the
-    account from the award, which is what the broker's snapshots count. They are acquired
-    for tax on the vesting: the programme's clause calling a premature disposal "void" is
-    read as making one legally ineffective, so Zufluss falls on the day the restriction
-    lapses ([GT-ESTG20-064]). That is the store's application of the German Zufluss test
-    to one programme's published terms, approved by the maintainer -- not a court ruling
-    on the programme, and the store states its limits. The award therefore books a lot
-    without cost or acquisition date, and the vesting row supplies both
-    ([GT-ESTG20-065]).
+    **The position and the tax acquisition coincide, and that is the store's application
+    of the law to one programme's terms rather than something obvious.** The shares sit in
+    the account from the award, and under the Refer-A-Friend terms Zufluss falls there
+    too: a contractual holding period and a reclaim condition do not postpone it, only a
+    disposal being *rechtlich unmoeglich* would ([GT-ESTG20-064]). So the award creates the
+    lot with its final date and cost ([GT-ESTG20-065]) and a vesting has nothing to
+    change. This is Reading B of an open question (Q17 at [GT-ESTG20-064]), taken by the
+    maintainer's decision recorded in the map row. Under Reading A -- the programme's
+    clause calling a premature disposal "void" making a transfer ineffective under the
+    law governing it -- the acquisition would move to the vesting row's date and price.
 
-    **A reversal realises nothing.** The condition failed and unvested shares are taken
-    back, so there is no disposal and no `RealizedGainLoss`, and -- nothing having
-    zugeflossen -- no negative Einnahme ([GT-ESTG20-067], Boundary). It is deliberately
-    not a `TRADE_SELL_LONG`: routing it through the trade path would produce a realised
-    gain the law does not recognise here.
+    **A reversal realises nothing.** The condition failed and the award is undone, so
+    there is no disposal and no `RealizedGainLoss`. It carries no proceeds for that
+    reason, and it is deliberately not a `TRADE_SELL_LONG`: routing it through the trade
+    path would produce a realised gain the law does not recognise here.
 
-    `unit_price_foreign` is the broker's price on the row, in `currency`. On a vesting it
+    `unit_price_foreign` is the broker's price on the row, in `currency`. On an award it
     is the ueblicher Endpreis at Zufluss (§ 8 Abs. 2 Satz 1) and becomes the
-    Anschaffungskosten; on an award and a return it is read and unused. It is converted to EUR by
+    Anschaffungskosten; on a vesting it is read and unused. It is converted to EUR by
     the enrichment step like any other foreign amount, at the ECB rate for the row's own
     date -- never at the broker's rate, which the export does not carry here anyway.
 

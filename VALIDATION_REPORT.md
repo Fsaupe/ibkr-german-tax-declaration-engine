@@ -1,5 +1,17 @@
 # Test Suite Validation Report
 
+## 2026-09-21 — PR #90 award-date acceptance
+
+The maintainer selected award-date receipt/acquisition and requested merge,
+superseding the vesting instruction recorded below. The existing `121a176`
+award-date implementation is restored with current/historical report disclosure.
+Full clean suite: **1,432 passed, 1 skipped**; copied-export schemas: **10 passed**;
+saved acceptance probes: **5 passed** (5 failed on the vesting head); new disclosure
+tests: **2 passed** (2 failed before the disclosure). Fresh VZ **2023–2025**
+console/PDF parity against accepted main and same-tree controls is exact.
+See [decision, reasoning and validation](docs/reviews/pr-90-merge-decision.md).
+Earlier vesting measurements below are historical, not the accepted timing model.
+
 **Date:** 2026-04-04
 **Scope:** Complete test suite cross-checked against curated reference library (`reference/`)
 **Method:** Every test file's assertions compared against authoritative German tax law sources (EStG, InvStG, BMF-Schreiben, official form instructions)

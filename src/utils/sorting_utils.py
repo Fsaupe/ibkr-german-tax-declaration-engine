@@ -69,15 +69,20 @@ def get_event_sort_key(event: FinancialEvent, asset_resolver: AssetResolver) -> 
         )
     elif isinstance(event, StockAwardEvent):
         # Same intra-day slot as a corporate action, for the same reason a transfer takes
-        # it: a vesting must be applied before that day's disposals, or a sale of shares
-        # vesting that day meets a lot that is still unvested and the run stops. All three
-        # kinds of one export share the band so they sort the same way.
+        # it: the shares must be in the ledger before that day's disposals, or a sale on
+        # the award date hits a lot that does not exist yet. A vesting shares the band
+        # although it changes nothing, so that all three kinds of one export sort the same
+        # way and a future kind that DOES touch the ledger inherits the safe order.
         #
-        # A same-day return and disposal need no order: a return takes unvested units of
-        # its own award, a sale is measured against acquired shares only, and the two
-        # cannot compete for a unit. No rule of law orders them ([GT-ESTG20-066]) and none
-        # is needed. Pinned, under both input row orders, by `TestASameDayReturnAndSale`
-        # in tests/test_stock_award_scenarios.py.
+        # A return here is therefore applied BEFORE a same-day disposal of the same share,
+        # and that is the only order consistent with both having happened: a return takes
+        # units of its own award at that award's cost ([GT-ESTG20-067]), and shares handed
+        # back cannot also be the shares sold, so the sale is measured against what is
+        # left. No rule of law orders the two ([GT-ESTG20-066]) and none is needed. The
+        # other order could never give a second figure -- a lot's unit cost is uniform, so
+        # the sale would cost the same -- it could only leave the return short of units
+        # and stop the run. Pinned, under both input row orders, by
+        # `TestASameDayReturnAndSale` in tests/test_stock_award_scenarios.py.
         #
         # The band decides this only because the event carries no `ibkr_transaction_id`:
         # the export's SerialNumber is blank on every row, so there is none to carry, and

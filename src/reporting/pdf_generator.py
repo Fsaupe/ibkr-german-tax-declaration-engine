@@ -1358,14 +1358,21 @@ class PdfReportGenerator:
         self._add_so_leistungen_manual_entries()
 
     def _add_so_leistungen_manual_entries(self):
-        """The § 22 Nr. 3 receipt of awarded shares, which this report cannot put on a
-        line (issue #76) and must therefore hand to the reader in full.
+        """The § 22 Nr. 3 receipt and return of awarded shares, which this report cannot
+        put on a line (issue #76) and must therefore hand to the reader in full.
 
-        The processor states it with amount, year and destination as a data gap, and the
+        The processor states each with amount, year and destination as a data gap, and the
         console prints every gap. This PDF rendered only the reconciliation gaps, so a run
-        with a vesting produced a complete-looking declaration summary with the Anlage SO
-        entry silently absent."""
-        gaps = [g for g in self.data_gaps if g.code == "STOCK_AWARD_RECEIPT_NOT_DECLARED"]
+        with an award produced a complete-looking declaration summary with the Anlage SO
+        entries silently absent."""
+        for gap in self.data_gaps:
+            if gap.code == "STOCK_GRANT_TAX_POSITION":
+                self.story.append(Paragraph("Steuerliche Behandlung zugeteilter Aktien",
+                                            self.styles['H3']))
+                self.story.append(Paragraph(gap.detail, self.styles['BodyText']))
+        gaps = [g for g in self.data_gaps
+                if g.code in ("STOCK_AWARD_RECEIPT_NOT_DECLARED",
+                              "STOCK_AWARD_RETURN_NOT_DECLARED")]
         if not gaps:
             return
         self.story.append(Paragraph(

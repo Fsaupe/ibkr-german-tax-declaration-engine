@@ -378,22 +378,24 @@ class RawGrantRecord(RawBaseRecord):
     * an **award** ("... Grant ...") books shares into the account;
     * a **reversal** ("... Return ...") takes some back when the condition fails, with a
       negative `Quantity` and the ORIGINAL award's `AwardDate`;
-    * a **vesting** ("... Vesting ...") moves no shares. It records the lapse of the
-      transfer restriction, which is where Zufluss falls ([GT-ESTG20-064]): it gives the
-      award's lot its acquisition date and cost, and a consumer that
-      added its `Quantity` to the position would count the same shares twice.
+    * a **vesting** ("... Vesting ...") moves nothing. It records the lapse of the
+      condition; the acquisition already happened at the award ([GT-ESTG20-064]), so it
+      changes no lot, and a consumer that added its `Quantity` to the position would
+      count the same shares twice.
 
     The third is why `parse_grants_csv` refuses an `ActivityDescription` it does not
     recognise instead of skipping it. A dispatch that falls through without an `else`
     would silently drop a future kind, and the drop would reconcile against the broker's
     snapshot only until the kind was one that moved the position.
 
-    **Why both dates are mapped.** `AwardDate` is the day the shares enter the account --
-    what the broker's snapshots count -- and, with the grant account, the matching key.
-    `VestingDate` is the day the transfer restriction lapses, which is where Zufluss falls
-    under the application at [GT-ESTG20-064]: the acquisition date,
-    and the day whose ECB rate converts the vesting row's `Price`. `ReportDate` is the
-    broker's booking day; it dates a return and nothing else.
+    **Why both dates are mapped.** `AwardDate` is where Zufluss falls -- a contractual
+    condition under which the grantor may reclaim the shares does not postpone it, only a
+    disposal being *rechtlich unmoeglich* would ([GT-ESTG20-064]) -- so it is the
+    acquisition date and, with the grant account, the matching key. `VestingDate` is mapped because it is what
+    identifies a vesting row as the lapse of THAT award's condition, and because the
+    claim's own test turns on whether disposal was possible before it, which a reader
+    checking this engine's position has to be able to see. `ReportDate` is the broker's
+    booking day, mapped for ordering only.
 
     **`SerialNumber` is not mapped.** The export carries the column and leaves it blank on
     every row measured, so there is no identity to read from it. It stays in `GRANTS_COLUMNS`

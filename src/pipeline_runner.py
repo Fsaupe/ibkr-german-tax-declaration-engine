@@ -184,6 +184,21 @@ def run_core_processing_pipeline(
     try:
         # Ensure run_main_calculations uses the passed tax_year_to_process
         data_gap_collector = DataGapCollector()
+        if orchestrator.raw_grants:
+            # GT-ESTG20-064 / Q17: disclose the selected application once, including
+            # historical awards whose basis can affect a later declaration.
+            data_gap_collector.record(
+                code="STOCK_GRANT_TAX_POSITION",
+                subject="IBKR Refer-A-Friend share grants",
+                detail=(
+                    "Award-date receipt is the selected filing position (GT-ESTG20-064, Q17): "
+                    "actual shares booked and ordinary dividends support receipt at award. "
+                    "Award-date value and FX determine acquisition basis, including historical awards. "
+                    "The transfer restriction remains legally uncertain: vesting-date receipt would change "
+                    "receipt year, valuation, FX, basis and the treatment of pre-vesting returns. "
+                    "No programme-specific German ruling establishing that alternative was located."
+                ),
+            )
         for key, description in orchestrator.vorabpauschale_price_substitutions:
             data_gap_collector.record(
                 code="VORABPAUSCHALE_PRICE_WRONG_DAY",

@@ -9,8 +9,8 @@ from .column_validator import GRANTS_COLUMNS
 
 # **The engine supports exactly one share-award programme: Interactive Brokers'
 # "Refer-A-Friend" award.** Everything the engine does with a grant row -- § 22 Nr. 3 as
-# the income category, Zufluss on the lapse of the transfer restriction, that day's value
-# as the Anschaffungskosten, a return before it as no tax event -- is established in
+# the income category, Zufluss on the booking day, that day's value as the
+# Anschaffungskosten, a return as a negative Einnahme -- is established in
 # reference/tax-law/estg-22-nr3-leistungen.md by applying the law to THAT programme's
 # terms ([GT-ESTG20-063] to [GT-ESTG20-067]). Another programme's terms may give another
 # result: a premium conditioned on buying securities, for one, is a cost reduction and no
