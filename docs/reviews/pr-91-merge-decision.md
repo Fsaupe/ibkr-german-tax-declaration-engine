@@ -58,4 +58,17 @@ authorize merging #92 or close deferred work.
 
 ## Final verification and publication
 
-Pending execution of the approved final clean-checkout verification and merge.
+**Verified code/test revision: 676ec7f5e1090a1c598478d81233c21d885dd545.**
+Full clean checkout, template configuration, no private imports or caches:
+**1,500 passed, 1 skipped**. The skip requires private exports; all 10 corresponding
+schema checks pass separately on copied exports. The approved replacement test
+removes the sole prior failure without changing application code.
+
+Source and dependency files are identical to measured candidate b52bede. The
+maintainer's current input and cache directories were compared recursively to the
+copied candidate state and match. The fresh 2023–2025 captures and controls remain
+applicable. Only review documentation follows this successful verification.
+
+**Disposition: accepted with existing follow-up retained.** Publication and merge
+are authorized. Refresh the remote head before the fast-forward push and merge
+only that verified outgoing head. Record the merge hash after GitHub confirms it.
