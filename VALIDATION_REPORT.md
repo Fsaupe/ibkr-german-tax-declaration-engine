@@ -1017,3 +1017,57 @@ snapshot: VZ 2023, VZ 2024 and VZ 2025 each IDENTICAL on console, log and PDF.
 proceeds stops the run naming the trade: a short lot has no place for proceeds below zero, and a
 figure is not invented for it. Probes: the magnitude restored at either site turns that site's test
 red and no other.
+
+## 2026-09-22 — PR #91 review corrections on maintainer exports
+
+Categories, in order: ks-maint for L1–L3 (reference re-audit), then fix-func
+for signed sale cash and short proceeds. Reviewed remote head eb52abe, accepted
+base adb9132; source correction 3541de7 follows store correction 849ccbe.
+
+The reference restores IX R 46/03's separate-service qualification, corrects the
+scope of IX R 43/14 and VIII R 8/20, and establishes JStG 2024 Article 3 Nr. 7 b,
+Article 56 Abs. 1 and historical § 52 Abs. 1 first application. All nine protocol
+items were checked: statute/admin foundation, exact sentences and qualifications,
+amendment and application, no changed form mapping, individual source provenance,
+applicable years, fact-specific remaining Q21 boundary, dependent citations, and
+purity. GT-ESTG20-010/069 and GT-ESTG23-008 were re-decided; no new claim ID or
+application deviation is created by the audit. The contributor's election
+attribution is withdrawn. Reference-purity checks: 31 passed.
+
+Zero net trade cash avoids division while retaining separate commission handling.
+Negative net cash consumes currency or opens a currency short; replay uses the
+same direction and rate. Short securities lots retain signed proceeds through
+partial covers and history. Existing option-premium tax treatment is unchanged.
+
+New invented-data regressions: **20 passed**; at original eb52abe, **14 failed,
+6 passed**, for division, missing outflow/lots, omitted commission and short-lot
+refusal. This is both red-first evidence and calibration. Direct historical lot
+inspection precedes snapshot reconciliation; current currency shorts are covered
+at a different rate. Export schemas: **10 passed** on copied refreshed data.
+
+Actual VZ **2023, 2024 and 2025 all complete** on the corrected candidate. The
+original PR head aborts VZ 2023 on an option-exercise stock delivery after the
+existing premium adjustment makes its proceeds negative. Accepted main completes.
+This is a reproduced compatibility regression, not an input gap.
+
+Fresh baseline and candidate same-tree console/PDF controls match for all years.
+Baseline uses the preserved original Trades; candidate uses refreshed Taxes
+exports. Other inputs/configuration/cache are identical; NAV auto-fetch is disabled
+equally. Intermediate captures at ccb81f0 and 093d0f4 separate tax,
+commission-credit and signed-proceeds effects. **Declared figures differ in every
+year; no approval is claimed.** Exact amounts and ordered report diffs are private.
+The signed-proceeds comparison also exposes the existing option-treatment
+deviation (GT-ESTG20-004 / PM-006); it does not certify that underlying treatment.
+
+Clean suite at 3541de7: **1,497 passed, 1 skipped, 1 failed**. The sole failure
+is the pre-existing test demanding the now-removed negative-short-proceeds
+refusal. Two further currency-short cases pass separately. The maintainer was
+asked for the explicitly required permission to change that test and the rebate
+test's stale legal docstring; neither existing test was changed without a reply.
+Consequently this candidate is not accepted and the full suite is not green.
+
+No publication or merge. Deferred work remains open. Actual input files and
+personal caches/configuration were only copied; public changes contain invented
+fixture amounts. Numeric diff matches were checked against export monetary fields;
+matches are fixture constants, citation/date/hunk numbers and unchanged context,
+with no account identifier. See the current local review handoff for next steps.

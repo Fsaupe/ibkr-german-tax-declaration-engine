@@ -29,6 +29,26 @@ def _currency_results(out):
 
 
 class TestSaleTaxCurrencyBoundary(FifoTestCaseBase):
+    @pytest.mark.parametrize("tax", ["1", "3"])
+    def test_current_year_currency_short_is_covered_at_its_opening_rate(self, tax):
+        deficit = D(tax) - D("1") + D(".25")
+        out = self._run_pipeline(
+            trades_data=[
+                trade_row(ACCOUNT, ISIN, "2025-03-01", "1", "100", "BUY", "O", "BUY", currency="USD"),
+                trade_row(ACCOUNT, ISIN, "2025-06-01", "-1", "1", "SELL", "C", "SELL",
+                          currency="USD", taxes="-" + tax, commission="-.25"),
+                fx_trade_row(ACCOUNT, "USD", "BUY", deficit, deficit * D(".8"), "1.25", "2025-07-01", "COVER_FX"),
+            ],
+            positions_start_data=[_usd_cash_position(ACCOUNT, "100", "80")],
+            positions_end_data=[],
+            cash_balance_data=[cash_balance_row(ACCOUNT, "USD", "100", "0", year=2025)],
+            custom_rate_provider=_RatePerDate({"2025-03-01": ".5", "2025-06-01": ".625", "2025-07-01": ".8"}),
+            tax_year=2025,
+        )
+        expected = D("-30") + deficit * (D(".625") - D(".8"))
+        assert sum((r.gross_gain_loss_eur for r in _currency_results(out)), D("0")) == expected
+        assert out.data_gaps == []
+
     @pytest.mark.parametrize("tax", ["0.5", "1", "3"])
     @pytest.mark.parametrize("commission", ["0", "-0.25"])
     def test_current_year(self, tax, commission):
