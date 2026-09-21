@@ -152,7 +152,8 @@ class TradeProcessor(EventProcessor):
           - This creates a new currency lot (no immediate FX gain/loss)
           - Exception: If short currency lots exist, receiving currency covers them (realizes FX gain/loss)
 
-        The EUR value used MUST match gross_amount_eur from enrichment for consistency.
+        The EUR value used MUST match gross_amount_eur from enrichment for consistency,
+        plus (buy) or minus (sale) the trade's transaction tax -- the cash the trade moved.
 
         Cross-currency trades (Phase 5b):
           When the asset's denomination currency differs from the settlement currency
@@ -228,6 +229,23 @@ class TradeProcessor(EventProcessor):
                     f"(asset: {asset_currency}, settlement: {settlement_currency}). "
                     f"Processing FX impact on {settlement_currency} (settlement currency)."
                 )
+
+        # The transaction tax moves with the trade's own cash: a buy pays gross + tax, a
+        # sale receives gross - tax. It is part of the one currency movement of the trade,
+        # not a second one -- a Nebenkosten belongs to the acquisition ([GT-ESTG20-068]).
+        # How that movement is taxed is the engine's standing position on the currency leg
+        # of a securities trade ([GT-FX-007]); the tax adds nothing to it.
+        if event.transaction_tax_foreign:
+            if event.transaction_tax_eur is None:
+                raise ProcessingError(
+                    f"Trade {event.ibkr_transaction_id}: transaction tax of "
+                    f"{event.transaction_tax_foreign} {trade_currency} has no EUR value.")
+            if event.event_type in [FinancialEventType.TRADE_BUY_LONG, FinancialEventType.TRADE_BUY_SHORT_COVER]:
+                foreign_amount += event.transaction_tax_foreign
+                eur_amount += event.transaction_tax_eur
+            elif event.event_type in [FinancialEventType.TRADE_SELL_LONG, FinancialEventType.TRADE_SELL_SHORT_OPEN]:
+                foreign_amount -= event.transaction_tax_foreign
+                eur_amount -= event.transaction_tax_eur
 
         # Calculate EUR per unit of foreign currency
         eur_per_unit = eur_amount / foreign_amount

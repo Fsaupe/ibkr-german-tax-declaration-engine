@@ -282,6 +282,35 @@ class DomainEventFactory:
                  continue
             event_date_str = event_date_str_or_none
 
+            # The transaction tax on the trade. Checked here, before the option-lifecycle and
+            # currency-pair branches below leave the loop body, because neither carries a
+            # tax anywhere: one placed after them would let a taxed row of those kinds
+            # through in silence. Treated: a charge (negative, as exported) on a stock
+            # trade, [GT-ESTG20-068]. Every other shape has occurred on no row of any
+            # export (input_data_spec.md) and has no treatment, so it stops the run.
+            if rt.taxes != Decimal(0):
+                if rt.taxes > Decimal(0):
+                    data_errors.append(
+                        f"Trade {tx_id_primary} ({rt.symbol}, {rt.trade_date}): Taxes is "
+                        f"positive ({rt.taxes} {rt.currency_primary}). A charge is exported "
+                        f"negative; a credit has no treatment.")
+                    continue
+                if rt.asset_class != "STK":
+                    data_errors.append(
+                        f"Trade {tx_id_primary} ({rt.symbol}, {rt.trade_date}): Taxes of "
+                        f"{rt.taxes} {rt.currency_primary} on an AssetClass {rt.asset_class} "
+                        f"row. Only a stock trade's transaction tax has a treatment.")
+                    continue
+                if rt.quantity * rt.trade_price == Decimal(0):
+                    # The tax would enter the cost or the proceeds, while the currency it was
+                    # paid in is drawn with the trade's value -- and a trade of no value
+                    # draws nothing. The two ledgers would part without saying why.
+                    data_errors.append(
+                        f"Trade {tx_id_primary} ({rt.symbol}, {rt.trade_date}): Taxes of "
+                        f"{rt.taxes} {rt.currency_primary} on a trade whose value is zero "
+                        f"(Quantity {rt.quantity} x TradePrice {rt.trade_price}).")
+                    continue
+
             current_event_processed_as_option_lifecycle = False
             if isinstance(asset, Option):
                 option_lifecycle_event = self._process_option_trade(rt, asset, event_date_str)
@@ -441,6 +470,7 @@ class DomainEventFactory:
                     price_foreign_currency=trade_price,
                     commission_foreign_currency=commission_val,
                     commission_currency=rt.ib_commission_currency or rt.currency_primary,
+                    transaction_tax_foreign=-rt.taxes,
                     local_currency=rt.currency_primary,
                     gross_amount_foreign_currency=calculated_gross_amount.copy_abs(),
                     ibkr_transaction_id=tx_id_primary,

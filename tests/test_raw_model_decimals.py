@@ -46,7 +46,7 @@ PAYLOADS = {
     "RawTradeRecord":
         {"CurrencyPrimary": "EUR", "AssetClass": "STK", "Symbol": "X",
          "Description": "d", "TradeDate": "2024-01-02", "Quantity": "1",
-         "TradePrice": "1"},
+         "TradePrice": "1", "Taxes": "0"},
     "RawCashTransactionRecord":
         {"CurrencyPrimary": "EUR", "Description": "d", "SettleDate": "2024-01-02",
          "Type": "Dividends", "Amount": "1"},

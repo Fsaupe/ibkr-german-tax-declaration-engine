@@ -52,7 +52,7 @@ class TestEoyMismatchFlowsIntoChannel(FifoTestCaseBase):
         """
         trades = [["U_GAP_TEST", "EUR", "STK", "COMMON", "GAPX", "GAP X", "US000000GAP1",
                    "", "", "", "20230401", "20", "10", "0", "EUR", "BUY", "T1", "", "",
-                   "CONGAP", "", "1", "O"]]
+                   "CONGAP", "", "1", "O", "0"]]
         positions_end = [["U_GAP_TEST", "EUR", "STK", "COMMON", "GAPX", "GAP X",
                           "US000000GAP1", Decimal("10"), Decimal("100"), Decimal("10"),
                           Decimal("100"), "", "CONGAP", "", Decimal("1")]]

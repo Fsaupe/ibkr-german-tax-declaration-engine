@@ -420,13 +420,13 @@ def generate_stock_trade_report_for_symbol(
     asset_trades_in_year.sort(key=lambda e: (e.event_date, e.creation_sequence))
 
     date_w, type_w, qty_w, price_w, curr_w = 10, 22, 15, 15, 4
-    val_loc_w, comm_loc_w, net_val_loc_w = 18, 15, 18
+    val_loc_w, comm_loc_w, tax_loc_w, net_val_loc_w = 18, 15, 15, 18
     avg_acq_open_eur_w = 20 
     net_val_eur_w, gl_eur_w = 18, 20
 
     header_parts = [
         f"{'Date':<{date_w}}", f"{'Type':<{type_w}}", f"{'Qty':>{qty_w}}", f"{'Price':>{price_w}}", f"{'Curr':<{curr_w}}",
-        f"{'Value (Local)':>{val_loc_w}}", f"{'Comm (Local)':>{comm_loc_w}}", f"{'Net Val (Local)':>{net_val_loc_w}}",
+        f"{'Value (Local)':>{val_loc_w}}", f"{'Comm (Local)':>{comm_loc_w}}", f"{'Tax (Local)':>{tax_loc_w}}", f"{'Net Val (Local)':>{net_val_loc_w}}",
         f"{'Avg Acq/Open EUR':>{avg_acq_open_eur_w}}",
         f"{'Net Val (EUR)':>{net_val_eur_w}}", f"{'Realized G/L (EUR)':>{gl_eur_w}}"
     ]
@@ -444,12 +444,13 @@ def generate_stock_trade_report_for_symbol(
 
         gross_value_local = abs_quantity * (price_local if price_local else Decimal(0))
         commission_local = trade.commission_foreign_currency or Decimal(0)
+        tax_local = trade.transaction_tax_foreign  # a positive charge, see TradeEvent
 
         net_value_local: Decimal
         if trade.event_type in [FinancialEventType.TRADE_BUY_LONG, FinancialEventType.TRADE_BUY_SHORT_COVER]:
-            net_value_local = gross_value_local + commission_local
+            net_value_local = gross_value_local + commission_local + tax_local
         else:
-            net_value_local = gross_value_local - commission_local
+            net_value_local = gross_value_local - commission_local - tax_local
 
         net_value_eur = trade.net_proceeds_or_cost_basis_eur or Decimal(0)
         realized_gl_eur_sum = Decimal(0)
@@ -503,6 +504,7 @@ def generate_stock_trade_report_for_symbol(
             f"{currency_str:<{curr_w}}",
             f"{_q(gross_value_local):>{val_loc_w}}",
             f"{_q(commission_local):>{comm_loc_w}}",
+            f"{_q(tax_local):>{tax_loc_w}}",
             f"{_q(net_value_local):>{net_val_loc_w}}",
             f"{avg_acq_open_price_eur_str:>{avg_acq_open_eur_w}}", 
             f"{_q(net_value_eur):>{net_val_eur_w}}",
@@ -515,10 +517,11 @@ def generate_stock_trade_report_for_symbol(
     print("  - 'Qty' is the absolute quantity of shares traded.")
     print("  - 'Price' is per share in local currency.")
     print("  - 'Value (Local)' is Qty * Price.")
-    print("  - 'Net Val (Local)' is Value (Local) +/- Commission (Local).")
+    print("  - 'Tax (Local)' is the transaction tax charged on the trade (e.g. a stamp duty), as a positive amount.")
+    print("  - 'Net Val (Local)' is Value (Local) +/- Commission (Local) +/- Tax (Local).")
     print("  - 'Avg Acq/Open EUR' is the weighted average EUR cost per share for shares sold (long positions),")
     print("    or the weighted average EUR proceeds per share from opening short sales (for short covers). N/A for opening trades.")
-    print("  - 'Net Val (EUR)' is the trade's net cost or proceeds in EUR from IBKR data, including EUR commissions and option premium adjustments.")
+    print("  - 'Net Val (EUR)' is the trade's net cost or proceeds in EUR from IBKR data, including EUR commissions, transaction tax and option premium adjustments.")
     print("  - 'Realized G/L (EUR)' is shown for sell/cover trades. It sums all G/L (in EUR) from FIFO lots")
     print("    realized by that specific trade event within the tax year.")
     print("  - Realized G/L in local currency is not directly provided by this report due to FIFO complexities with")

@@ -37,7 +37,7 @@ _ISIN = "DE0000000041"
 def _trade(date_str, qty, tx_id, buy_sell, open_close, notes=""):
     return [_ACCOUNT, "EUR", "STK", "", "CNCL", "CNCL Stock", _ISIN,
             "", "", "", date_str, qty, "40.00", "-1.00", "EUR",
-            buy_sell, tx_id, notes, "", "CON_CNCL", "", "1", open_close]
+            buy_sell, tx_id, notes, "", "CON_CNCL", "", "1", open_close, "0"]
 
 
 def _position(qty, position_value, mark_price, cost_basis):
@@ -83,7 +83,7 @@ def _raw(qty, tx_id, buy_sell, open_close=""):
         "Description": "CNCL Stock", "ISIN": _ISIN, "Conid": "CON_CNCL",
         "TradeDate": "2023-02-01", "Quantity": qty, "TradePrice": "40.00",
         "Buy/Sell": buy_sell, "TransactionID": tx_id,
-        "Open/CloseIndicator": open_close,
+        "Open/CloseIndicator": open_close, "Taxes": "0",
     })
 
 

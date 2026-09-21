@@ -106,7 +106,7 @@ class TestBothEoyBranchesRecord(FifoTestCaseBase):
         other one."""
         trades = [["U_GAP_TEST", "EUR", "STK", "COMMON", "GAPY", "GAP Y", "US000000GAP2",
                    "", "", "", "20230401", "20", "10", "0", "EUR", "BUY", "T1", "", "",
-                   "CONGAPY", "", "1", "O"]]
+                   "CONGAPY", "", "1", "O", "0"]]
         with pytest.raises(DataGapError) as excinfo:
             self._run_pipeline(
                 trades_data=trades, positions_end_data=[],
@@ -124,10 +124,10 @@ class TestBothEoyBranchesRecord(FifoTestCaseBase):
         trades = [
             ["U_GAP_TEST", "EUR", "STK", "COMMON", "GAPY", "GAP Y", "US000000GAP2",
              "", "", "", "20230401", "20", "10", "0", "EUR", "BUY", "T1", "", "",
-             "CONGAPY", "", "1", "O"],
+             "CONGAPY", "", "1", "O", "0"],
             ["U_GAP_TEST", "EUR", "STK", "COMMON", "GAPZ", "GAP Z", "US000000GAP3",
              "", "", "", "20230402", "7", "10", "0", "EUR", "BUY", "T2", "", "",
-             "CONGAPZ", "", "1", "O"],
+             "CONGAPZ", "", "1", "O", "0"],
         ]
         with pytest.raises(DataGapError) as excinfo:
             self._run_pipeline(

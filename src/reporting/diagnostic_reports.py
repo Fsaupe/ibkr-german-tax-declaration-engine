@@ -78,6 +78,10 @@ def print_grouped_event_details(
                 if trade_event.commission_eur is not None and trade_event.commission_eur != Decimal(0):
                     comm_eur = trade_event.commission_eur
                     details.append(f"CommEUR: {(comm_eur.quantize(display_precision) if isinstance(comm_eur, Decimal) else comm_eur)}")
+                if trade_event.transaction_tax_foreign != Decimal(0):
+                    details.append(f"Tax: {trade_event.transaction_tax_foreign.quantize(display_precision)} {trade_event.local_currency or ''}")
+                    if trade_event.transaction_tax_eur is not None:
+                        details.append(f"TaxEUR: {trade_event.transaction_tax_eur.quantize(display_precision)}")
             print(" | ".join(details))
             if event.ibkr_activity_description:
                 print(f"    Desc: {event.ibkr_activity_description[:80]}")

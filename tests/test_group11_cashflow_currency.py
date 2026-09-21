@@ -135,7 +135,7 @@ def _fx_trade_row(
         ACCOUNT_ID, "EUR", "CASH", "", symbol, f"FX {symbol}", "",
         None, None, None,
         date, quantity, ecb_rate, Decimal("0"), "EUR",
-        buy_sell, tx_id, None, None, None, None, Decimal("1"), "O",
+        buy_sell, tx_id, None, None, None, None, Decimal("1"), "O", "0",
     ]
 
 

@@ -180,7 +180,7 @@ class TestVorabpauschaleFromARealRunReachesThePdf(FifoTestCaseBase):
         return ["U1234567", "EUR", "STK", "", "XYZ2", "XYZ2 ETF INDEX",
                 self.ISIN, "", "", "", trade_date, quantity, price, "0", "EUR",
                 "BUY", f"TX{trade_date.replace('-', '')}", "", "", self.CONID,
-                "", "1", "O"]
+                "", "1", "O", "0"]
 
     def test_a_fund_created_as_a_fund_renders_instead_of_crashing(self):
         results = self._run_pipeline(

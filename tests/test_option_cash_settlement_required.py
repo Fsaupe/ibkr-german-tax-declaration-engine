@@ -58,14 +58,14 @@ def _option_trade(symbol: str, conid: str, date: str, qty: str, price: str,
     return [ACCOUNT, "EUR", "OPT", "OPT", symbol, f"{symbol} option", None,
             "5000", "20250718", "C", date, qty, price, "0", "EUR", side,
             tx_id, notes, underlying_symbol, conid, underlying_conid, "100",
-            open_close]
+            open_close, "0"]
 
 
 def _stock_trade(symbol: str, conid: str, date: str, qty: str, price: str,
                  side: str, open_close: str, tx_id: str) -> List[Any]:
     return [ACCOUNT, "EUR", "STK", "COMMON", symbol, f"{symbol} security",
             "DE000000TEST", None, None, None, date, qty, price, "0", "EUR",
-            side, tx_id, "", None, conid, None, "1", open_close]
+            side, tx_id, "", None, conid, None, "1", open_close, "0"]
 
 
 def _cash_settlement_rows(symbol: str, conid: str, date: str, qty: str,

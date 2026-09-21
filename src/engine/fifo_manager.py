@@ -219,6 +219,10 @@ def split_position_flip_event(event: TradeEvent, available_long_qty: Decimal, av
         sub_commission_fc = event.commission_foreign_currency * ratio if event.commission_foreign_currency is not None else None
         sub_commission_eur = event.commission_eur * ratio if event.commission_eur is not None else None
         sub_net = event.net_proceeds_or_cost_basis_eur * ratio if event.net_proceeds_or_cost_basis_eur is not None else None
+        # The tax is already inside sub_net; it is carried as well because the currency
+        # each leg draws or receives is read off the sub-event, not off the net.
+        sub_tax_fc = event.transaction_tax_foreign * ratio
+        sub_tax_eur = event.transaction_tax_eur * ratio if event.transaction_tax_eur is not None else None
 
         # Allocate each linked delivery once across the close/open split. An option
         # assignment can cross zero in the underlying account just like another trade.
@@ -240,6 +244,8 @@ def split_position_flip_event(event: TradeEvent, available_long_qty: Decimal, av
             commission_foreign_currency=sub_commission_fc,
             commission_currency=event.commission_currency,
             commission_eur=sub_commission_eur,
+            transaction_tax_foreign=sub_tax_fc,
+            transaction_tax_eur=sub_tax_eur,
             net_proceeds_or_cost_basis_eur=sub_net,
             option_delivery_links=links,
             account_id=event.account_id,

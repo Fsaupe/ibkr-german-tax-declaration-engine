@@ -188,7 +188,7 @@ class TestVorabpauschaleAcrossClassification(FifoTestCaseBase):
         return ["U1234567", "EUR", "STK", "", "XYZ1", "XYZ1 BOND INDEX",
                 self.ISIN, "", "", "", trade_date, quantity, price, "0", "EUR",
                 "BUY", f"TX{trade_date.replace('-', '')}", "", "", self.CONID,
-                "", "1", "O"]
+                "", "1", "O", "0"]
 
     def _position_row(self, quantity, mark_price, position_value):
         # ClientAccountID, CurrencyPrimary, AssetClass, SubCategory, Symbol,

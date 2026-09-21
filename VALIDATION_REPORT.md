@@ -935,3 +935,41 @@ Suite in the developer checkout: **1436 passed, 1 failed** — the failure is
 skipped on a clean clone. Red-first for the change: **30** of the award tests written for the
 award-day reading failed against the vesting-day engine before they were rewritten to the new
 requirement; the mutation table is in `tests/test_stock_award_scenarios.py`.
+
+## 2026-09-21 — the Trades `Taxes` column (GT-ESTG20-068), real-data measurement
+
+**Instrument.** `scripts/parity_check.sh`. Baseline: `main` at `adb9132` reading the superseded
+23-column Trades exports — `main` refuses the current 24-column ones at header validation.
+After: this change reading the current exports. The two sets of Trades files were compared row by
+row and are identical but for the `Taxes` column, so every difference below is this change. A
+same-tree control capture of VZ 2025 compared IDENTICAL on console, log and PDF first.
+
+**What the column holds.** 236 trade rows over the four files; `Taxes` blank on 0, non-zero on 2,
+both negative, both an opening stock purchase, one in each of two foreign currencies, one in 2024
+and one in 2025. None of the 383 cash-transaction rows repeats either charge.
+
+- **VZ 2023: IDENTICAL** — console, log, PDF. No taxed trade lies in or before it. The negative
+  control: reading the column moves nothing where it holds only zeros.
+- **VZ 2024: 4 console lines differ.** One is a data gap that **disappears**: the
+  `CURRENCY_EOY_MISMATCH` for the currency of that year's taxed purchase. The baseline's FIFO
+  balance exceeded the broker's closing balance by exactly the row's `Taxes` value (compared for
+  equality to the cent, not printed); now they agree. The other three are Anlage KAP Zeile 19,
+  Zeile 22 and *Saldo Sonstige Kapitalerträge*, each moving by a fraction of the tax: the tax enlarged
+  the foreign currency the purchase consumed, and that currency's realised result with it.
+- **VZ 2025: 4 console lines differ**, the same four, for the second currency and the second
+  taxed purchase; the 2024 purchase is now historical and rebuilt by the replay.
+- **No capital-gain line moves in any year.** Both taxed lots are still held, so the higher cost
+  basis has not yet met a disposal; that path is carried by `tests/test_transaction_taxes.py`.
+
+The equality of each vanished gap with its `Taxes` value is what settles two things the export
+does not say: the tax is denominated in `CurrencyPrimary`, and a negative value is a charge.
+
+Suite with the real exports present: **one failure**, and it is
+`test_the_column_tuples_match_the_real_exports`, now on `Cash_Balance` alone (4 of 36 files, the
+segment columns that parser deliberately allows); before this change it also named the four Trades
+files. Probes: 21 mutations, one at a time with bytecode caching off, 21 caught — listed in the map row
+for GT-ESTG20-068. Five of them put the tax's foreign amount where its EUR value belongs; those
+were invisible while the fixtures dated taxed trades on a day whose rate is 1. Three drop or swap
+the short-selling types where the direction of a trade is decided; those were invisible until a
+short sale and its cover were taxed in a scenario.
+

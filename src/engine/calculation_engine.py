@@ -3266,6 +3266,17 @@ def _apply_historical_currency_event(
                 eur_amount = event.gross_amount_eur
 
                 if foreign_amount and eur_amount and foreign_amount > Decimal("0") and eur_amount > Decimal("0"):
+                    # The transaction tax is part of the trade's one currency movement, as in
+                    # TradeProcessor for a tax-year trade: a buy paid gross + tax, a sale
+                    # received gross - tax ([GT-ESTG20-068]). Enrichment has refused a trade
+                    # whose tax has no EUR value.
+                    if event.transaction_tax_foreign:
+                        if event.event_type in [FinancialEventType.TRADE_BUY_LONG, FinancialEventType.TRADE_BUY_SHORT_COVER]:
+                            foreign_amount = ctx.add(foreign_amount, event.transaction_tax_foreign)
+                            eur_amount = ctx.add(eur_amount, event.transaction_tax_eur)
+                        elif event.event_type in [FinancialEventType.TRADE_SELL_LONG, FinancialEventType.TRADE_SELL_SHORT_OPEN]:
+                            foreign_amount = ctx.subtract(foreign_amount, event.transaction_tax_foreign)
+                            eur_amount = ctx.subtract(eur_amount, event.transaction_tax_eur)
                     eur_per_unit = ctx.divide(eur_amount, foreign_amount)
 
                     if event.event_type in [FinancialEventType.TRADE_BUY_LONG, FinancialEventType.TRADE_BUY_SHORT_COVER]:

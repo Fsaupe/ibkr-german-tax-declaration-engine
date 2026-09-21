@@ -186,6 +186,7 @@ def create_fx_trade_csv_row(
         None,                # UnderlyingConid
         Decimal("1"),        # Multiplier
         open_close,          # Open/CloseIndicator
+        "0",  # Taxes
     ]
 
 
@@ -237,6 +238,7 @@ def create_cross_currency_fx_trade_csv_row(
         None,                # UnderlyingConid
         Decimal("1"),        # Multiplier
         "O",                 # Open/CloseIndicator
+        "0",  # Taxes
     ]
 
 
@@ -286,6 +288,7 @@ def create_security_trade_csv_row(
         None,                            # UnderlyingConid
         Decimal("1"),                    # Multiplier
         open_close,                      # Open/CloseIndicator
+        "0",  # Taxes
     ]
 
 

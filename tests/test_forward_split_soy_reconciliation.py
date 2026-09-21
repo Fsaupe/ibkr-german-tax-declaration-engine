@@ -34,7 +34,7 @@ CONID = "CONSPLT"
 def _trade(date, qty, price, txid, open_close):
     return [ACCOUNT, "EUR", "STK", "COMMON", SYMBOL, DESC, ISIN,
             "", "", "", date, str(qty), str(price), "0", "EUR",
-            "BUY" if qty > 0 else "SELL", txid, "", "", CONID, "", "1", open_close]
+            "BUY" if qty > 0 else "SELL", txid, "", "", CONID, "", "1", open_close, "0"]
 
 
 def _position(qty, cost_basis):

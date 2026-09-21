@@ -45,7 +45,7 @@ def _bond_buy_row(symbol, isin, date, quantity, price, commission="0", tx_id="TX
         "", "", "",        # Strike, Expiry, Put/Call
         date,
         str(quantity), str(price), str(commission), currency,
-        "BUY", tx_id, "", "", f"CON_{symbol}", "", "1", "O",
+        "BUY", tx_id, "", "", f"CON_{symbol}", "", "1", "O", "0",
     ]
 
 

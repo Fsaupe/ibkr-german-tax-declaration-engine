@@ -230,6 +230,22 @@ run.
   caught. Kept here because the coincidence in the real data is what made it invisible, and
   a fixture that lets the two columns agree would hide it again.
 
+- **Which currency a value is in, in any fixture whose rate is 1.** At 1.00 a foreign amount and
+  its EUR value are the same number, so a site that uses the wrong one of the two -- or the rate
+  of the wrong day -- stays green. Five such mutations of the trade transaction tax survived a
+  suite that caught every *removal* of the same sites. Date foreign-currency trades on days
+  whose rates differ from 1 and from each other.
+- **The EUR value of a replayed purchase.** The historical currency replay reads it only when
+  the purchase overdraws the balance and opens a short; with currency on hand it consumes lots
+  and the value is never looked at. A replayed *sale* is the other way round: the value becomes
+  the cost of the lot it creates, and shows once that lot is spent. The same holds in the tax
+  year for a sale whose proceeds are never spent again. A scenario has to contain the overdraft,
+  or the later spending, to see either.
+- **The short-selling half of a rule written per trade direction.** Where buy-side types add and
+  sell-side types subtract, the list literals name four event types and the long two carry every
+  ordinary scenario. Dropping or swapping the short two at all three tax sites left the suite
+  green. A rule keyed on direction needs a long and a short scenario each.
+
 Add to this list whenever a probe finds a site the suite cannot observe.
 
 Test fixtures are YAML specs in `tests/fixtures/` with helpers in `tests/support/`;
