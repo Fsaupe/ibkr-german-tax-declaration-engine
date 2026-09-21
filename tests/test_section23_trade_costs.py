@@ -4,8 +4,8 @@ it does to a § 23 asset too. The rule is the same one and has its own ground.
 
 legal_basis: [GT-ESTG23-008]. § 23 Abs. 3 Satz 1 EStG subtracts the Anschaffungskosten and the
 Werbungskosten from the Veraeusserungspreis; the Anschaffungskosten are those of § 255 Abs. 1
-HGB, so a Nebenkosten of the purchase raises them ([GT-ESTG20-068]); a cost of the disposal is a
-Werbungskosten. All
+HGB, so a Nebenkosten of the purchase raises them ([GT-ESTG20-068]) and a reduction caused by
+it lowers them ([GT-ESTG20-069]); a cost of the disposal is a Werbungskosten. All
 identifiers and amounts are invented.
 """
 from decimal import Decimal
@@ -45,3 +45,11 @@ class TestTheCostsOfASection23Trade(FifoTestCaseBase):
         assert gain.total_cost_basis_eur == Decimal("1006")           # 1000 + 1 + 5
         assert gain.total_realization_value_eur == Decimal("1196")    # 1200 - 1 - 3
         assert gain.gross_gain_loss_eur == Decimal("190")
+
+    def test_a_credit_on_the_purchase_lowers_its_cost(self):
+        gain = self._gain(
+            trade_row(ACCOUNT, self.ISIN, "2025-01-10", "10", "100", "BUY", "O", "T_BUY",
+                      commission="2"),
+            trade_row(ACCOUNT, self.ISIN, "2025-06-10", "-10", "120", "SELL", "C", "T_SELL"))
+        assert gain.total_cost_basis_eur == Decimal("998")            # 1000 - 2
+        assert gain.gross_gain_loss_eur == Decimal("202")

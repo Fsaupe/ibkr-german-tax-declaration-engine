@@ -973,3 +973,24 @@ were invisible while the fixtures dated taxed trades on a day whose rate is 1. T
 the short-selling types where the direction of a trade is decided; those were invisible until a
 short sale and its cover were taxed in a scenario.
 
+## 2026-09-21 — a commission credit keeps its sign (GT-ESTG20-069, Q21 reading A), real-data measurement
+
+**Instrument.** `scripts/parity_check.sh`, the commit before against the change, same exports, same
+cache snapshot, all three years.
+
+**What the column holds.** The Trades commission is positive on a few rows, all stock trades in the
+trade's own currency: opening trades, a purchase and a short sale among them. Until now its absolute
+value was folded, so a credit was booked as a charge.
+
+- **VZ 2023: IDENTICAL** — console and PDF. No credited trade lies in or before it.
+- **VZ 2024: IDENTICAL** — console, log and PDF — although a credited short sale was opened and
+  covered in that year. Twice its credit is below half a cent (checked as an inequality, not
+  printed), so the correction does not reach a two-decimal figure.
+- **VZ 2025: 4 console lines differ, each by twice the credit or its rounding.** Anlage KAP Zeile 19, Zeile 20, one
+  instrument's line and *Saldo Aktien*. The instrument is the one bought with a credit and **sold
+  later in the same year**; its gain rises by twice the credit — once for no longer adding it to
+  the cost, once for subtracting it. An earlier note in this work had assumed that lot was still
+  held; the capture says otherwise.
+- No currency line and no data gap moves: the currency side already followed the sign.
+
+Probes: 5 mutations of the two lines, 5 caught (map row for GT-ESTG20-069).

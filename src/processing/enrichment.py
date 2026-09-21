@@ -139,11 +139,17 @@ def enrich_financial_events(
                     logger.warning(f"Event {event_idx+1} (Trade ID: {event.event_id}): Cannot calculate net_proceeds_or_cost_basis_eur because the transaction tax ({event.transaction_tax_foreign} {event.local_currency}) could not be converted to EUR.")
                 elif event.gross_amount_eur is not None and event.commission_eur is not None:
                     if event.event_type in [FinancialEventType.TRADE_BUY_LONG, FinancialEventType.TRADE_BUY_SHORT_COVER]:
-                        # Cost basis = gross amount + commission
-                        event.net_proceeds_or_cost_basis_eur = ctx.add(event.gross_amount_eur, event.commission_eur.copy_abs()) # Ensure commission added is positive
+                        # Cost basis = gross amount plus what the commission cost. The commission
+                        # is signed as exported: a charge is negative and raises the cost
+                        # ([GT-ESTG20-068]); a credit is positive and lowers it
+                        # ([GT-ESTG20-069], reading A of Q21, the taxpayer's choice recorded in
+                        # the map). Its absolute value was taken here until September 2026,
+                        # which turned a credit into a charge.
+                        event.net_proceeds_or_cost_basis_eur = ctx.subtract(event.gross_amount_eur, event.commission_eur)
                     elif event.event_type in [FinancialEventType.TRADE_SELL_LONG, FinancialEventType.TRADE_SELL_SHORT_OPEN]:
-                        # Proceeds = gross amount - commission
-                        event.net_proceeds_or_cost_basis_eur = ctx.subtract(event.gross_amount_eur, event.commission_eur.copy_abs()) # Ensure commission subtracted is positive
+                        # Proceeds = gross amount less what the commission cost: a charge
+                        # (negative) lowers them, a credit (positive) raises them.
+                        event.net_proceeds_or_cost_basis_eur = ctx.add(event.gross_amount_eur, event.commission_eur)
                 elif event.gross_amount_eur is not None and event.commission_eur is None and event.commission_foreign_currency == Decimal('0.0'):
                     # If commission is zero, net = gross
                     event.net_proceeds_or_cost_basis_eur = ctx.create_decimal(event.gross_amount_eur) # ensure it's under context
