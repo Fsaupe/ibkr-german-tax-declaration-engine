@@ -963,7 +963,16 @@ class FifoLedger:
         if not trade_event.ibkr_transaction_id:
             raise ValueError(f"Missing ibkr_transaction_id for trade {trade_event.event_id} needed for Short FIFO lot creation.")
 
-        total_sale_proceeds_eur = self.ctx.create_decimal(trade_event.net_proceeds_or_cost_basis_eur).copy_abs()
+        # Signed, not its magnitude. The net is what the sale brought in after its costs
+        # ([GT-ESTG20-011]); where the costs exceed the price it is negative, and a short lot
+        # has no place for proceeds below zero. Its absolute value was taken here until
+        # September 2026, which booked such a sale as having brought in what it had cost.
+        total_sale_proceeds_eur = self.ctx.create_decimal(trade_event.net_proceeds_or_cost_basis_eur)
+        if total_sale_proceeds_eur < Decimal(0):
+            raise ProcessingError(
+                f"Short sale {trade_event.ibkr_transaction_id} on {trade_event.event_date}: its costs "
+                f"exceed its price, so it brought in {total_sale_proceeds_eur} EUR. A short lot "
+                f"cannot carry negative proceeds.")
         lot_qty_shorted_contracts_or_units = trade_event.quantity.copy_abs().quantize(global_config.PRECISION_QUANTITY, context=self.ctx)
 
         if lot_qty_shorted_contracts_or_units == Decimal(0):
@@ -1013,7 +1022,11 @@ class FifoLedger:
         if sale_event.net_proceeds_or_cost_basis_eur is None: return []
 
         quantity_to_realize = sale_event.quantity.copy_abs().quantize(global_config.PRECISION_QUANTITY, context=self.ctx)
-        total_sale_proceeds_for_event = self.ctx.create_decimal(sale_event.net_proceeds_or_cost_basis_eur).copy_abs()
+        # Signed, not its magnitude: a sale whose costs exceed its price brings in less than
+        # nothing, and § 20 Abs. 4 Satz 1 sets no floor under that ([GT-ESTG20-011]). Taking
+        # the absolute value here turned -3 into +3 and understated the loss by twice the
+        # excess, without an error.
+        total_sale_proceeds_for_event = self.ctx.create_decimal(sale_event.net_proceeds_or_cost_basis_eur)
 
         if quantity_to_realize == Decimal(0): return []
         sale_proceeds_eur_per_unit_for_event = self.ctx.divide(total_sale_proceeds_for_event, quantity_to_realize)

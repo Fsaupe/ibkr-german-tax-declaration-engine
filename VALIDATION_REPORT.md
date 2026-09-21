@@ -994,3 +994,24 @@ value was folded, so a credit was booked as a charge.
 - No currency line and no data gap moves: the currency side already followed the sign.
 
 Probes: 5 mutations of the two lines, 5 caught (map row for GT-ESTG20-069).
+
+## 2026-09-21 — the net proceeds of a sale keep their sign (GT-ESTG20-011), real-data measurement
+
+**The defect.** Where a sale consumes its lots, and where a short sale opens one, the engine took the
+absolute value of the net proceeds. A sale whose costs exceed its price therefore came out as having
+brought in what it had cost, and the loss was understated by twice the excess, with no error and no
+data gap. It is older than the transaction tax; the tax on a sale is a second cost routed into the
+same place.
+
+**Incidence.** No sale in the exports has costs above its price, so the defect has not reached a
+declared figure here. The shape is ordinary all the same: a near-worthless position sold at a
+minimum commission.
+
+**Parity**, `scripts/parity_check.sh`, the capture before against the change, same exports and cache
+snapshot: VZ 2023, VZ 2024 and VZ 2025 each IDENTICAL on console, log and PDF.
+
+**Behaviour now.** A long sale carries the negative net into its loss. A short sale with negative
+proceeds stops the run naming the trade: a short lot has no place for proceeds below zero, and a
+figure is not invented for it. Probes: the magnitude restored at either site turns that site's test
+red and no other.
+
