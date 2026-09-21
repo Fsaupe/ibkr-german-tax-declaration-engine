@@ -106,6 +106,15 @@ FLEX_QUERY_IDS: dict[str, int | None] = {
     "grants": None,
 }
 
+# Share awards (the Grants export). The export does not name the programme the shares
+# were awarded under, and everything the engine does with them -- income category, day of
+# receipt, cost basis, the treatment of a return -- follows from that programme's terms.
+# The one supported programme is Interactive Brokers' "Refer-A-Friend" award
+# (reference/tax-law/estg-22-nr3-leistungen.md, [GT-ESTG20-063]). Set this to
+# "IBKR_REFER_A_FRIEND" to confirm that every row of your Grants files came under it.
+# Left as None, a run whose Grants files contain rows stops and asks for it.
+STOCK_AWARD_PROGRAMME: str | None = None
+
 # Cache directory for downloaded Flex Query CSVs
 FLEX_CACHE_DIR = "data/flex_cache"
 

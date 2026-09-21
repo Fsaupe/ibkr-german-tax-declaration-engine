@@ -91,6 +91,9 @@ def run_core_processing_pipeline(
     # data_preparation). A hole in a supplied export stops the run; an absent export
     # only warns. Empty when the export is complete or absent altogether.
     transfers_missing_years: str = "",
+    # Grants counterpart: years missing from a supplied Grants export (a hole). Stops the run
+    # like the Transfers hole; empty when the export is complete or absent altogether.
+    grants_missing_years: str = "",
     # Preceding calendar year's position snapshots. Required for the Vorabpauschale, which for
     # a VZ Y declaration is the one computed for calendar Y-1 (18 Abs. 3 InvStG). Optional at
     # this boundary: the engine decides what a missing snapshot means once it knows whether any
@@ -181,6 +184,21 @@ def run_core_processing_pipeline(
     try:
         # Ensure run_main_calculations uses the passed tax_year_to_process
         data_gap_collector = DataGapCollector()
+        if orchestrator.raw_grants:
+            # GT-ESTG20-064 / Q17: disclose the selected application once, including
+            # historical awards whose basis can affect a later declaration.
+            data_gap_collector.record(
+                code="STOCK_GRANT_TAX_POSITION",
+                subject="IBKR Refer-A-Friend share grants",
+                detail=(
+                    "Award-date receipt is the selected filing position (GT-ESTG20-064, Q17): "
+                    "actual shares booked and ordinary dividends support receipt at award. "
+                    "Award-date value and FX determine acquisition basis, including historical awards. "
+                    "The transfer restriction remains legally uncertain: vesting-date receipt would change "
+                    "receipt year, valuation, FX, basis and the treatment of pre-vesting returns. "
+                    "No programme-specific German ruling establishing that alternative was located."
+                ),
+            )
         for key, description in orchestrator.vorabpauschale_price_substitutions:
             data_gap_collector.record(
                 code="VORABPAUSCHALE_PRICE_WRONG_DAY",
@@ -254,6 +272,8 @@ def run_core_processing_pipeline(
                 make_declaration_prompt() if interactive_classification_mode else None),
             transfers_file_supplied=orchestrator.transfers_file_supplied,
             transfers_missing_years=transfers_missing_years,
+            grants_file_supplied=orchestrator.grants_file_supplied,
+            grants_missing_years=grants_missing_years,
         )
     except Exception as e:
         logger.critical(f"Calculation engine failed with unexpected error: {e}", exc_info=True)

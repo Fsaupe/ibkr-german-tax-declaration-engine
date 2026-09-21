@@ -1,5 +1,17 @@
 # Test Suite Validation Report
 
+## 2026-09-21 — PR #90 award-date acceptance
+
+The maintainer selected award-date receipt/acquisition and requested merge,
+superseding the vesting instruction recorded below. The existing `121a176`
+award-date implementation is restored with current/historical report disclosure.
+Full clean suite: **1,432 passed, 1 skipped**; copied-export schemas: **10 passed**;
+saved acceptance probes: **5 passed** (5 failed on the vesting head); new disclosure
+tests: **2 passed** (2 failed before the disclosure). Fresh VZ **2023–2025**
+console/PDF parity against accepted main and same-tree controls is exact.
+See [decision, reasoning and validation](docs/reviews/pr-90-merge-decision.md).
+Earlier vesting measurements below are historical, not the accepted timing model.
+
 **Date:** 2026-04-04
 **Scope:** Complete test suite cross-checked against curated reference library (`reference/`)
 **Method:** Every test file's assertions compared against authoritative German tax law sources (EStG, InvStG, BMF-Schreiben, official form instructions)
@@ -382,18 +394,24 @@ longer uses; the two disagree, and the difference is itself a finding (last two 
 | Non-EUR currencies held in **more than one account** in the same year | 3 in 2023 and 3 in 2024 (CAD, SGD, USD each in both accounts); 0 otherwise |
 | `Quantity`, `PositionAmount`, `TransferPrice` on the cash transfer rows | `0` on every one; the amount is in `CashTransfer` |
 | `CASH` rows in any `Positions-*.csv` | none, any year — no export supplies a cost basis for a currency balance, and none is read |
-| `AssetClass=CASH` transfer rows in the default (35-column) Transfers export | one **EUR** move (one OUT, one IN) in 2023; **no non-EUR move** |
-| The one non-EUR (USD) currency Umbuchung | present only in `data_import/obsolete/` (the 32-column export); the re-exported 35-column Transfers dropped it — the same incompleteness PR-C recorded for the LEG securities move |
+| `AssetClass=CASH` transfer rows in the currently resolved (35-column) Transfers-2023 export | one **EUR** move (OUT+IN, one id) **and one non-EUR (USD) move** (a single OUT row, no matching IN, its own id); none in other years |
+| The USD move's shape and effect | single-sided and dated inside 2023 — built from the one observed side into a current-year § 20 Abs. 2 disposal of the sending account's Kapitalforderung. **Corrected 2026-09-18:** an earlier arrangement of gitignored `data_import/` carried this row only in `obsolete/`, which is why the row above once read "no non-EUR move"; the resolved file now carries it, so that reading was stale. |
 
 **What this settles.** [GT-FX-009] is **not latent**: non-EUR currencies sit in both accounts in
 2023 and 2024, so the pooled ledger measures a disposal against another account's lots today and
 the per-account split changes which lots are consumed — an observable delta up to each year's
-abort. [GT-FX-010]'s move valuation **is latent on the default export**: the only move in it is
-EUR, which is inert because the base currency is not a Fremdwährungsguthaben. The real USD
-Umbuchung the taxpayer made in 2023 survives only in the obsolete 32-column export, which the
-securities half of the train cannot read. So the currency-move code is exercised by the test
-scenarios and by the obsolete export, not by the default run — stated rather than left implicit.
-Neither half is zero, so the counting gate does not stop the work.
+abort. **[GT-FX-010]'s move valuation is exercised on the resolved export, not latent:** the 2023
+USD Umbuchung is a non-EUR move in the 35-column Transfers file, dated inside the year, so it builds
+a current-year § 20 disposal of the sending account's Kapitalforderung (pinned as a figure in
+`test_per_account_currency.py::TestASingleSidedMoveInTheYearRealisesTheDisposal`). That figure is
+computed but **not emitted on the full real run**, because the pre-existing securities reconciliation
+(the #90 grant ISIN and the LEG move) aborts every supported year before any form line — fail-closed,
+not latent. So the currency-move code is exercised by both the test scenarios and the default real
+export; the § 20 delta becomes a **declared figure the first time the securities aborts clear**
+(later in the train), and is the maintainer's to approve, named to VZ 2023. Because `data_import/`
+is local and has drifted between arrangements, this counting gate is pinned to the currently
+resolved file and must be re-run against the maintainer's production export. Neither half is zero,
+so the counting gate does not stop the work.
 
 **Reproduce with:** for each Cash_Balance file, take the header from the first line, drop any later
 line equal to it, group the non-EUR (non-`BASE_SUMMARY`) rows by `CurrencyPrimary` and count
@@ -599,6 +617,10 @@ rule and the PR-hygiene rule against a portfolio census in published text.
 
 ## 2026-09-01 — PR-C (own-account transfers) real-data validation
 
+**Historical contributor record.** The later PR #88 review below supersedes its
+acceptance/ordering conclusions; these captures were not completed declarations
+on the maintainer's accepted input baseline.
+
 Run against the maintainer's export with the 35-column Transfers report
 (`data_import/data_new_transfers/`) copied into `data_import/`; `cache/` present so no
 early classification abort. Baseline is PR-B (`2c8c45b`), which does not read Transfers.
@@ -692,3 +714,224 @@ current-year dispatch entry (1), historical bucket entry (2), enrichment EUR con
 parser unclassified-kind refusal (1), zero-quantity guard (1), over-reversal guard (1),
 undeclared-receipt recording (1); the eighth, the stock-award sort band, is GREEN when deleted and
 is the documented blind spot recorded under *Where the suite is blind* in `CLAUDE.md`.
+
+## 2026-09-17 — PR #86 correctness review and fixes
+
+**Category:** `fix-func`. The maintainer authorized correction and merge after an
+independent review of `ea45c42` against base `5a64079` and the knowledge store.
+
+- Missing additive contributions now keep snapshot totals unknown, within an
+  account and across accounts. Opening reconciliation reports every affected
+  holding; checkpoint fallback cannot consume a partial basis. Source:
+  GT-ESTG20-011. Explicit zero cost remains a known value.
+- Snapshot price conflicts are separate from absent prices and survive grouping
+  and row-order changes. An older snapshot cannot clear a current-year conflict;
+  an independently resolved price can. Source: GT-INVSTG-010.
+- A prior position count cannot establish acquisition timing for undated surviving
+  units. Positive Vorabpauschale calculations requiring that timing stop, including
+  when the old units were sold and replaced. No factor is needed when the cap,
+  distributions or Basiszins already establish zero. Sources: GT-INVSTG-011/055.
+
+**Regression evidence:** the original five review probes had four failures and
+one passing control on `ea45c42`. All five pass after correction. The final
+`test_snapshot_integrity.py` expands them to 36 passing cases, including row-order
+permutations, both price endpoints, checkpoint basis, explicit zero basis, grouped
+error reporting and independent price resolution. Five existing tests were updated
+because they had accepted the unsupported quantity-only acquisition inference or
+silent omission when no gap collector was supplied; dates remain unknown on refusal.
+
+**Full suite:** 1,193 passed / 1 skipped without private data; 1,194 passed with a
+copy of the maintainer's exports. Python 3.12.12 and the frozen lockfile dependencies.
+
+**Actual-data validation:** the maintainer's 34 exports span 2021-2025 and one
+account. Their 87 position rows contain no blank quantity, account, cost basis or
+mark price; missing-input and multi-account cases therefore require synthetic tests.
+For VZ 2023, 2024 and 2025, the corrected PR completes with console and PDF identical
+to base `5a64079` (excluding volatile PDF metadata), with unchanged data-gap codes.
+Both base control captures also match. Every capture used fresh identical copies
+of the supplied classification, FX-rate and fund-price caches, with automatic NAV
+fetching disabled. Original export/cache hashes remained unchanged. These results
+establish regression parity, not correctness of every pre-existing figure.
+
+**Architectural acceptance:** bounded follow-up requirements are recorded in
+`docs/reviews/pr-86-required-rework.md`. Account independence and declaration-level
+aggregation remain the target; a separate Person entity is not required. Later PRs
+still need individual review.
+
+## 2026-09-17 — PR #87 account boundaries and safe refusal
+
+Category: `fix-func`. The maintainer authorized fixes and merge after review of
+`2c8c45b` and local corrected-history candidate `0d5c958` against accepted main
+`8b7e49f`. Option linking is explicitly deferred as PM-005.
+
+- Before current-year securities disposals, every account/asset with unresolved
+  acquisition history is collected and refused. Short-lot provenance and merger
+  preservation match the long-lot contract (GT-ESTG20-011/013/014/022).
+- Currency dispatch has an explicit pooled boundary at this stage. A positive
+  commission adjustment cannot masquerade as capital repayment or a negative fee;
+  all unclassified credits are refused during import. GT-ESTG20-010/048 and
+  GT-ESTG20-011 distinguish the possible treatments; no new filing position is chosen.
+- The initial 11 regression cases were 10 failed/1 passed before the change.
+  The final 13 cases, including merger provenance, are 12 failed/1 passed on
+  `0d5c958` and 13 passed on the fixed code. Full suite with copied private exports:
+  **1,225 passed**. The clean-checkout result is recorded in the review handoff.
+- Nine snapshot-only FIFO scenarios and two dedicated undated-lot tests now require
+  refusal. EOY, split, option and currency scenarios whose purpose is unrelated to
+  missing history have explicit synthetic acquisition inputs; numerical assertions
+  remain unchanged. No tests bypass the new production guard.
+
+The maintainer's input window has one unclassified positive commission credit
+among 920 cash-transaction data rows (2021–2025). It says only
+`ADJUSTMENT: COMMISSION`; asset class, symbol, ISIN and contract identifier are
+blank, so its original transaction/service is not established. Across all 34 CSVs,
+account IDs are populated in 6,976 trades, 920 cash transactions, 13 corporate
+actions, 170 option-EAE rows, 87 positions and 55 cash-balance rows. One account
+is represented; synthetic cases are needed for transfers/account isolation.
+
+Fresh identical input/cache copies, tracked configuration, non-interactive execution
+and automatic NAV fetching disabled: VZ 2023 console/PDF match accepted base
+(volatile PDF metadata excluded). VZ 2024 and VZ 2025 exit 1 on
+`COMMISSION_REFUND_UNCLASSIFIED`, producing no PDF; the latter imports the earlier
+credit as history. These are intentional data refusals, not successful declarations
+or parity claims. The original export/cache hashes are unchanged. No inputs were
+removed or overridden. Previous base controls matched for all three years.
+
+The old mixed-basis/refund algorithms are not validated by making two representations
+agree. Resolving the refund requires evidence and explicit supported treatment.
+The no-account and named-account inputs now both refuse the same unclassified
+credit. Source/spec/docstring claims about successful disposal from snapshot-only
+history were updated alongside the code; accepted architectural work remains open.
+
+## 2026-09-17 — restore commission-correction cash processing (TR-008)
+
+Category: `fix-func`. The maintainer rejected the new import refusal and confirmed
+the credit as a refund of an earlier commission overcharge. `FeeEvent.is_refund`
+now distinguishes credits from charges. The same cash direction is used for the
+tax year and historical replay, without converting the credit into capital
+repayment or inventing a security link. Acquisition-history safeguards remain.
+
+Focused verification before the change: 10 failed, 8 passed. After correction,
+the focused set passes; two additional charge controls retain the prior debit
+behavior. Final clean checkout suite: **1,231 passed, 1 data-dependent skip**.
+No option-linking or reference-law files changed.
+
+Fresh copies of saved inputs/caches through the normal entry point now complete
+VZ 2023, 2024 and 2025 with PDFs. VZ 2023 and 2025 console/PDF bytes match accepted
+pre-#87 main `8b7e49f`, excluding volatile PDF metadata. All 24 parsed VZ 2024
+form-line values match the working #87 candidate before the refusal. Compared
+with `8b7e49f`, the known refund currency bug changes two VZ 2024 form lines;
+the currency mismatch disappears and the refund no longer appears as capital
+repayment. Private differences remain in the review captures. Original export
+and cache hashes are unchanged. This is not an all-years byte-parity claim.
+
+## 2026-09-19 — PR #90 grants re-measured on the merged tree (onto merged main)
+
+Re-ran the share-grant real-data check on the merged candidate `01ebea5` (grants re-applied onto
+merged main = per-account currency #89 + corrected #86/#87/#88/#93) against base `origin/main`
+`7d27755`, on the contributor's own exports, VZ 2023–2025. Trades used the pre-`Taxes`-column export
+(PR #91's `Taxes` column is not parsed by main or #90, so both sides are fed the same parseable
+input; the swap isolates the grant). `scripts/parity_check.sh`; same-tree control identical
+(console/log/PDF), so the comparison is reliable.
+
+The grant instrument is the **sole** reconciliation blocker in every supported year. On base each
+year aborts on it alone and produces no declaration — VZ 2023 `EOY_RECONCILIATION_FAILED`, VZ 2024
+and VZ 2025 `REPLAY_MARK_MISMATCH` (the reconstructed opening quantity is short by the awarded
+units). On the merged tree all three years complete and produce a declaration: the awarded shares
+reconcile at every checkpoint mark, no fallback lot is synthesised, and VZ 2023 records exactly one
+`STOCK_AWARD_RECEIPT_NOT_DECLARED` WARNING. The `DE000LEG1110` transfers-completeness abort recorded
+on 2026-09-02 is no longer present, so the grant is now the only blocker.
+
+This confirms the 2026-09-02 measurement on the merged architecture. It is a Band A feature
+movement, not output-neutral — base cannot declare these years and the merged tree can — so it is
+the maintainer's to approve, named to VZ 2023, VZ 2024 and VZ 2025. That no non-grant figure moved
+is not shown by a real-data figure diff (base produces no declaration to diff); it rests on the
+merged tree differing from main by exactly the grant change and on the green clean-clone suite.
+
+## 2026-09-20 — PR #90 maintainer-review rework, real-data parity
+
+Re-measured after the rework answering the maintainer's review (award provenance through transfers;
+awarded acquisitions in the same-day transfer dependencies; the reversal-ordering warning keyed by
+account; the § 22 Nr. 3 classification re-grounded on § 20 Abs. 1 Nr. 7's charging element and BMF
+Rz. 129b; Q16 recorded as the taxpayer's Reading A; the BFH VI R 37/09 Randnummern corrected to
+Rn. 12 and Rn. 15). Head = the reworked tree; base = the reviewed head before the rework. Contributor
+exports, VZ 2023–2025, `scripts/parity_check.sh`; same-tree control identical (console/log/PDF), so
+the comparison is reliable.
+
+**base vs head is byte-identical in all three years** — console (normalized), log (normalized) and
+metadata-stripped PDF. The rework moves no declared figure: the changed award-lot identity, the
+same-day ordering dependency and the account-keyed warning are all output-neutral on this data, which
+carries one grant, no cross-account award collision, no same-day grant-and-transfer of the awarded
+security, and no award reversal in a result year. This is the compatibility/parity gate for the
+rework itself; it does not restate the separate Band A feature approval owed for the grant feature
+(above, 2026-09-19), which the maintainer approves named to VZ 2023/2024/2025.
+
+## 2026-09-20 — PR #90 acceptance rework: store re-audit, one supported programme, real-data parity
+
+Measured after the rework answering the maintainer's acceptance requirements: the share-award
+claims re-grounded in `reference/` for one named programme (Q16–Q20 retired); the grant parser
+matching the supported programme's three whole activity descriptions; the same-day
+return/disposal warning removed; a return of awarded shares stated as a negative § 22 Nr. 3
+receipt with amount, year and destination; both Anlage SO lines asserted on the pipeline output.
+This entry supersedes the framing of the entry above where it speaks of "Q16 recorded as the
+taxpayer's Reading A" and of a reversal-ordering warning: neither exists any more.
+
+Head = the reworked tree; base = the reviewed head before it. Contributor exports, VZ 2023–2025,
+`scripts/parity_check.sh`; same-tree control on the base identical (console/log/PDF).
+
+- **VZ 2024 and VZ 2025: byte-identical** — console (normalized), log (normalized),
+  metadata-stripped PDF.
+- **VZ 2023: PDF byte-identical; the console differs in exactly one line** — the text of the
+  `STOCK_AWARD_RECEIPT_NOT_DECLARED` note, which now names the programme and the year. The amount
+  in that line is unchanged (compared, not printed). No declared figure moves.
+- The exact-match parser admits every row of the contributor's Grants files (measured by parsing
+  them); the removed warning and the return line have no occurrence in the processed years, so
+  their change is exercised by the synthetic scenarios only, which is where it is calibrated.
+
+Clean-clone suite (`cp src/config_example.py src/config.py && uv run pytest -q`, throwaway
+worktree): **1408 passed, 1 skipped**.
+
+**After the cold review of that tree (same day).** Four further commits: an award row whose `Price`
+is not positive now stops the run (a zero had given the lot a nil basis and declared the whole
+later proceeds as gain — reproduced on invented figures, zero occurrence in the contributor's
+files); both production ends of every optional export's path are asserted; the over-return refusal
+names both of its causes and the ledger tool passes the Grants missing-years string; and doc
+statements about a `SerialNumber` guard and an earliest-year fallback that do not exist are
+corrected. Re-measured on the final tree against the tree measured above: **VZ 2023, VZ 2024 and
+VZ 2025 byte-identical** in console and metadata-stripped PDF; same-tree control identical. The
+log differs in VZ 2023 by one line in both the comparison and the control, and it is ambient: an
+award dated on an ECB holiday has no cached rate, so each run asks the live ECB service, and one
+run received an empty answer where the other timed out. Both fall back to the preceding business
+day's rate, and no figure differs. Clean-clone suite: **1426 passed, 1 skipped**.
+
+## 2026-09-20 — PR #90: Zufluss moved to the vesting day (Q17, Reading A), real-data measurement
+
+Assessment years **VZ 2023, VZ 2024, VZ 2025**, contributor exports, `scripts/parity_check.sh
+capture`, compared against the last award-day captures of the same day. No amounts are printed
+here; differences were read with every figure masked, and directions computed without displaying
+values. This is a **measured correction**, not a parity result: the maintainer decided on
+2026-09-20 that the shares zufliessen when the programme's transfer restriction lapses
+(`docs/legal-implementation-map.md`, GT-ESTG20-064), and the figures are expected to move.
+
+- **All three years reconcile and complete.** The unvested lots count towards the holding at every
+  snapshot and mark, as before.
+- **VZ 2023: 3 console lines differ, none a declared figure.** The award-day receipt note for the
+  award of that year is gone; two receipt notes appear, one per vesting of that year, each dated on
+  its `VestingDate` and valued at the vesting row's price and that day's ECB rate.
+- **VZ 2024: 1 console line differs, not a declared figure.** One receipt note appears for that
+  year's vesting.
+- **VZ 2025: 8 console lines differ, and these are declared figures.** The year disposes of awarded
+  shares. Anlage KAP Zeile 19, Zeile 20, the instrument's line and *Saldo Aktien* each move **down
+  by one and the same amount** (the four deltas compared for equality, not printed): the vested
+  lots carry the higher vesting-day Anschaffungskosten, so the gain is lower by exactly the
+  difference in basis. No receipt note: nothing vested in 2025.
+- The 2022 return precedes its award's vesting. It reduces the unvested lot and states nothing,
+  in any year.
+- The contributor's three vesting rows each name exactly the units their award still held
+  (the run would have stopped otherwise); on 2 of the 3 the broker's `ReportDate` is later than
+  the `VestingDate` the event is dated on.
+
+Suite in the developer checkout: **1436 passed, 1 failed** — the failure is
+`test_the_column_tuples_match_the_real_exports`, which reads the local `data_import/` and is
+skipped on a clean clone. Red-first for the change: **30** of the award tests written for the
+award-day reading failed against the vesting-day engine before they were rewritten to the new
+requirement; the mutation table is in `tests/test_stock_award_scenarios.py`.

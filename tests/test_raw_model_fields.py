@@ -161,8 +161,9 @@ def test_the_models_that_deliberately_drop_a_requested_column_are_listed():
         # ReportDate, SettleDate, TransferAccountName, UnderlyingConid/Symbol), the
         # broker's own position/PnL figures (PositionAmount(InBase), PnlAmount(InBase)),
         # the `Code` "ST" marker that `LevelOfDetail` replaces, and `DateTime` -- the
-        # intraday timestamp the engine deliberately never reads (same-day order is a band
-        # rule, not a clock; see sorting_utils). `CashTransfer` is now READ, not dropped: it
+        # intraday clock the engine deliberately never reads: same-day order comes from the
+        # sort bands and, within the trade band, the broker's `TransactionID` chronology, not
+        # the wall-clock time (see sorting_utils). `CashTransfer` is now READ, not dropped: it
         # carries the amount of a currency move ([GT-FX-009]), the only column that does.
         "RawTransferRecord": [
             "AccountAlias", "ClientReference", "Code", "CommodityType",
@@ -171,9 +172,9 @@ def test_the_models_that_deliberately_drop_a_requested_column_are_listed():
             "TransferAccountName", "UnderlyingConid", "UnderlyingSymbol",
         ],
         # `SerialNumber` is requested and arrives blank on every row of the export, so
-        # there is no identity to read from it. It stays in `GRANTS_COLUMNS` for the
-        # reason `RawTransferRecord`'s full-header declaration gives: if the broker ever
-        # starts populating it, that is caught at the boundary and not downstream.
+        # there is no identity to read from it. It stays in `GRANTS_COLUMNS` so that the
+        # column being removed or renamed is caught at the boundary. The boundary checks
+        # headers, not values: if the broker ever starts POPULATING it, nothing notices.
         "RawGrantRecord": ["SerialNumber"],
     }, (
         f"the set of requested-but-unmapped columns changed: {dropped}. If a column "

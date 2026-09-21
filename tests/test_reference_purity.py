@@ -64,6 +64,12 @@ IMPLEMENTATION_PATTERNS: list[tuple[str, re.Pattern]] = [
     # contains the word.
     ("engine prose", re.compile(r"\bengines?\b", re.IGNORECASE)),
     ("input data file", re.compile(r"\bdata_import\b|\b[\w-]+\.csv\b")),
+    # Input/data-state prose. The store states law; what the broker's export contains
+    # and how often a case occurs are implementation state that belongs in the map.
+    # Both slipped in ("the export carries", an "Incidence" line) and passed every
+    # pattern above. "VZ 20xx" is deliberately NOT here: a form-year or amendment year
+    # is legitimate law, used across the library.
+    ("input-state prose", re.compile(r"\bexports?\b|\bincidence\b", re.IGNORECASE)),
 ]
 
 ALLOWLIST: set[tuple[str, str, str]] = set()  # (relative path, pattern name, matched text)

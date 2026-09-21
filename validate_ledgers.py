@@ -94,6 +94,7 @@ def run_validation_for_year(year: int) -> YearResult:
             transfers_file_path=data_paths.get("transfers", "") or None,
             transfers_missing_years=data_paths.get("transfers_missing_years", ""),
             grants_file_path=data_paths.get("grants", "") or None,
+            grants_missing_years=data_paths.get("grants_missing_years", ""),
             # The checkpoint marks. Without them every interval is the earliest one, which
             # is the configuration where a missing award degrades to a WARNING and a
             # synthesised lot instead of a refusal.

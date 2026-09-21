@@ -6,13 +6,14 @@ import uuid
 from datetime import date as date_obj, datetime
 
 from src.domain.assets import Asset, Option, PositionSnapshot
-from src.domain.events import FinancialEvent, TradeEvent, CorpActionSplitForward, CorpActionMergerCash, CorpActionStockDividend, CorpActionMergerStock, OptionLifecycleEvent, CorporateActionEvent, CorpActionExpireDividendRights, StockAwardEvent
+from src.domain.events import FinancialEvent, TradeEvent, CorpActionSplitForward, CorpActionMergerCash, CorpActionStockDividend, CorpActionMergerStock, OptionLifecycleEvent, CorporateActionEvent, CorpActionExpireDividendRights, StockAwardEvent, OptionDeliveryLink
 from src.domain.results import RealizedGainLoss
 from src.domain.enums import AssetCategory, FinancialEventType, TaxReportingCategory, RealizationType, InvestmentFundType
 from src.domain.exceptions import DataIntegrityError, ProcessingError
 from src.utils.currency_converter import CurrencyConverter
 from src.utils.exchange_rate_provider import ECBExchangeRateProvider
 from src.utils.type_utils import parse_ibkr_date, safe_decimal
+from src.utils.account_utils import account_key
 from src.utils.tax_utils import get_teilfreistellung_rate_for_fund_type
 from src.tax_law.holding_period import is_within_section23_speculation_period 
 import src.config as global_config
@@ -77,6 +78,7 @@ class ShortFifoLot:
     unit_sale_proceeds_eur: Decimal # Renamed from sale_proceeds_eur_per_unit
     total_sale_proceeds_eur: Decimal # Total sale proceeds when shorted
     source_transaction_id: str # IBKR Transaction ID (or fallback string like "SOY_FALLBACK_SHORT")
+    acquisition_date_is_known: bool = True
 
     def __post_init__(self):
         if not isinstance(self.quantity_shorted, Decimal) or not self.quantity_shorted.is_finite() or self.quantity_shorted <= Decimal(0):
@@ -158,6 +160,20 @@ class ConsumedLotDetail:
     original_lot_source_tx_id: str
 
 
+@dataclass(frozen=True)
+class LotTransfer:
+    """A delivery of existing lots; acquisition history travels intact (GT-ESTG20-014)."""
+    asset_internal_id: uuid.UUID
+    long_lots: tuple
+    short_lots: tuple
+
+
+@dataclass(frozen=True)
+class PreparedTransferState:
+    long_lots: list
+    short_lots: list
+
+
 def split_position_flip_event(event: TradeEvent, available_long_qty: Decimal, available_short_qty: Decimal) -> List[TradeEvent]:
     """Split a position-flip trade (C;O / O;C) into close + open sub-events.
 
@@ -203,12 +219,18 @@ def split_position_flip_event(event: TradeEvent, available_long_qty: Decimal, av
         sub_commission_fc = event.commission_foreign_currency * ratio if event.commission_foreign_currency is not None else None
         sub_commission_eur = event.commission_eur * ratio if event.commission_eur is not None else None
         sub_net = event.net_proceeds_or_cost_basis_eur * ratio if event.net_proceeds_or_cost_basis_eur is not None else None
-        # The transaction tax splits with the trade like the commission does; without this a
-        # flip carrying a stamp tax would lose the tax's currency consumption on its sub-events
-        # (the cost basis already rides in sub_net) [GT-ESTG20-066].
-        sub_tax_fc = event.transaction_tax_foreign * ratio if event.transaction_tax_foreign is not None else None
-        sub_tax_eur = event.transaction_tax_eur * ratio if event.transaction_tax_eur is not None else None
 
+        # Allocate each linked delivery once across the close/open split. An option
+        # assignment can cross zero in the underlying account just like another trade.
+        offset = Decimal('0') if sub_type == close_type else close_qty
+        end = offset + sub_abs_qty
+        cursor = Decimal('0')
+        links = []
+        for link in event.option_delivery_links:
+            take = min(end, cursor + link.quantity) - max(offset, cursor)
+            if take > 0:
+                links.append(OptionDeliveryLink(link.option_event_id, take))
+            cursor += link.quantity
         return TradeEvent(
             asset_internal_id=event.asset_internal_id,
             event_date=event.event_date,
@@ -218,10 +240,9 @@ def split_position_flip_event(event: TradeEvent, available_long_qty: Decimal, av
             commission_foreign_currency=sub_commission_fc,
             commission_currency=event.commission_currency,
             commission_eur=sub_commission_eur,
-            transaction_tax_foreign=sub_tax_fc,
-            transaction_tax_eur=sub_tax_eur,
             net_proceeds_or_cost_basis_eur=sub_net,
-            related_option_event_id=None,  # flip events don't arise from option exercise
+            option_delivery_links=links,
+            account_id=event.account_id,
             is_position_flip=False,
             local_currency=event.local_currency,
             gross_amount_foreign_currency=sub_gross_fc,
@@ -656,14 +677,11 @@ class FifoLedger:
         The snapshot supplies a quantity and a cost basis. It supplies no acquisition
         date, so the lot carries `acquisition_date_is_known=False`.
 
-        **Exactly one consumer honours that flag: § 18 Abs. 2, which raises rather than
-        read the placeholder. § 23 does not.** The holding period is computed straight
-        from `acquisition_date`, so a placeholder would decide the Spekulationsfrist
-        with no signal either way. This docstring claimed both refused until 2026-08-09;
-        it now says what the code does. The assumption the gap rests on, measured over
-        2021-2025: two undated lots exist, neither is a `PRIVATE_SALE_ASSET` -- the only
-        category § 23 reaches -- and neither has been disposed of. It becomes live the
-        day an undated lot is crypto, a metal ETP or a currency balance.
+        The calculation entry point refuses current-year securities disposals that
+        depend on such lots, collecting the affected accounts before dispatch.
+        The Vorabpauschale acquisition-month calculation also refuses an unknown date.
+        Reconciliation can still retain quantities for diagnostics or an instrument
+        that is not disposed of; a matching quantity does not establish its history.
 
         **A cost basis this cannot use stops the run; it is never replaced by zero.**
         Three substitutions stood here until 2026-08-09 -- an absent basis, one that
@@ -747,7 +765,8 @@ class FifoLedger:
         fallback_short_lot = ShortFifoLot(
             opening_date=opening_date_str, quantity_shorted=quantity_abs,
             unit_sale_proceeds_eur=proceeds_per_unit, total_sale_proceeds_eur=total_proceeds_eur, # Renamed
-            source_transaction_id=self.soy_fallback_short_lot_source_tx_id
+            source_transaction_id=self.soy_fallback_short_lot_source_tx_id,
+            acquisition_date_is_known=False,
         )
         self.short_lots.append(fallback_short_lot)
         logger.info(
@@ -800,6 +819,7 @@ class FifoLedger:
                 # § 19 Abs. 1 Satz 3 deducts them when it ends. Rebuilding the lot
                 # without this drops them, and the loss is silent.
                 vorabpauschale_gross_eur=lot.vorabpauschale_gross_eur,
+                acquisition_date_is_known=lot.acquisition_date_is_known,
             ))
 
         prepared_short_lots: List[ShortFifoLot] = []
@@ -812,6 +832,7 @@ class FifoLedger:
                 unit_sale_proceeds_eur=new_unit_proceeds,
                 total_sale_proceeds_eur=lot.total_sale_proceeds_eur,
                 source_transaction_id=str(merger_event.event_id),
+                acquisition_date_is_known=lot.acquisition_date_is_known,
             ))
 
         # Phase 2 — COMMIT (cannot fail)
@@ -820,39 +841,88 @@ class FifoLedger:
         self.short_lots.extend(prepared_short_lots)
         self.short_lots.sort(key=lambda l: (parse_ibkr_date(l.opening_date) or datetime.min.date(), l.source_transaction_id))
 
-    def remove_relocated_lots(self, long_lots: List[FifoLot],
-                              short_lots: List[ShortFifoLot]) -> None:
-        """Remove the given lot objects (by identity) -- the sending side of a transfer.
 
-        Identity, not equality: two lots acquired on one day with the same quantity and
-        basis would be equal as dataclasses, and removing "one of them" by value could
-        drop the wrong object. The transfer coordinator has already chosen the exact
-        objects.
+    def prepare_transfer_delivery(self, event, name, data_gap_collector=None):
+        """Validate the sending account's own lots without touching any ledger.
+
+        Lot detail selects whole acquisition days. A summary-only move can select
+        only the entire long or short holding. Sub-day selection remains unsupported.
         """
-        long_ids = {id(lot) for lot in long_lots}
-        short_ids = {id(lot) for lot in short_lots}
-        self.lots = [lot for lot in self.lots if id(lot) not in long_ids]
-        self.short_lots = [lot for lot in self.short_lots if id(lot) not in short_ids]
+        from src.processing.data_gaps import DataGapError, GapSeverity
 
-    def receive_relocated_lots(self, long_lots: List[FifoLot],
-                               short_lots: List[ShortFifoLot]) -> None:
-        """Receive lot objects relocated from another account by an internal transfer.
+        def refuse(detail):
+            subject = f'{name}: transfer on {event.event_date}'
+            if data_gap_collector is not None:
+                data_gap_collector.record(code='INTERNAL_TRANSFER_PARTIAL', subject=subject,
+                    detail=detail, severity=GapSeverity.FAIL_FAST)
+            raise DataGapError(f'[INTERNAL_TRANSFER_PARTIAL] {subject}: {detail}')
 
-        The objects move INTACT -- their acquisition date, cost basis,
-        `acquisition_date_is_known` flag and accumulated Vorabpauschale travel with them,
-        because a move between the taxpayer's own accounts is not a disposal
-        ([GT-ESTG20-014]): nothing is closed and reopened. This is the difference from
-        `receive_all_lots_from_merger`, which REBUILDS the lots because a merger rescales
-        the quantities by a ratio. Here the same objects are re-parented, so the holding
-        period and basis are preserved by construction rather than by care.
+        if event.moved_lots:
+            days = {}
+            for detail in event.moved_lots:
+                if detail.quantity <= 0:
+                    refuse('Lot-detail quantity must be positive')
+                days[detail.acquisition_date] = days.get(detail.acquisition_date, Decimal('0')) + detail.quantity
+            if sum(days.values(), Decimal('0')) != event.quantity:
+                refuse('Lot-detail quantity does not match the transfer total')
+            longs, shorts = [], []
+            for day, quantity in days.items():
+                day_longs = [lot for lot in self.lots if lot.acquisition_date == day]
+                day_shorts = [lot for lot in self.short_lots if lot.opening_date == day]
+                if day_longs and day_shorts:
+                    refuse(f'Long and short lots both exist on {day}; lot-detail is ambiguous')
+                available = (sum((lot.quantity for lot in day_longs), Decimal('0'))
+                             + sum((lot.quantity_shorted for lot in day_shorts), Decimal('0')))
+                if available != quantity:
+                    refuse(f'Lot-detail for {day} moves {quantity} but account {event.account_id} '
+                           f'holds {available}; provide lot-detail for a whole acquisition day')
+                if any(detail.is_short != bool(day_shorts) for detail in event.moved_lots
+                       if detail.acquisition_date == day):
+                    logger.warning('Transfer lot sign disagrees with the sending ledger on %s; '
+                                   'preserving the ledger side', day)
+                longs.extend(day_longs)
+                shorts.extend(day_shorts)
+        else:
+            long_qty = sum((lot.quantity for lot in self.lots), Decimal('0'))
+            short_qty = sum((lot.quantity_shorted for lot in self.short_lots), Decimal('0'))
+            if long_qty == event.quantity and short_qty == 0:
+                longs, shorts = list(self.lots), []
+            elif short_qty == event.quantity and long_qty == 0:
+                longs, shorts = [], list(self.short_lots)
+            else:
+                refuse(f'Account {event.account_id} holds {long_qty} long and {short_qty} short; '
+                       f'transfer moves {event.quantity}. Supply lot-detail for a partial move')
+        long_ids, short_ids = {id(lot) for lot in longs}, {id(lot) for lot in shorts}
+        remaining = PreparedTransferState(
+            [lot for lot in self.lots if id(lot) not in long_ids],
+            [lot for lot in self.short_lots if id(lot) not in short_ids])
+        return LotTransfer(self.asset_internal_id, tuple(longs), tuple(shorts)), remaining
 
-        A list `extend` + `sort`, so it cannot fail: the transfer coordinator validates
-        the move before any ledger is touched, and removal + receipt are pure list ops.
-        """
-        self.lots.extend(long_lots)
-        self.lots.sort(key=lambda lot: (parse_ibkr_date(lot.acquisition_date) or datetime.min.date(), lot.source_transaction_id))
-        self.short_lots.extend(short_lots)
-        self.short_lots.sort(key=lambda lot: (parse_ibkr_date(lot.opening_date) or datetime.min.date(), lot.source_transaction_id))
+    def prepare_transfer_receipt(self, delivery: LotTransfer) -> PreparedTransferState:
+        """Validate and sort the receiving account's replacement state before commit."""
+        if delivery.asset_internal_id != self.asset_internal_id:
+            raise ProcessingError('Transfer receipt names a different instrument')
+        incoming = delivery.long_lots + delivery.short_lots
+        existing_ids = {id(lot) for lot in self.lots + self.short_lots}
+        if len({id(lot) for lot in incoming}) != len(incoming) or any(id(lot) in existing_ids for lot in incoming):
+            raise ProcessingError('Transfer receipt contains a duplicated lot')
+        longs = list(self.lots) + list(delivery.long_lots)
+        shorts = list(self.short_lots) + list(delivery.short_lots)
+        if longs and shorts:
+            raise ProcessingError('Transfer would combine long and short holdings; netting is not a lot relocation')
+        longs.sort(key=lambda lot: (parse_ibkr_date(lot.acquisition_date) or datetime.min.date(), lot.source_transaction_id))
+        shorts.sort(key=lambda lot: (parse_ibkr_date(lot.opening_date) or datetime.min.date(), lot.source_transaction_id))
+        return PreparedTransferState(longs, shorts)
+
+    def commit_transfer_state(self, state: PreparedTransferState) -> None:
+        """Commit already validated state. No parsing, sorting or calculations here."""
+        self.lots = state.long_lots
+        self.short_lots = state.short_lots
+
+
+    def has_unresolved_acquisition_history(self) -> bool:
+        """Account-local provenance check; matching a snapshot proves only quantity."""
+        return any(not lot.acquisition_date_is_known for lot in self.lots + self.short_lots)
 
     def add_long_lot(self, trade_event: TradeEvent):
         if trade_event.event_type != FinancialEventType.TRADE_BUY_LONG: return
@@ -1413,19 +1483,36 @@ class FifoLedger:
 
     # --- Stock awards: shares a broker granted for capital placed with it ---
     #
-    # Three operations on one lot, keyed by the award date. The export's SerialNumber is
-    # blank on every row, so the award date is the only thing tying a vesting or a
-    # reversal back to the lot its award created; `_STOCK_AWARD_SOURCE_PREFIX` puts it
-    # into `source_transaction_id` where it can be matched.
+    # Three operations on one lot, keyed by the account the award was granted in *and*
+    # the award date. The grant report carries no per-row id tying a vesting or a reversal
+    # back to its award, so (grant account, award date) is the only stable identity the
+    # export supplies -- and it must be stable through a transfer: once one account's award
+    # and another account's same-date award sit in one ledger, the award date alone no
+    # longer tells them apart, and a reversal keyed on the date would take the wrong lot's
+    # basis. `_STOCK_AWARD_SOURCE_PREFIX` puts the composite identity into the lot's
+    # `source_transaction_id`, which the lot carries when it is moved.
     _STOCK_AWARD_SOURCE_PREFIX = "STOCK_AWARD:"
 
-    def _find_stock_award_lot(self, award_date: str) -> Optional[FifoLot]:
-        """The lot an award created, or None. Match is on the award date alone."""
-        wanted = f"{self._STOCK_AWARD_SOURCE_PREFIX}{award_date}"
-        for lot in self.lots:
-            if lot.source_transaction_id == wanted:
-                return lot
-        return None
+    def _stock_award_source_id(self, account_id, award_date: str) -> str:
+        return f"{self._STOCK_AWARD_SOURCE_PREFIX}{account_key(account_id)}:{award_date}"
+
+    def _find_stock_award_lot(self, account_id, award_date: str) -> Optional[FifoLot]:
+        """The lot the award (grant account, award date) created, or None.
+
+        Matches the composite originating identity, not the date alone. Two awards with the
+        same identity cannot coexist -- the creation check below refuses a same-account,
+        same-date duplicate -- so more than one match means the ledger disagrees with that
+        invariant; refuse rather than pick the first and reverse an unknown basis.
+        """
+        wanted = self._stock_award_source_id(account_id, award_date)
+        matches = [lot for lot in self.lots if lot.source_transaction_id == wanted]
+        if len(matches) > 1:
+            raise ProcessingError(
+                f"More than one lot on asset {self.asset_internal_id} carries the award "
+                f"identity {wanted}. A reversal cannot choose between them without taking a "
+                f"basis that may not be the one awarded."
+            )
+        return matches[0] if matches else None
 
     def add_lot_for_stock_award(self, event: StockAwardEvent):
         """Book an award into the ledger on the day the shares entered the account.
@@ -1438,7 +1525,7 @@ class FifoLedger:
         Its acquisition date and cost basis are FINAL. Zufluss falls on the booking --
         a contractual condition under which the grantor may reclaim the shares does not
         postpone it, only a disposal being *rechtlich unmoeglich* would ([GT-ESTG20-064],
-        BFH VI R 37/09 Leitsatz 2 and Rn. 4) -- and the value at Zufluss is the
+        BFH VI R 37/09 Leitsatz 2 and Rn. 12) -- and the value at Zufluss is the
         Anschaffungskosten ([GT-ESTG20-065]). A later vesting therefore changes nothing.
         """
         if event.unit_cost_basis_eur is None:
@@ -1449,13 +1536,13 @@ class FifoLedger:
                 f"would carry an invented acquisition cost into a later disposal."
             )
         quantity = event.quantity.quantize(global_config.PRECISION_QUANTITY, context=self.ctx)
-        source_id = f"{self._STOCK_AWARD_SOURCE_PREFIX}{event.award_date}"
-        if self._find_stock_award_lot(event.award_date) is not None:
+        source_id = self._stock_award_source_id(event.account_id, event.award_date)
+        if self._find_stock_award_lot(event.account_id, event.award_date) is not None:
             raise ProcessingError(
-                f"Two stock awards on asset {self.asset_internal_id} share the award "
-                f"date {event.award_date}. That date is the only key a vesting or a "
-                f"reversal has to find its lot by, so a duplicate would let one restate "
-                f"or reverse the wrong award's shares."
+                f"Two stock awards on asset {self.asset_internal_id} in account "
+                f"{account_key(event.account_id)} share the award date {event.award_date}. "
+                f"That identity is the only key a vesting or a reversal has to find its lot "
+                f"by, so a duplicate would let one restate or reverse the wrong award's shares."
             )
         self.lots.append(FifoLot(
             acquisition_date=event.event_date, quantity=quantity,
@@ -1468,29 +1555,39 @@ class FifoLedger:
         logger.info("Stock award %s: added lot on %s, qty %s, cost/unit %s",
                     event.award_date, event.event_date, quantity, event.unit_cost_basis_eur)
 
-    def reverse_stock_award_lot(self, event: StockAwardEvent):
+    def reverse_stock_award_lot(self, event: StockAwardEvent) -> Decimal:
         """Take back part or all of an award whose condition failed.
 
-        **Realises nothing.** The award is undone rather than disposed of, so no
-        `RealizedGainLoss` is produced and none is returned. The units leave at the
-        lot's own unit cost, which is what the broker does too -- it removes the basis
-        at the original award price rather than the price on the day of the reversal.
+        **Realises nothing.** A return to the grantor is not a Veraeusserung -- nothing is
+        received for it -- so no `RealizedGainLoss` is produced. The units leave at the
+        lot's own unit cost, the value originally brought to account; what the shares are
+        worth on the day of the return is recognised nowhere ([GT-ESTG20-067], BFH VI R
+        17/08). The return row's own `Price` is therefore never used.
+
+        Returns that unit cost, so the caller can state the negative Einnahme the return
+        gives rise to without reaching into the lot.
         """
-        lot = self._find_stock_award_lot(event.award_date)
+        lot = self._find_stock_award_lot(event.account_id, event.award_date)
         if lot is None:
             raise ProcessingError(
-                f"A stock award reversal on asset {self.asset_internal_id} names award "
-                f"date {event.award_date}, and no lot in this account's ledger came from "
-                f"an award on that day. The reversal cannot be applied to some other "
-                f"lot: it would take units at a cost basis that was never awarded."
+                f"A stock award reversal on asset {self.asset_internal_id} names the award "
+                f"of {event.award_date} in account {account_key(event.account_id)}, and no "
+                f"lot with that originating identity is in this ledger. The reversal cannot "
+                f"be applied to some other lot: it would take units at a cost basis that was "
+                f"never awarded -- including another account's same-date award."
             )
         quantity = event.quantity.quantize(global_config.PRECISION_QUANTITY, context=self.ctx)
         if quantity > lot.quantity:
             raise ProcessingError(
                 f"A stock award reversal on asset {self.asset_internal_id} would take "
                 f"{quantity} units from the award of {event.award_date}, which holds "
-                f"{lot.quantity}. Reversing more than was awarded means the export and "
-                f"the ledger disagree about the award itself."
+                f"{lot.quantity}. Either the export returns more than it awarded, or "
+                f"earlier sales have already consumed units of this award: FIFO "
+                f"([GT-ESTG20-012]) deems the oldest shares sold first, so a sale of "
+                f"separately bought shares of the same stock takes the award's units if "
+                f"the award is older. How a return is measured once that has happened is "
+                f"not established in reference/ ([GT-ESTG20-067]), and the units are not "
+                f"taken from another lot instead."
             )
         if quantity == lot.quantity:
             self.lots.remove(lot)
@@ -1499,6 +1596,7 @@ class FifoLedger:
             lot.total_cost_basis_eur = self.ctx.multiply(lot.quantity, lot.unit_cost_basis_eur)
         logger.info("Stock award %s: reversed %s units, no gain realised",
                     event.award_date, quantity)
+        return lot.unit_cost_basis_eur
 
     def consume_long_option_get_cost(self, quantity_contracts_to_consume: Decimal) -> List[ConsumedLotDetail]:
         if self.asset_category != AssetCategory.OPTION:
@@ -1624,7 +1722,7 @@ class FifoLedger:
         """
         if repayment_amount_eur <= Decimal('0') or not self.lots:
             return repayment_amount_eur
-            
+
         remaining_repayment = repayment_amount_eur
         
         for lot in self.lots:

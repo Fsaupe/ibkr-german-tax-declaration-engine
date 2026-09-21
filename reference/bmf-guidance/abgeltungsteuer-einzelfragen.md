@@ -72,6 +72,39 @@ cited anywhere in this library are from the 14.05.2025 version unless stated oth
 
 ### Specific interpretations
 
+#### Anschaffungskosten of shares received as a benefit in kind (Rz. 87)
+
+Supporting authority for [GT-ESTG20-065]; the normative claim is defined there, with the verbatim
+text. Under the heading *"Anschaffung von Aktien durch Ausuebung von Arbeitnehmer-Optionen"*,
+Rz. 87 (14.05.2025, PDF pages 39-40, read 2026-09-20) puts the Anschaffungskosten at the value
+*"der als geldwerter Vorteil ... angesetzt wird"* and keeps them at that value *"auch in den
+Faellen, in denen der geldwerte Vorteil ... nicht der Besteuerung unterworfen wurde"*. It is written
+for § 19 EStG and refers on to the BMF-Schreiben vom 1. Juni 2024 (BStBl I S. 946).
+
+#### A premium for moving or retaining capital (Rz. 129b)
+
+Supporting authority for the subsumption at GT-ESTG20-063; the normative claim is defined there.
+
+Under the heading *"Einkuenfte aus sonstigen Leistungen (§ 22 Nummer 3 EStG)"*, Rz. 129b (14.05.2025)
+settles the income category of a bank/broker premium for capital moves. It has two limbs, retrieved
+and read 2026-09-20 (PDF pages 59-60, URL and query string in the Source block above):
+
+- **¶1 -- a premium for a Depotuebertrag.** *"Wird ein Wertpapierdepot auf ein anderes Kreditinstitut
+  uebertragen und zahlt das uebernehmende Kreditinstitut dafuer eine Geldpraemie, so stellt diese
+  Geldpraemie Einkuenfte aus sonstigen Leistungen im Sinne des § 22 Nummer 3 EStG dar, sofern sie
+  nicht einer anderen Einkunftsart (§§ 13, 15, 18 oder 21 EStG) zugeordnet werden kann."*
+- **¶2 -- a premium conditioned on acquiring securities.** Where a Kontoguthaben is transferred, or a
+  Depot first opened, and the premium is paid *"unter der Bedingung ..., dass Wertpapiere beim
+  uebernehmenden/eroeffnenden Kreditinstitut erworben werden"*, the premium instead **mindert ...
+  die Anschaffungskosten** of those securities, offset in the order of their acquisition. It is not
+  income under Nr. 3.
+
+¶1 addresses a **Geldpraemie for a Depotuebertrag** and ¶2 a **cash premium conditioned on a
+securities purchase**. Neither is verbatim a share award for deposits of cash or assets; ¶1 is cited
+at [GT-ESTG20-063] as the administration's category for the closest case, with that limit stated
+there, and ¶2 is the case the claim excludes. Rz. 129/129a concern unrelated matters (negative Einlagezinsen); Rz. 130 is
+*"Nicht besetzt"*.
+
 #### [GT-ESTG20-038] What counts as a Termingeschaeft (Rz. 9)
 
 Rz. 9 defines the term the statute leaves open. A Termingeschaeft is any financial instrument

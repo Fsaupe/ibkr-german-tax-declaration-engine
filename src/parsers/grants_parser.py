@@ -7,19 +7,30 @@ from .csv_reader import parse_records
 from .raw_models import RawGrantRecord
 from .column_validator import GRANTS_COLUMNS
 
-# The three activity kinds this export is known to carry, and whether each moves the
-# position. Which rows move it is pinned by `tests/test_stock_award_lots.py` and
-# `tests/test_stock_award_scenarios.py`; the incidence that justified treating a vesting
-# as a non-moving row is in the commit that added this file.
+# **The engine supports exactly one share-award programme: Interactive Brokers'
+# "Refer-A-Friend" award.** Everything the engine does with a grant row -- § 22 Nr. 3 as
+# the income category, Zufluss on the booking day, that day's value as the
+# Anschaffungskosten, a return as a negative Einnahme -- is established in
+# reference/tax-law/estg-22-nr3-leistungen.md by applying the law to THAT programme's
+# terms ([GT-ESTG20-063] to [GT-ESTG20-067]). Another programme's terms may give another
+# result: a premium conditioned on buying securities, for one, is a cost reduction and no
+# income at all (BMF 14.05.2025 Rz. 129b para 2).
 #
-# Matching is on a substring rather than the whole string because the broker appends the
-# reason to the kind -- an award reads "... for Cash Deposit", a reversal "... for Cash
-# Withdrawal" -- and the reason names the customer's conduct, not a different tax event.
-AWARD_MARKER = "Stock Award Grant"
-REVERSAL_MARKER = "Stock Award Return"
-VESTING_MARKER = "Stock Award Vesting"
+# These are the three activity descriptions that programme writes, matched WHOLE. A row
+# that merely contains one of them belongs to something nobody has read the terms of, and
+# stops the run.
+#
+# **The export does not name the programme**, so a different programme that wrote these
+# identical strings could not be told apart here. That the rows came under Refer-A-Friend
+# is therefore a fact the user states once, as config.STOCK_AWARD_PROGRAMME; with rows
+# present and no such confirmation `ParsingOrchestrator` stops the run.
+SUPPORTED_STOCK_AWARD_PROGRAMME = "IBKR_REFER_A_FRIEND"
 
-KNOWN_ACTIVITY_MARKERS = (AWARD_MARKER, REVERSAL_MARKER, VESTING_MARKER)
+AWARD_ACTIVITY = "Stock Award Grant for Cash Deposit"
+REVERSAL_ACTIVITY = "Stock Award Return for Cash Withdrawal"
+VESTING_ACTIVITY = "Stock Award Vesting"
+
+KNOWN_ACTIVITIES = (AWARD_ACTIVITY, REVERSAL_ACTIVITY, VESTING_ACTIVITY)
 
 
 def parse_grants_csv(file_path: str, encoding='utf-8-sig') -> List[RawGrantRecord]:
@@ -45,17 +56,19 @@ def parse_grants_csv(file_path: str, encoding='utf-8-sig') -> List[RawGrantRecor
 
     unknown = [
         r for r in records
-        if not any(marker in r.activity_description for marker in KNOWN_ACTIVITY_MARKERS)
+        if r.activity_description.strip() not in KNOWN_ACTIVITIES
     ]
     if unknown:
         seen = sorted({r.activity_description for r in unknown})
         raise DataIntegrityError(
             f"{len(unknown)} row(s) of the Grants export carry an activity kind this "
-            f"engine does not classify: {seen}. Each known kind either moves the "
-            f"position or deliberately does not, and which of the two an unclassified "
-            f"kind is cannot be guessed -- an award and a vesting differ in nothing a "
-            f"parser can see except this text. Classify it against "
-            f"reference/tax-law/estg-22-nr3-leistungen.md before running again."
+            f"engine does not classify: {seen}. The only share-award programme supported "
+            f"is Interactive Brokers' Refer-A-Friend award, which writes exactly "
+            f"{list(KNOWN_ACTIVITIES)}. Shares granted under any other programme may be "
+            f"taxed differently -- category, date of receipt and cost basis all follow "
+            f"from the programme's terms -- so they are refused rather than treated "
+            f"alike. The supported case and its grounds are in "
+            f"reference/tax-law/estg-22-nr3-leistungen.md ([GT-ESTG20-063])."
         )
 
     return records

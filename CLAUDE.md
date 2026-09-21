@@ -210,15 +210,25 @@ run.
   the tax year's. Written up in `docs/research_historical_replay_defects.md`.
 
 - **The intra-day sort band of a new event kind.** Deleting the stock-award branch from
-  `get_event_sort_key` leaves the suite green, including a scenario built to sort a
-  same-day disposal against it. The event falls to the unknown-type band, which orders it
-  after that day's trades. It is currently harmless for stock awards, because the only
-  kind that touches the ledger is dated on the day the shares arrive; it would stop being
-  harmless the moment a kind that changes a lot is added.
+  `get_event_sort_key` leaves the suite green -- and, for the stock award, that is not a
+  hidden figure risk but the truth of the key. A `StockAwardEvent` carries no broker
+  transaction id, and the secondary key sorts an empty id before every trade's id, so a
+  grant or a reversal stays ahead of same-day *trades* with or without the branch. The
+  branch's only real effect is precedence against same-day *corporate actions* (both share
+  the lot-delivering band). Even there the figure does not move: a return removes its own
+  `(account, award_date)` lot at that lot's own cost and refuses to take more than it holds, so
+  the opposite order cannot produce a second figure, only stop the run -- which is what
+  `TestASameDayReturnAndSale` shows when a return is forced after the day's trades. The
+  still-blind case is therefore award-versus-corporate-action *ordering* of a kind that is not
+  itself a disposal; probe it by mutation if such a kind is ever added.
 - **Which date column an event is built from, where the export's columns agree.** Dating a
-  stock award on the broker's report date instead of the award date leaves the suite
-  green. The two coincide on every award row of the current export, so no fixture
-  distinguishes them, and the scenario written to do so passes either way.
+  stock award on the broker's report date instead of the award date moves only the
+  acquisition date under a start-of-year snapshot -- quantity, cost basis, proceeds and gain
+  reconcile either way. The award rows of the real export have the two columns equal, so no
+  real fixture distinguishes them; `test_an_award_is_dated_on_its_award_date_not_the_broker_s_report_date`
+  now uses a fixture where they differ and asserts the acquisition date, so this mutation is
+  caught. Kept here because the coincidence in the real data is what made it invisible, and
+  a fixture that lets the two columns agree would hide it again.
 
 Add to this list whenever a probe finds a site the suite cannot observe.
 

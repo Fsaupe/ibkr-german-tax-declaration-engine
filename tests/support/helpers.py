@@ -403,7 +403,6 @@ def spec_to_trades_data(
                 None,
                 Decimal("1"),
                 open_close,
-                Decimal("0"),  # Taxes
             ])
 
     # Add intra-year trades
@@ -439,7 +438,6 @@ def spec_to_trades_data(
             None,
             Decimal("1"),
             open_close,
-            Decimal("0"),  # Taxes
         ])
 
     return trades_data

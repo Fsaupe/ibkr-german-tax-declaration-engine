@@ -78,7 +78,7 @@ FILENAME_PREFIXES = {
 }
 
 # Portal query name (normalised, naming prefix removed) -> query key. The names
-# are the ones the README tells you to give the seven queries; separators and
+# are the ones the README tells you to give the eight queries; separators and
 # case do not matter, so "MyTax_Cash_Transactions" and "MyTax Cash
 # Transactions" both resolve to cash_transactions.
 QUERY_KEYS_BY_NAME = {

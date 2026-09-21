@@ -177,7 +177,6 @@ def create_option_trade_data(
         underlying_conid,    # UnderlyingConid
         multiplier,          # Multiplier
         open_close,          # Open/CloseIndicator
-        Decimal("0"),        # Taxes (no transaction tax on options here)
     ]
 
 
@@ -231,7 +230,6 @@ def create_stock_trade_data(
         "",                  # UnderlyingConid (none for stocks)
         Decimal("1"),        # Multiplier (1 for stocks)
         open_close,          # Open/CloseIndicator
-        Decimal("0"),        # Taxes (no transaction tax in these fixtures)
     ]
 
 

@@ -80,7 +80,6 @@ class RawTradeRecord(RawBaseRecord):
     trade_price: Decimal = Field(alias="TradePrice")
     ib_commission: Optional[Decimal] = Field(None, alias="IBCommission")
     ib_commission_currency: Optional[str] = Field(None, alias="IBCommissionCurrency")
-    taxes: Optional[Decimal] = Field(None, alias="Taxes") # Transaction tax (stamp duty) in CurrencyPrimary; a charge is negative
     open_close_indicator: Optional[str] = Field(None, alias="Open/CloseIndicator") # O, C, A, Ex, Ep etc.
     notes_codes: Optional[str] = Field(None, alias="Notes/Codes") # Contains O, C, A, Ex, Ep, P, D etc.
     transaction_id: Optional[str] = Field(None, alias="TransactionID") # Used for linking
@@ -90,7 +89,7 @@ class RawTradeRecord(RawBaseRecord):
     # derived from Quantity x TradePrice x Multiplier. See create_events_from_trades.
 
     # Validators for specific fields
-    @validator('multiplier', 'strike', 'quantity', 'trade_price', 'ib_commission', 'taxes', pre=True)
+    @validator('multiplier', 'strike', 'quantity', 'trade_price', 'ib_commission', pre=True)
     def parse_decimal_fields(cls, v: Any) -> Optional[Decimal]:
         return safe_decimal(v, default=None if v is None or str(v).strip() == "" else Decimal("0.0"))
 
@@ -315,8 +314,9 @@ class RawTransferRecord(RawBaseRecord):
     wrong -- but in the broker's convention: IBKR nets an option-assignment premium into
     the basis of assigned shares, which German law rejects ([GT-ESTG20-004], BMF
     14.05.2025 Rz. 26). Taking them would understate the basis and tax the premium twice.
-    The German-correct basis is the sending ledger's own reconstruction, which the
-    handover relocates, so these two values are never read to value anything. They are
+    The carried basis is the sending ledger's own reconstruction, which the
+    handover relocates; separate option-treatment limitations remain in the legal
+    implementation map. These two values are never read to value anything. They are
     parsed here only because they complete the required lot-detail export shape (an export
     lacking them is read on a heuristic instead, which is the state this file exists to
     prevent). What the `LOT` rows ARE used for -- the acquisition day, the quantity and the
@@ -383,7 +383,7 @@ class RawGrantRecord(RawBaseRecord):
       changes no lot, and a consumer that added its `Quantity` to the position would
       count the same shares twice.
 
-    The third is why `GrantsParser` refuses an `ActivityDescription` it does not
+    The third is why `parse_grants_csv` refuses an `ActivityDescription` it does not
     recognise instead of skipping it. A dispatch that falls through without an `else`
     would silently drop a future kind, and the drop would reconcile against the broker's
     snapshot only until the kind was one that moved the position.
@@ -391,15 +391,20 @@ class RawGrantRecord(RawBaseRecord):
     **Why both dates are mapped.** `AwardDate` is where Zufluss falls -- a contractual
     condition under which the grantor may reclaim the shares does not postpone it, only a
     disposal being *rechtlich unmoeglich* would ([GT-ESTG20-064]) -- so it is the
-    acquisition date and the matching key. `VestingDate` is mapped because it is what
+    acquisition date and, with the grant account, the matching key. `VestingDate` is mapped because it is what
     identifies a vesting row as the lapse of THAT award's condition, and because the
     claim's own test turns on whether disposal was possible before it, which a reader
     checking this engine's position has to be able to see. `ReportDate` is the broker's
     booking day, mapped for ordering only.
 
-    **`SerialNumber` is not mapped.** The export carries the column and leaves it blank,
-    so there is no identity to read from it. It stays in `GRANTS_COLUMNS` so that its
-    ever being populated is caught at the boundary rather than downstream.
+    **`SerialNumber` is not mapped.** The export carries the column and leaves it blank on
+    every row measured, so there is no identity to read from it. It stays in `GRANTS_COLUMNS`
+    so that the column being **removed or renamed** is caught at the boundary; the boundary
+    validates the header set, not the values, so a `SerialNumber` that later carries a value
+    would pass it unnoticed. Nothing reads the field, and the award's identity is (grant
+    account, award date) instead, so a populated value changes no figure today -- but it is
+    not detected, and if it ever needs to become the award key that detection is what is
+    missing.
 
     **`Value` is mapped and deliberately not read.** It is `Quantity` x `Price` rounded
     to the cent, so it can only disagree with them by rounding, and the cost basis is
@@ -430,11 +435,12 @@ class RawGrantRecord(RawBaseRecord):
         """Blank becomes absent; anything else is handed to pydantic to parse or reject.
 
         Deliberately NOT the `safe_decimal(v, default=Decimal("0.0"))` pattern of the
-        older models. A quantity, price or value of zero here is a real statement -- an
-        award of nothing, or one worth nothing -- so defaulting an unparseable figure to
-        zero would put an invented acquisition cost on a lot, which is the substitution
-        CLAUDE.md's fallback rule forbids. `quantity`, `price` and `value` are required,
-        so a blank one still raises; `multiplier` is optional.
+        older models. Defaulting an unparseable figure to zero would put an invented
+        acquisition cost on a lot, which is the substitution CLAUDE.md's fallback rule
+        forbids. `quantity`, `price` and `value` are required, so a blank one still raises;
+        `multiplier` is optional. A zero that IS in the file is parsed as zero here and
+        refused where the row's meaning is known: `create_events_from_grants` stops on a
+        zero quantity and on an award whose price is not positive.
         """
         if v is None or str(v).strip() == "":
             return None

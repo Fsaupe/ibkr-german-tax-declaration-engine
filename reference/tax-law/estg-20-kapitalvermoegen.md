@@ -102,6 +102,24 @@ Nr. 3a does the same for Spezial-Investmentertraege nach § 34 InvStG.
 ### [GT-ESTG20-003] Nr. 7 -- Interest
 Interest from capital claims of any kind (Kapitalforderungen jeder Art).
 
+Statutory text (Satz 1 to 3), retrieved 2026-09-20 from gesetze-im-internet.de/estg/__20.html:
+
+> *"Ertraege aus sonstigen Kapitalforderungen jeder Art, wenn die Rueckzahlung des Kapitalvermoegens
+> oder ein Entgelt fuer die Ueberlassung des Kapitalvermoegens zur Nutzung zugesagt oder geleistet
+> worden ist, auch wenn die Hoehe der Rueckzahlung oder des Entgelts von einem ungewissen Ereignis
+> abhaengt. 2 Dies gilt unabhaengig von der Bezeichnung und der zivilrechtlichen Ausgestaltung der
+> Kapitalanlage. 3 Erstattungszinsen im Sinne des § 233a der Abgabenordnung sind Ertraege im Sinne
+> des Satzes 1."*
+
+**The charging element** is either a promised/paid **Rueckzahlung des Kapitalvermoegens** or an
+**Entgelt fuer die Ueberlassung des Kapitalvermoegens zur Nutzung** -- consideration for capital
+being made available for use. Satz 1 taxes such an Entgelt *even where its amount depends on an
+uncertain event*, and Satz 2 relaxes the **form** of the investment (which is what admits a
+Zertifikat, [GT-ESTG20-008]); neither dispenses with the receipt being an Entgelt for the *Nutzung*
+of the capital. A payment that is the consideration for a distinct act rather than for the use of
+the capital is therefore outside Nr. 7 -- the boundary drawn at [GT-ESTG20-063] and, for the
+lending fee, at [GT-ESTG20-049].
+
 ### [GT-ESTG20-004] Nr. 11 -- Stillhalterpraemien (Option Premiums)
 Premiums received for granting options (Einraeumung von Optionen).
 
@@ -450,45 +468,6 @@ separately because a figure turns on each:
 | 8, 9 | Zinsschein separated from the Stammrecht, and the allocation of that value | -- |
 
 Saetze 2, 3, 4 and 6 do not reach a directly held private portfolio bought for consideration.
-
-### [GT-ESTG20-066] Anschaffungskosten include the Nebenkosten of the purchase
-
-[GT-ESTG20-011] subtracts the *Anschaffungskosten*, and § 20 does not say what they comprise. The
-term is the general one of **§ 255 Abs. 1 HGB**:
-
-> *"Anschaffungskosten sind die Aufwendungen, die geleistet werden, um einen Vermoegensgegenstand
-> zu erwerben und ihn in einen betriebsbereiten Zustand zu versetzen, soweit sie dem
-> Vermoegensgegenstand einzeln zugeordnet werden koennen. Zu den Anschaffungskosten gehoeren auch
-> die Nebenkosten sowie die nachtraeglichen Anschaffungskosten. Anschaffungspreisminderungen, die
-> dem Vermoegensgegenstand einzeln zugeordnet werden koennen, sind abzusetzen."*
->
-> Retrieved 2026-09-13 from gesetze-im-internet.de/hgb/__255.html. Tier 1.
-
-So a cost paid to acquire a security and individually attributable to that purchase -- a broker
-commission, or a transaction tax such as UK Stamp Duty or Hong Kong stamp duty -- is an
-Anschaffungsnebenkosten under Satz 2 and forms part of the Anschaffungskosten. It raises the cost
-basis of the acquired lot and so reduces the later Abs. 2 gain. Because it is part of the
-Anschaffungskosten and not a laufende Werbungskosten, the Abs. 9 exclusion of actual Werbungskosten
-([GT-ESTG20-024]) does not reach it: the line that provision draws is between a cost *of the
-acquisition itself* and a running cost of *holding* (a custody fee, a data subscription).
-
-Satz 3's *Anschaffungspreisminderungen* run the other way -- a purchase-price reduction
-attributable to the asset, of which a commission rebate is the instance that occurs here, is
-subtracted from the Anschaffungskosten.
-
-Confirmed for the private declaration by BMF 14.05.2025 Rn. 184a, which states the Anschaffungskosten
-of Investmentanteile as the *"Kaufpreis einschliesslich Anschaffungsnebenkosten"* ([GT-ESTG20-041]),
-and illustrated by the Anlage KAP 2025 Anleitung worked example, which subtracts the An- und
-Verkaufsaufwendungen and the Transaktionskosten from the certified gain (Tier 3).
-
-> **What § 255 otherwise contains (Validation Protocol item 2).** Abs. 1 is the only Absatz that
-> reaches a purchased security. Abs. 2 and 2a define Herstellungskosten (and, for a self-created
-> immaterielles Wirtschaftsgut, the research/development split); Abs. 3 the Bauzeitzinsen that may
-> enter them; Abs. 4 the beizulegender Zeitwert. None applies to a security bought for
-> consideration.
-
-Applicable tax years: all. The definition is not year-specific and carries no regime floor of its
-own; it inherits the Abs. 2 / Abs. 4 gain regime it feeds.
 
 ### [GT-ESTG20-022] Satz 1 zweiter Halbsatz -- currency conversion, each leg at its own date
 
