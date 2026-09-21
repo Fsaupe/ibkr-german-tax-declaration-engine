@@ -12,9 +12,8 @@ The engine took the absolute value of the net proceeds where a sale consumes its
 """
 from decimal import Decimal
 
-import pytest
-
 from src.domain.enums import RealizationType
+from src.engine.fifo_manager import FifoLedger
 from tests.support.base import FifoTestCaseBase
 from tests.support.multi_account import position_row, trade_row
 
@@ -48,16 +47,30 @@ class TestALongSaleThatCostsMoreThanItBrings(FifoTestCaseBase):
 
 
 class TestAShortSaleThatCostsMoreThanItBrings(FifoTestCaseBase):
-    """A short lot records what the sale brought in, and the ledger has no place for a lot
-    that brought in less than nothing. The run stops and names the trade; it does not book
-    the magnitude."""
+    """GT-ESTG20-011: an open short retains its signed net disposal proceeds."""
 
-    def test_the_run_stops_and_names_the_trade(self):
-        with pytest.raises(pytest.fail.Exception, match="T_OPEN"):
-            self._run_pipeline(
-                trades_data=[trade_row(ACCOUNT, "DE000000NEG2", "2025-03-01", "-100", "0.01",
-                                       "SELL", "O", "T_OPEN", commission="-4")],
-                # The short is still open at year end, so the run would otherwise complete.
-                positions_end_data=[position_row(ACCOUNT, "DE000000NEG2", "-100", "-1",
-                                                 price="0.01")],
-                tax_year=2025)
+    def test_the_open_lot_preserves_negative_net_proceeds(self, monkeypatch):
+        recorded = []
+        original = FifoLedger.add_short_lot
+
+        def observe_opening(ledger, event):
+            original(ledger, event)
+            if event.ibkr_transaction_id == "T_OPEN":
+                recorded.extend(
+                    (lot.quantity_shorted, lot.total_sale_proceeds_eur,
+                     lot.unit_sale_proceeds_eur)
+                    for lot in ledger.short_lots
+                    if lot.source_transaction_id == "T_OPEN"
+                )
+
+        monkeypatch.setattr(FifoLedger, "add_short_lot", observe_opening)
+        out = self._run_pipeline(
+            trades_data=[trade_row(ACCOUNT, "DE000000NEG2", "2025-03-01", "-100", "0.01",
+                                   "SELL", "O", "T_OPEN", commission="-4")],
+            positions_end_data=[position_row(ACCOUNT, "DE000000NEG2", "-100", "-1",
+                                             price="0.01")],
+            tax_year=2025)
+        # Gross proceeds 1 less commission 4 = -3, spread over 100 shares.
+        assert recorded == [(Decimal("100"), Decimal("-3"), Decimal("-0.03"))]
+        assert out.data_gaps == []
+        assert out.realized_gains_losses == []  # The short remains open.

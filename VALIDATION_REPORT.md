@@ -1020,6 +1020,8 @@ red and no other.
 
 ## 2026-09-22 — PR #91 review corrections on maintainer exports
 
+**Historical checkpoint, superseded by the acceptance record below.**
+
 Categories, in order: ks-maint for L1–L3 (reference re-audit), then fix-func
 for signed sale cash and short proceeds. Reviewed remote head eb52abe, accepted
 base adb9132; source correction 3541de7 follows store correction 849ccbe.
@@ -1071,3 +1073,29 @@ personal caches/configuration were only copied; public changes contain invented
 fixture amounts. Numeric diff matches were checked against export monetary fields;
 matches are fixture constants, citation/date/hunk numbers and unchanged context,
 with no account identifier. See the current local review handoff for next steps.
+
+## 2026-09-22 — approved PR #91 test updates and declaration corrections
+
+The maintainer approved the two explained pre-existing-test changes, the measured
+VZ 2023–2025 declaration differences, publication and merge after the option-delivery
+reconciliation established the affected purchased-put treatment. This approval
+follows the specific results and explanation; it is not inferred from the earlier
+general instruction to fix findings.
+
+The rebate test's explanation now retains the separate-service qualification and
+does not assert a taxpayer election; every numerical assertion is unchanged.
+The old mandatory short-sale rejection test now checks the open lot's exact signed
+proceeds, quantity and per-share proceeds, with unchanged invented trade inputs.
+Calibration at eb52abe: one failed, two passed in that module. The final focused
+set (sale costs, rebates, new currency boundaries and copied-export schemas):
+39 passed. No application code changed after the measured candidate b52bede.
+
+Reference correction 22cb66b records GT-ESTG20-070: the purchased-put holder's paid
+cost enters the delivered asset's disposal result under BMF Rn. 28–29. Independent
+raw-input reconstruction matches both exercises and all 13 affected stock-cover
+portions. Only those portions change in the sign-stage result comparison. The
+specific 2023 sign correction is supported; writer assignments and other existing
+PM-006 paths remain separate follow-up. No deferred work is closed by this approval.
+
+The complete acceptance and final clean-checkout result are recorded in
+docs/reviews/pr-91-merge-decision.md.

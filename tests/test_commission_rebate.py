@@ -2,11 +2,13 @@
 A commission that comes out as a credit is part of the trade it was booked on.
 
 legal_basis: [GT-ESTG20-069]. § 255 Abs. 1 Satz 3 HGB subtracts a reduction of the
-acquisition cost that can be attributed to the asset; BFH IX R 46/03 reads that as covering
-any Rueckfluss caused by the acquisition, whoever pays it. Whether § 20 Abs. 3 Satz 2 EStG
-takes such a credit instead, and what it is on a disposal, is open (Q21). The reading
-implemented is A, chosen by the taxpayer and recorded in the map: the credit lowers a
-purchase's cost and raises a disposal's proceeds. It is the mirror of a charge
+acquisition cost that can be attributed to the asset. BFH IX R 46/03 includes third-party
+reductions, provided they do not remunerate a separate service by the recipient.
+These fixtures model the contemporaneous net price for executing the identified trade:
+a credit lowers a purchase's cost and raises a disposal's net proceeds under § 20
+Abs. 4 Satz 1. Q21 distinguishes independent reimbursements and payments for separate
+services, which require their own facts and characterisation. No taxpayer election
+is asserted by these tests. The execution-price credit is the mirror of a charge
 ([GT-ESTG20-068]) and is converted on the trade date like the rest of the trade
 ([GT-ESTG20-022]).
 
