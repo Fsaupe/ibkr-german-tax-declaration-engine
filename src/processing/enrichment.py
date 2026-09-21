@@ -142,8 +142,8 @@ def enrich_financial_events(
                         # Cost basis = gross amount plus what the commission cost. The commission
                         # is signed as exported: a charge is negative and raises the cost
                         # ([GT-ESTG20-068]); a credit is positive and lowers it
-                        # ([GT-ESTG20-069], reading A of Q21, the taxpayer's choice recorded in
-                        # the map). Its absolute value was taken here until September 2026,
+                        # ([GT-ESTG20-069], the attributable net execution price).
+                        # Its absolute value was taken here until September 2026,
                         # which turned a credit into a charge.
                         event.net_proceeds_or_cost_basis_eur = ctx.subtract(event.gross_amount_eur, event.commission_eur)
                     elif event.event_type in [FinancialEventType.TRADE_SELL_LONG, FinancialEventType.TRADE_SELL_SHORT_OPEN]:

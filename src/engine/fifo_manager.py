@@ -83,10 +83,12 @@ class ShortFifoLot:
     def __post_init__(self):
         if not isinstance(self.quantity_shorted, Decimal) or not self.quantity_shorted.is_finite() or self.quantity_shorted <= Decimal(0):
             raise ValueError(f"ShortFifoLot quantity_shorted must be a positive finite Decimal: {self.quantity_shorted}")
-        if not isinstance(self.unit_sale_proceeds_eur, Decimal) or not self.unit_sale_proceeds_eur.is_finite() or self.unit_sale_proceeds_eur < Decimal(0): # Renamed
-            raise ValueError(f"ShortFifoLot unit_sale_proceeds_eur must be a non-negative finite Decimal: {self.unit_sale_proceeds_eur}") # Renamed
-        if not isinstance(self.total_sale_proceeds_eur, Decimal) or not self.total_sale_proceeds_eur.is_finite() or self.total_sale_proceeds_eur < Decimal(0):
-            raise ValueError(f"ShortFifoLot total_sale_proceeds_eur must be a non-negative finite Decimal: {self.total_sale_proceeds_eur}")
+        # Net disposal proceeds may be negative after directly attributable costs
+        # [GT-ESTG20-011]. Quantity remains a positive magnitude; proceeds do not.
+        if not isinstance(self.unit_sale_proceeds_eur, Decimal) or not self.unit_sale_proceeds_eur.is_finite():
+            raise ValueError(f"ShortFifoLot unit_sale_proceeds_eur must be a finite Decimal: {self.unit_sale_proceeds_eur}")
+        if not isinstance(self.total_sale_proceeds_eur, Decimal) or not self.total_sale_proceeds_eur.is_finite():
+            raise ValueError(f"ShortFifoLot total_sale_proceeds_eur must be a finite Decimal: {self.total_sale_proceeds_eur}")
         if not self.source_transaction_id:
             raise ValueError(f"ShortFifoLot requires a non-empty source_transaction_id.")
 
@@ -964,15 +966,10 @@ class FifoLedger:
             raise ValueError(f"Missing ibkr_transaction_id for trade {trade_event.event_id} needed for Short FIFO lot creation.")
 
         # Signed, not its magnitude. The net is what the sale brought in after its costs
-        # ([GT-ESTG20-011]); where the costs exceed the price it is negative, and a short lot
-        # has no place for proceeds below zero. Its absolute value was taken here until
+        # ([GT-ESTG20-011]); where the costs exceed the price it is negative, and the
+        # eventual cover must retain that loss. Its absolute value was taken here until
         # September 2026, which booked such a sale as having brought in what it had cost.
         total_sale_proceeds_eur = self.ctx.create_decimal(trade_event.net_proceeds_or_cost_basis_eur)
-        if total_sale_proceeds_eur < Decimal(0):
-            raise ProcessingError(
-                f"Short sale {trade_event.ibkr_transaction_id} on {trade_event.event_date}: its costs "
-                f"exceed its price, so it brought in {total_sale_proceeds_eur} EUR. A short lot "
-                f"cannot carry negative proceeds.")
         lot_qty_shorted_contracts_or_units = trade_event.quantity.copy_abs().quantize(global_config.PRECISION_QUANTITY, context=self.ctx)
 
         if lot_qty_shorted_contracts_or_units == Decimal(0):

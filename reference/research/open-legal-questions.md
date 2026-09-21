@@ -241,7 +241,6 @@ a fact-specific question. It is not an unresolved election for an ordinary conte
 execution-price credit with no separate service. § 20 Abs. 3 Satz 2 was inserted by JStG 2024
 Article 3 Nr. 7 Buchst. b, effective 06.12.2024, first applying for VZ 2024 under the
 then-current § 52 Abs. 1 Satz 1; see the sources and precise passages at [GT-ESTG20-069].
-after a search by the fact pattern's vocabulary alone had missed it; BFH decisions on Anschaffungspreisminderungen by third parties and on Abs. 3).
 
 ## Pending legal developments
 

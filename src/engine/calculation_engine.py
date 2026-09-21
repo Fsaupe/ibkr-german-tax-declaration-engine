@@ -3199,7 +3199,7 @@ def _apply_historical_currency_event(
 
     Handles every single-account event type that moves currency:
     - CurrencyConversionEvent: explicit FX trades (only the side matching our currency)
-    - TradeEvent: security buys consume currency, sells produce currency, commissions consume
+    - TradeEvent: net trade cash determines direction; commissions keep their own sign
     - CorpActionMergerCash: cash proceeds create a currency lot
     - Income cashflows: dividends, interest, distributions create currency lots
     - Expense cashflows: WHT, fees, Stueckzinsen consume currency lots
@@ -3277,14 +3277,16 @@ def _apply_historical_currency_event(
                         elif event.event_type in [FinancialEventType.TRADE_SELL_LONG, FinancialEventType.TRADE_SELL_SHORT_OPEN]:
                             foreign_amount = ctx.subtract(foreign_amount, event.transaction_tax_foreign)
                             eur_amount = ctx.subtract(eur_amount, event.transaction_tax_eur)
-                    eur_per_unit = ctx.divide(eur_amount, foreign_amount)
-
-                    if event.event_type in [FinancialEventType.TRADE_BUY_LONG, FinancialEventType.TRADE_BUY_SHORT_COVER]:
-                        # Buying security = spending currency
-                        _consume_lots_historical(ledger, foreign_amount, eur_per_unit, event.event_date, ctx)
+                    # [GT-FX-007]: use the cash direction after tax, including sales
+                    # that cost more than they receive. Zero cash has no unit rate;
+                    # still process the separate commission below.
+                    is_purchase = event.event_type in [FinancialEventType.TRADE_BUY_LONG, FinancialEventType.TRADE_BUY_SHORT_COVER]
+                    if foreign_amount and (is_purchase or foreign_amount < Decimal("0")):
+                        eur_per_unit = ctx.divide(eur_amount, foreign_amount)
+                        _consume_lots_historical(ledger, foreign_amount.copy_abs(), eur_per_unit, event.event_date, ctx)
                         replayed += 1
-                    elif event.event_type in [FinancialEventType.TRADE_SELL_LONG, FinancialEventType.TRADE_SELL_SHORT_OPEN]:
-                        # Selling security = receiving currency
+                    elif foreign_amount > Decimal("0") and event.event_type in [FinancialEventType.TRADE_SELL_LONG, FinancialEventType.TRADE_SELL_SHORT_OPEN]:
+                        eur_per_unit = ctx.divide(eur_amount, foreign_amount)
                         _create_lot_historical(
                             ledger, foreign_amount, eur_per_unit, event.event_date,
                             event.ibkr_transaction_id, ctx

@@ -975,6 +975,9 @@ short sale and its cover were taxed in a scenario.
 
 ## 2026-09-21 — a commission credit keeps its sign (GT-ESTG20-069, Q21 reading A), real-data measurement
 
+Historical contributor measurement on a different export set. The 2026-09-22 review
+below supersedes the election rationale and does not transfer these results to the maintainer.
+
 **Instrument.** `scripts/parity_check.sh`, the commit before against the change, same exports, same
 cache snapshot, all three years.
 
@@ -1010,8 +1013,7 @@ minimum commission.
 **Parity**, `scripts/parity_check.sh`, the capture before against the change, same exports and cache
 snapshot: VZ 2023, VZ 2024 and VZ 2025 each IDENTICAL on console, log and PDF.
 
-**Behaviour now.** A long sale carries the negative net into its loss. A short sale with negative
+**Behaviour at that revision, superseded below.** A long sale carries the negative net into its loss. A short sale with negative
 proceeds stops the run naming the trade: a short lot has no place for proceeds below zero, and a
 figure is not invented for it. Probes: the magnitude restored at either site turns that site's test
 red and no other.
-
