@@ -11,6 +11,9 @@ from zero:
 
     safe_decimal(v, default=None if v is None or str(v).strip() == "" else Decimal("0.0"))
 
+(that body is quoted as it stood at #47. Its other half -- a cell that is not a number read
+as zero -- was removed later; see `test_a_cell_that_is_not_a_number_is_rejected_not_read_as_zero`)
+
 and the wildcard turned every `None` it produced straight back into `Decimal("0.0")`. So the
 distinction could not be observed anywhere, and the per-field rule read as though it guarded
 something. Two silent shapes, both as reported: a blank optional column arrived downstream as
@@ -223,6 +226,39 @@ def test_a_blank_required_decimal_is_rejected(model_name):
     for alias in required_decimals:
         with pytest.raises(ValidationError):
             model.parse_obj({**payload, alias: ""})
+
+
+CASH_BALANCE_PAYLOAD = {"CurrencyPrimary": "EUR", "FromDate": "20240101",
+                        "ToDate": "20241231", "StartingCash": "1", "EndingCash": "1"}
+
+
+@pytest.mark.parametrize("model_name", ALL_MODELS)
+def test_a_cell_that_is_not_a_number_is_rejected_not_read_as_zero(model_name):
+    """
+    No silent default, for the case #47 left: a cell that is present and is not a number.
+    `safe_decimal` was handed `default=Decimal("0.0")` for every non-blank value, so
+    `"abc"`, `"12.3.4"` or a column shifted by a stray delimiter became a real zero -- a
+    zero quantity, price, commission, tax or balance -- and the run went on. It now fails
+    validation, and `csv_reader` names the row with every other bad one.
+
+    Every Decimal field of every raw model, required or optional, read off the model.
+    `RawCashBalanceRecord` is included: its blank-is-zero is deliberate and pinned below;
+    an unparsable balance read as zero never was.
+
+    Probed: restoring the old body on any one model turns this red for that model alone.
+    """
+    model = getattr(rm, model_name)
+    payload = PAYLOADS.get(model_name, CASH_BALANCE_PAYLOAD)
+    aliases = _decimal_aliases(model_name, required=True) + _decimal_aliases(model_name, required=False)
+    assert aliases, f"{model_name} has no Decimal field"
+
+    for alias in aliases:
+        # "NaN" to "-inf" parse as Decimal and are still not a number anyone exported. The
+        # last two are numbers to a reader and a guess to a parser: `safe_decimal` would
+        # make 1.234 of the first.
+        for junk in ("abc", "12.3.4", "N/A", "NaN", "Infinity", "-inf", "1,234", "12,5"):
+            with pytest.raises(ValidationError):
+                model.parse_obj({**payload, alias: junk})
 
 
 def test_the_cash_balance_record_keeps_its_own_zero_default():
