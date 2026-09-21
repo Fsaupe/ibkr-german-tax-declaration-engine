@@ -306,8 +306,10 @@ trailer fees or management charges is itself taxable capital income. Note *"oder
 Dritten"*: the payer need not be the debtor of the capital income.
 
 > **Provenance of Satz 2, added 2026-09-21 (Validation Protocol items 3 and 6).** The sentence was
-> added by the JStG 2024 (BGBl. 2024 I Nr. 387), in force 06.12.2024 or 01.01.2025 -- which of
-> that Act's two Artikel changing § 20 carried it is not pinned, see [GT-ESTG20-069]; read 2026-09-21 in identical wording on gesetze-im-internet.de and buzer.de. What it
+> added by JStG 2024 (BGBl. 2024 I Nr. 387), Article 3 Nr. 7 Buchst. b,
+> effective 06.12.2024 under Article 56 Abs. 1;
+> first application is VZ 2024 under the then-current § 52 Abs. 1 Satz 1, see
+> [GT-ESTG20-069]. Read 2026-09-21 on gesetze-im-internet.de and buzer.de. What it
 > was meant to reach, and what that leaves open for a credit on a single trade, is at
 > [GT-ESTG20-069].
 
@@ -566,7 +568,10 @@ die dem Vermoegensgegenstand einzeln zugeordnet werden koennen, sind abzusetzen.
 > *"Nach § 255 Abs. 1 Satz 3 des Handelsgesetzbuches (HGB) sind Anschaffungspreisminderungen
 > abzusetzen. Diese Vorschrift gilt nicht nur fuer Kaufpreisnachlaesse, sondern nach ihrem Zweck
 > ganz allgemein fuer Ermaessigungen der Anschaffungskosten und damit fuer Rueckfluesse von im
-> Zusammenhang mit dem Erwerb geleisteten Aufwendungen ... Der Minderungsvorgang muss mit dem
+> Zusammenhang mit dem Erwerb geleisteten Aufwendungen ... So verhaelt es sich z.B. dann, wenn
+> Aufwendungen fuer die Anschaffung eines Wirtschaftsguts von Dritten erstattet oder verguetet
+> werden, sofern hierin nicht ein Entgelt fuer eine Leistung des Empfaengers liegt ...
+> Der Minderungsvorgang muss mit dem
 > Anschaffungsgeschaeft so verbunden sein, dass der Zufluss von Guetern in Geld oder Geldeswert
 > als Ermaessigung (Rueckfuehrung) von Anschaffungskosten bewertet werden kann. Ausreichend
 > hierfuer ist ein wirtschaftlicher Zusammenhang, der gegeben ist, wenn der massgebende Anlass
@@ -601,20 +606,38 @@ arising from how one order was executed. It is the nearest case the administrati
 and it decided it this way.
 
 **So for a purchase:** a credit whose *massgebender Anlass* is the acquisition of particular units,
-and which can be attributed to them individually, reduces their Anschaffungskosten. Who grants it
-does not matter. It is the counterpart of [GT-ESTG20-068]: a Nebenkosten raises the cost, a
+and which can be attributed to them individually, reduces their Anschaffungskosten, provided it
+does not remunerate a separate service by the recipient. Payer identity alone does not decide
+the classification. It is the counterpart of [GT-ESTG20-068]: a Nebenkosten raises the cost, a
 reduction attributable to the same purchase lowers it.
 
-**The boundary that is NOT settled: § 20 Abs. 3 Satz 2.** [GT-ESTG20-010] makes it a besonderer
-Vorteil *"wenn Bestandsprovisionen, Verwaltungsentgelte oder sonstige Aufwendungen ... oder durch
-einen Dritten erstattet werden"*, and *"sonstige Aufwendungen"* can be read onto a refunded
-transaction cost. What is established about that sentence, and what is not:
+**Distinguish the agreed execution price, an expense refund and a separate service.** A signed
+net price agreed for executing a particular acquisition or disposal belongs to that transaction.
+The acquisition uses § 255 Abs. 1 Saetze 1–3 HGB; the disposal uses the actual directly related
+expenses in § 20 Abs. 4 Satz 1, with BMF 14.05.2025 Rn. 93 Satz 2 and Rn. 94. A reduction of
+those expenses increases the net disposal result; it need not be additional consideration paid
+by the purchaser to have that effect. A net execution credit belongs to the same result where
+the sole economic cause is that execution and no separate service is remunerated. This is an
+application of the general attribution test, not a broker-specific judicial holding.
+
+A later reimbursement or remuneration for another service requires its own characterisation.
+§ 20 Abs. 3 Saetze 1–2 ([GT-ESTG20-010]) includes benefits alongside income under **both** Abs. 1
+and Abs. 2, including reimbursed *"sonstige Aufwendungen"*. It does not by itself place every
+benefit in one income category or loss pool. In particular, BMF Rn. 84 applies Abs. 3 together
+with Abs. 1 Nr. 3 and retains the fund partial exemption. It is not authority for automatically
+putting a share-disposal benefit in general capital income. Q21 preserves this distinction.
+
+**Amendment and interpretive limits:**
 
 - It was **added by the JStG 2024** (BGBl. 2024 I Nr. 387) on the Bundesrat's proposal. Every
-  version of § 20 on buzer.de up to the one in force until 06.12.2024 lacks the sentence
-  (compared 2026-09-21). Which Artikel carried it was **not pinned**: that Act changed § 20 by
-  Art. 3, in force 06.12.2024, and by Art. 4, in force 01.01.2025, and the comparison pages do
-  not tell the two apart. The Bundesrat's proposal was addressed to Art. 3. The
+  version before 06.12.2024 lacks the sentence. **Article 3 Nr. 7 Buchst. b** inserts it
+  (promulgated text, printed page 4); **Article 56 Abs. 1** makes it effective the day after
+  promulgation on 05.12.2024, hence **06.12.2024**. Article 56 Abs. 7's 01.01.2025 date
+  concerns Article 4, not this insertion. **§ 52 Abs. 1 Satz 1 in the 06.12.2024 version**
+  provides first application for **VZ 2024**; Abs. 28 supplies no special rule for this sentence.
+  Sources retrieved 2026-09-21, rechecked 2026-09-22: [promulgated law](https://www.recht.bund.de/bgbl/1/2024/387/regelungstext.pdf?__blob=publicationFile&v=1),
+  [§ 20 comparison](https://www.buzer.de/gesetz/4499/al208561-0.htm),
+  [§ 52 comparison](https://www.buzer.de/gesetz/4499/al208581-0.htm). Tier 1. The
   reasoning (BT-Drs. 20/13157, Nr. 10 -- legislative material, not a tier of this library, cited
   for the purpose stated and not as authority) names two cases, both **running charges on a fund
   holding**: Bestandsprovisionen passed on by the custodian, and Verwaltungsgebuehren refunded by
@@ -628,34 +651,33 @@ transaction cost. What is established about that sentence, and what is not:
   ... hat nur klarstellenden Charakter."* **Rn. 32:** the refund of *"als Werbungskosten
   abziehbaren Aufwendungen"* can be an Einnahme of the Einkunftsart in which they were deducted,
   and requires *"die Identitaet der an den Aufwendungen und am Rueckfluss beteiligten Personen"*.
-  That is the rule for Werbungskosten; the decision says nothing about a cost that is part of the
-  Anschaffungskosten.
-- **No Tier 1 or Tier 2 source has been located that names a credit booked on a single
-  securities trade.** The administration's two nearest cases point in opposite directions and
-  are told apart by the same test the BFH uses: Rz. 129b third paragraph subtracts a premium
+  That is the rule for Werbungskosten; the decision concerns running fund income under the
+  former InvStG. Rn. 26 does not restrict all benefits accessory to an Abs. 2 disposal to
+  remuneration for capital use. It does not decide a net execution price or acquisition cost.
+- **No broker-specific ruling is necessary to apply the general tests.** The administration's
+  neighbouring cases concern different facts: Rz. 129b third paragraph subtracts a premium
   **tied to the acquisition** from the Anschaffungskosten; Rz. 84 taxes a refunded
   Bestandsprovision, a **running** charge tied to no acquisition, under Abs. 3. Rz. 93 treats
   Anschaffungsnebenkosten and Veraeusserungskosten as items of the trade and does not mention a
   credit.
 
-**The disposal side is weaker still.** Abs. 4 Satz 1 deducts the *"Aufwendungen, die im
-unmittelbaren sachlichen Zusammenhang mit dem Veraeusserungsgeschaeft stehen"* from the Einnahmen
-and has no sentence about a credit caused by the disposal. The BFH's definition of the
-Veraeusserungspreis under § 17 -- *"alles, was der Veraeusserer aus dem Veraeusserungsgeschaeft als
-Gegenleistung erhaelt"* (BFH v. 13.10.2015 -- IX R 43/14, **Rn. 12**; read 2026-09-21 on
-bundesfinanzhof.de, the Randnummer taken from the page markup) -- turns on *Gegenleistung*, which a credit from someone other than the buyer
-is not, and it is a § 17 rule in any case. Registered with both readings as **Q21** in
-`../research/open-legal-questions.md`.
+**Limit of the § 17 analogy.** BFH 13.10.2015, IX R 43/14 Rn. 12 defines consideration from a
+disposal in a share-exchange valuation case. It does not exclude consideration because a third
+party paid it and does not decide brokerage rebates. It supplies no reason to disregard a
+reduction of actual disposal expenses under § 20 Abs. 4 Satz 1. The full decisions underlying
+this audit were retrieved 2026-09-21 and rechecked 2026-09-22:
+[IX R 46/03](https://bfh.simons-moll.de/bfh_2004/xx041046.html), II.1 and II.2.a–b;
+[VIII R 8/20](https://www.bundesfinanzhof.de/de/entscheidung/entscheidungen-online/detail/STRE202410005/), Rn. 26 and 32–34;
+[IX R 43/14](https://www.bundesfinanzhof.de/de/entscheidung/entscheidungen-online/detail/STRE201610004/), Rn. 12. Tier 4, interpreting the statutory provisions above.
 
 Applicable tax years: § 255 Abs. 1 Satz 3 in its present wording since 23.07.2015 (BilRUG, see
 [GT-ESTG20-068]), when BilRUG re-issued the sentence. IX R 46/03 predates that and quotes the
 sentence as *"sind Anschaffungspreisminderungen abzusetzen"*; the earlier statutory wording was
 not read in an archived version, so whether BilRUG added the words *"die dem Vermoegensgegenstand
 einzeln zugeordnet werden koennen"* or only moved them is not established here. The attribution
-requirement is in the text that applies to every year this library covers. § 20 Abs. 3 Satz 2 in force
-since 06.12.2024 or 01.01.2025 (see above); **no application rule for it was found in
-§ 52 Abs. 28 EStG** (current text searched 2026-09-21), and its first year of application was not
-established beyond that.
+requirement applies throughout the acquisition window from 2021 onward. § 20 Abs. 3 Satz 2 is
+effective 06.12.2024 and first applies for VZ 2024, as established above. Its description as a
+clarification informs interpretation of Satz 1 for earlier years; it does not backdate the text.
 
 ### [GT-ESTG20-022] Satz 1 zweiter Halbsatz -- currency conversion, each leg at its own date
 

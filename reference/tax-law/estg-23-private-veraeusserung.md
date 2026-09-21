@@ -258,9 +258,11 @@ the disposal from the Einnahmen because § 20 Abs. 9 bars every other Werbungsko
 Satz 1 has no such bar and subtracts *"die Werbungskosten"* in terms, which takes in the costs of
 the disposal. A commission or a tax charged on the sale reduces the gain under either.
 
-**Not settled:** a *credit* caused by the disposal. Q21 in `../research/open-legal-questions.md`
-asks it for § 20; nothing located answers it for § 23 either, and the second reading there
-(§ 20 Abs. 3) has no counterpart in § 23.
+**Execution-price credits:** where the agreed net execution price includes a credit attributable
+only to that disposal, it reduces the actual disposal expense and increases the § 23 Abs. 3
+Satz 1 result. The separate-service qualification in BFH IX R 46/03 must also be retained for
+purchase credits. Q21 distinguishes this pricing from a separate reimbursement or service
+payment; § 20 Abs. 3 does not supply a competing classification for a § 23 asset.
 
 **What Abs. 3 otherwise contains** (read in full 2026-09-21): Satz 2 and Satz 3 put a substitute
 value in place of the Veraeusserungspreis or the Anschaffungskosten where the asset came from an
