@@ -2,6 +2,11 @@
 
 ## Source
 
+Physical delivery by a purchased put's holder: Rn. 28–29, including the page
+12–13 continuation, reproduced at [GT-ESTG20-070]. The paid acquisition cost
+enters the underlying disposal result; writer-premium rules must not be
+generalised to this case.
+
 - **Current version (14.05.2025):** [BMF-Schreiben Einzelfragen Abgeltungsteuer (PDF)](https://www.bundesfinanzministerium.de/Content/DE/Downloads/BMF_Schreiben/Steuerarten/Abgeltungsteuer/2025-05-14-einzelfragen-zur-abgeltungsteuer.pdf?__blob=publicationFile&v=2)
 - **EStH 2024 Anhang 19 II:** [esth.bundesfinanzministerium.de -- Anhang 19 II](https://ao.bundesfinanzministerium.de/esth/2024/C-Anhaenge/Anhang-19/II/anhang-19-II.html)
 - **EStH 2025 Anhang 19 II:** [esth.bundesfinanzministerium.de -- Anhang 19 II](https://esth.bundesfinanzministerium.de/esth/2025/B-Anhaenge/Anhang-19/II/inhalt.html)

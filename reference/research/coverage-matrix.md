@@ -41,7 +41,8 @@ have is worse than one with a visible hole.
 | Option premium (Stillhalter) | EStG | 20 Abs. 1 Nr. 11 | KAP Z19 | estg-20-kapitalvermoegen.md |
 | Option close (trade) | EStG | 20 Abs. 2 Nr. 3 | KAP Z21/19 | estg-20-kapitalvermoegen.md |
 | Option expiration worthless | EStG | 20 Abs. 2 Nr. 3 | KAP Z21/22/19 | estg-20-kapitalvermoegen.md |
-| Option exercise/assignment | EStG | 20 Abs. 2 (disposal of the Basiswert); premium stays under Abs. 1 Nr. 11 and does **not** enter the Veraeusserungsgewinn -- BMF 14.05.2025 Rz. 26 | (cost basis adj.) | estg-20-kapitalvermoegen.md [GT-ESTG20-004] |
+| Physical call assignment (writer) | EStG | 20 Abs. 2; received premium remains separate under Abs. 1 Nr. 11 -- BMF 14.05.2025 Rn. 26 | Underlying disposal and separate premium | estg-20-kapitalvermoegen.md [GT-ESTG20-004] |
+| Physical put exercise (holder) | EStG | 20 Abs. 2 and Abs. 4 Satz 1; paid option acquisition costs enter underlying disposal -- BMF 14.05.2025 Rn. 28–29 | Underlying asset's disposal result | estg-20-kapitalvermoegen.md [GT-ESTG20-070] |
 | Option cash settlement (Barausgleich) | EStG | 20 Abs. 2 S. 1 Nr. 3 **Buchst. a** (not "Nr. 3a") | KAP Z21/19 | estg-20-kapitalvermoegen.md [GT-ESTG20-007] |
 | Cash merger | EStG | 20 Abs. 2 Nr. 1 | KAP Z19/20 | estg-20-kapitalvermoegen.md |
 | Stock merger | EStG | 20 Abs. 4a | (steuerneutral) | estg-20-kapitalvermoegen.md |

@@ -178,6 +178,48 @@ earlier should be reviewed by hand.** Registered in `research/open-legal-questio
 
 ## Abs. 2 -- Capital Gains (Veraeusserungsgewinne)
 
+### [GT-ESTG20-070] Physical exercise by the holder of a purchased put
+
+BMF 14.05.2025 Rn. 28 Saetze 1–2 (Tier 2):
+
+> "Die gezahlten Optionspraemien sind Anschaffungskosten des Kaeufers fuer das
+> Wirtschaftsgut 'Optionsrecht'. Beim Erwerb der Option anfallende Bankspesen,
+> Provisionen und andere Transaktionskosten gehoeren zu den Anschaffungskosten."
+
+Rn. 29 Saetze 1–2, including the continuation across printed pages 12–13:
+
+> "Uebt der Inhaber die Verkaufsoption aus und liefert er den Basiswert, liegt ein
+> Veraeusserungsgeschaeft nach § 20 Absatz 2 EStG hinsichtlich des Basiswerts vor,
+> wenn dieser ein Wirtschaftsgut im Sinne des § 20 Absatz 2 EStG (z. B. Aktien oder
+> Anleihe) ist. Die Anschaffungs- und Anschaffungsnebenkosten des Optionsrechts
+> sind gemaess § 20 Absatz 4 Satz 1 EStG zu beruecksichtigen."
+
+For delivered shares, § 20 Abs. 2 Satz 1 Nr. 1 and Abs. 4 Satz 1
+([GT-ESTG20-005], [GT-ESTG20-011]) therefore apply: the paid put acquisition
+costs, including purchase expenses, reduce the stock-disposal result.
+They are not an additional independent derivative loss on exercise.
+A reduction of disposal proceeds is an algebraic representation of this
+deduction; the net amount has no statutory zero floor. Currency conversion
+retains each acquisition/disposal leg's own date ([GT-ESTG20-022]); exercise
+does not revalue the put's historical EUR acquisition cost.
+
+The condition is **exercise by the holder with physical delivery**.
+Rn. 30 instead treats cash settlement under § 20 Abs. 2 Satz 1 Nr. 3 Buchst. a
+and Abs. 4 Satz 5; Rn. 31 concerns sale/closing of the put, and Rn. 32 expiry.
+Conversely, Rn. 26 (call writer) and Rn. 33 Saetze 1–2 (put writer) leave
+**received** premiums separate under § 20 Abs. 1 Nr. 11. That rule does not
+govern the holder's **paid** put acquisition cost.
+
+Source: [BMF 14.05.2025, Einzelfragen zur Abgeltungsteuer](https://www.bundesfinanzministerium.de/Content/DE/Downloads/BMF_Schreiben/Steuerarten/Abgeltungsteuer/2025-05-14-einzelfragen-zur-abgeltungsteuer.pdf?__blob=publicationFile&v=2),
+GZ IV C 1 - S 2252/00075/016/070; retrieved 2026-09-21, operative pages 12–13
+read and visually verified 2026-09-22. Tier 2 interpreting § 20 Abs. 2/4.
+Applicable to all open cases under Rn. 324 ([GT-ESTG20-060]), including VZ 2023–2025;
+general regime floor VZ 2009. Rn. 325's withholding-only transition does not
+restrict this assessment rule and does not list Rn. 28/29.
+No new form destination arises: a share-disposal result retains share treatment
+and the stock-loss restrictions. Contractual role and settlement facts determine
+the rule; holder and writer treatment are not alternative filing elections.
+
 ### [GT-ESTG20-005] Satz 1 Nr. 1 -- Sale of shares in corporations (Aktien)
 Gains from sale of shares in any corporation (Koerperschaft, Personenvereinigung, Vermoegensmasse).
 
