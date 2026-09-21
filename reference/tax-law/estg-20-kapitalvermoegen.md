@@ -305,6 +305,12 @@ Kapitalertraege nach Absatz 1 oder 2 oder durch einen Dritten erstattet werden"*
 trailer fees or management charges is itself taxable capital income. Note *"oder durch einen
 Dritten"*: the payer need not be the debtor of the capital income.
 
+> **Provenance of Satz 2, added 2026-09-21 (Validation Protocol items 3 and 6).** The sentence was
+> added by the JStG 2024 (BGBl. 2024 I Nr. 387), in force 06.12.2024 or 01.01.2025 -- which of
+> that Act's two Artikel changing § 20 carried it is not pinned, see [GT-ESTG20-069]; read 2026-09-21 in identical wording on gesetze-im-internet.de and buzer.de. What it
+> was meant to reach, and what that leaves open for a credit on a single trade, is at
+> [GT-ESTG20-069].
+
 ### [GT-ESTG20-048] Tier 2 -- how the administration applies Abs. 3 to a fund holding
 
 BMF-Schreiben vom 14.05.2025, section I.3 *Besondere Entgelte und Vorteile (§ 20 Absatz 3 EStG)*,
@@ -537,7 +543,8 @@ amount belongs to the Anschaffungskosten of the security.
 > **What § 255 otherwise contains (Validation Protocol item 2).** Abs. 1 Satz 1 is the definition
 > and carries the limit *"einzeln zugeordnet werden koennen"* -- a charge not attributable to one
 > acquisition is outside it. Satz 2 also names the *nachtraegliche Anschaffungskosten*, and Satz 3
-> subtracts *Anschaffungspreisminderungen*; neither is relied on here. Abs. 2 and 2a define
+> subtracts *Anschaffungspreisminderungen*. The first is not relied on in this library; the
+> second is its own claim, [GT-ESTG20-069]. Abs. 2 and 2a define
 > Herstellungskosten, Abs. 3 the treatment of Fremdkapitalzinsen within them, Abs. 4 the
 > beizulegender Zeitwert. None of those reaches a security bought for consideration.
 
@@ -547,6 +554,108 @@ before that by Art. 1 BilMoG v. 25.05.2009 (BGBl. I S. 1102). buzer.de lists no 
 since 2006 (read 2026-09-21). Satz 2 is therefore unchanged across every year the Abs. 2 / Abs. 4
 gain regime has applied, and the claim carries no regime floor of its own: it inherits that of
 [GT-ESTG20-011]. BMF 14.05.2025 applies to all open cases (Rz. 324, see [GT-ESTG20-060]).
+
+### [GT-ESTG20-069] A reduction of the acquisition cost attributable to the purchase is subtracted -- also one granted by a third party
+
+§ 255 Abs. 1 **Satz 3** HGB, quoted in full at [GT-ESTG20-068]: *"Anschaffungspreisminderungen,
+die dem Vermoegensgegenstand einzeln zugeordnet werden koennen, sind abzusetzen."* Tier 1.
+
+**How far the sentence reaches (Tier 4, interpreting it).** BFH v. 16.03.2004 -- IX R 46/03, BStBl II
+2004, 1046, under II.1:
+
+> *"Nach § 255 Abs. 1 Satz 3 des Handelsgesetzbuches (HGB) sind Anschaffungspreisminderungen
+> abzusetzen. Diese Vorschrift gilt nicht nur fuer Kaufpreisnachlaesse, sondern nach ihrem Zweck
+> ganz allgemein fuer Ermaessigungen der Anschaffungskosten und damit fuer Rueckfluesse von im
+> Zusammenhang mit dem Erwerb geleisteten Aufwendungen ... Der Minderungsvorgang muss mit dem
+> Anschaffungsgeschaeft so verbunden sein, dass der Zufluss von Guetern in Geld oder Geldeswert
+> als Ermaessigung (Rueckfuehrung) von Anschaffungskosten bewertet werden kann. Ausreichend
+> hierfuer ist ein wirtschaftlicher Zusammenhang, der gegeben ist, wenn der massgebende Anlass
+> fuer den Minderungsvorgang in der Anschaffung liegt."*
+
+and under II.2.a, of a payment that came from the intermediary and not from the seller: *"Es ist
+unerheblich, dass nicht der Veraeusserer, sondern E als Vermittlerin des Grundstuecksgeschaefts
+diesen Preisnachlass gewaehrte."* The court then refuses the alternative the tax office had argued,
+a separately taxable receipt: *"stand der Provisionszahlung keine eigene Leistung des Klaegers
+gegenueber, die zu nach § 22 Nr. 3 EStG steuerbaren Einkuenften fuehrte."* The decision builds on
+BFH v. 26.02.2002 -- IX R 20/98, BFHE 198, 425, BStBl II 2002, 796, which it cites for both the
+rule and the *Anlass* test.
+
+> Pre-2010 decisions are not in the court's own online collection. Read 2026-09-21 in two
+> independent copies -- datenbank.nwb.de/Dokument/136187 and
+> bfh.simons-moll.de/bfh_2004/xx041046.html -- and the passages above compared between them:
+> identical. IX R 20/98 itself was not read; it is cited here only as the decision IX R 46/03
+> names. The case concerned a dwelling, not a security; what is taken from it is the reading of
+> § 255 Abs. 1 Satz 3 HGB, which is not specific to a kind of asset.
+
+**The administration applies the same rule to securities (Tier 2).** BMF 14.05.2025 Rz. 129b,
+third paragraph (PDF page 60, read 2026-09-21; the Randziffer is indexed in
+`../bmf-guidance/abgeltungsteuer-einzelfragen.md`): where a bank pays a Geldpraemie *"unter der
+Bedingung ..., dass Wertpapiere beim uebernehmenden/eroeffnenden Kreditinstitut erworben werden, so
+mindert die fuer die Uebertragung des Kontoguthabens gezahlte Geldpraemie die Anschaffungskosten
+dieser Wertpapiere. Die Geldpraemie ist mit den Anschaffungskosten der erworbenen Wertpapiere in
+der Reihenfolge deren Erwerbs zu verrechnen."* A third party's cash, caused by the acquisition of
+securities, reduces their Anschaffungskosten and is not taxed on its own -- the first paragraph
+of the same Randziffer taxes the premium under § 22 Nr. 3 where it is NOT tied to a purchase.
+**Its limit:** the case is a premium for moving a balance or opening a Depot, not a credit
+arising from how one order was executed. It is the nearest case the administration has decided,
+and it decided it this way.
+
+**So for a purchase:** a credit whose *massgebender Anlass* is the acquisition of particular units,
+and which can be attributed to them individually, reduces their Anschaffungskosten. Who grants it
+does not matter. It is the counterpart of [GT-ESTG20-068]: a Nebenkosten raises the cost, a
+reduction attributable to the same purchase lowers it.
+
+**The boundary that is NOT settled: § 20 Abs. 3 Satz 2.** [GT-ESTG20-010] makes it a besonderer
+Vorteil *"wenn Bestandsprovisionen, Verwaltungsentgelte oder sonstige Aufwendungen ... oder durch
+einen Dritten erstattet werden"*, and *"sonstige Aufwendungen"* can be read onto a refunded
+transaction cost. What is established about that sentence, and what is not:
+
+- It was **added by the JStG 2024** (BGBl. 2024 I Nr. 387) on the Bundesrat's proposal. Every
+  version of § 20 on buzer.de up to the one in force until 06.12.2024 lacks the sentence
+  (compared 2026-09-21). Which Artikel carried it was **not pinned**: that Act changed § 20 by
+  Art. 3, in force 06.12.2024, and by Art. 4, in force 01.01.2025, and the comparison pages do
+  not tell the two apart. The Bundesrat's proposal was addressed to Art. 3. The
+  reasoning (BT-Drs. 20/13157, Nr. 10 -- legislative material, not a tier of this library, cited
+  for the purpose stated and not as authority) names two cases, both **running charges on a fund
+  holding**: Bestandsprovisionen passed on by the custodian, and Verwaltungsgebuehren refunded by
+  the fund manager, each called a *"Rueckfluss frueherer Aufwendungen"*. It does not explain
+  *"sonstige Aufwendungen"*, and it closes: *"Dieser weit zu verstehende Rahmen wird durch den
+  neuen Absatz 3 Satz 2 nicht erweitert, sondern lediglich klarstellend konkretisiert."*
+- BFH v. 24.10.2023 -- VIII R 8/20, **Rn. 26** (read 2026-09-21 on bundesfinanzhof.de): Abs. 1 and
+  Abs. 3 rest on *"ein weiter Veranlassungszusammenhang und Einkuenftebegriff ..., nach dem zu
+  den Einkuenften aus Kapitalvermoegen alle Vermoegensmehrungen gehoeren, die bei
+  wirtschaftlicher Betrachtung ein Entgelt fuer die Kapitalueberlassung sind. § 20 Abs. 3 EStG
+  ... hat nur klarstellenden Charakter."* **Rn. 32:** the refund of *"als Werbungskosten
+  abziehbaren Aufwendungen"* can be an Einnahme of the Einkunftsart in which they were deducted,
+  and requires *"die Identitaet der an den Aufwendungen und am Rueckfluss beteiligten Personen"*.
+  That is the rule for Werbungskosten; the decision says nothing about a cost that is part of the
+  Anschaffungskosten.
+- **No Tier 1 or Tier 2 source has been located that names a credit booked on a single
+  securities trade.** The administration's two nearest cases point in opposite directions and
+  are told apart by the same test the BFH uses: Rz. 129b third paragraph subtracts a premium
+  **tied to the acquisition** from the Anschaffungskosten; Rz. 84 taxes a refunded
+  Bestandsprovision, a **running** charge tied to no acquisition, under Abs. 3. Rz. 93 treats
+  Anschaffungsnebenkosten and Veraeusserungskosten as items of the trade and does not mention a
+  credit.
+
+**The disposal side is weaker still.** Abs. 4 Satz 1 deducts the *"Aufwendungen, die im
+unmittelbaren sachlichen Zusammenhang mit dem Veraeusserungsgeschaeft stehen"* from the Einnahmen
+and has no sentence about a credit caused by the disposal. The BFH's definition of the
+Veraeusserungspreis under § 17 -- *"alles, was der Veraeusserer aus dem Veraeusserungsgeschaeft als
+Gegenleistung erhaelt"* (BFH v. 13.10.2015 -- IX R 43/14, **Rn. 12**; read 2026-09-21 on
+bundesfinanzhof.de, the Randnummer taken from the page markup) -- turns on *Gegenleistung*, which a credit from someone other than the buyer
+is not, and it is a § 17 rule in any case. Registered with both readings as **Q21** in
+`../research/open-legal-questions.md`.
+
+Applicable tax years: § 255 Abs. 1 Satz 3 in its present wording since 23.07.2015 (BilRUG, see
+[GT-ESTG20-068]), when BilRUG re-issued the sentence. IX R 46/03 predates that and quotes the
+sentence as *"sind Anschaffungspreisminderungen abzusetzen"*; the earlier statutory wording was
+not read in an archived version, so whether BilRUG added the words *"die dem Vermoegensgegenstand
+einzeln zugeordnet werden koennen"* or only moved them is not established here. The attribution
+requirement is in the text that applies to every year this library covers. § 20 Abs. 3 Satz 2 in force
+since 06.12.2024 or 01.01.2025 (see above); **no application rule for it was found in
+§ 52 Abs. 28 EStG** (current text searched 2026-09-21), and its first year of application was not
+established beyond that.
 
 ### [GT-ESTG20-022] Satz 1 zweiter Halbsatz -- currency conversion, each leg at its own date
 

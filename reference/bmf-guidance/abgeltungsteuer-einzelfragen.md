@@ -105,7 +105,8 @@ and read 2026-09-20 (PDF pages 59-60, URL and query string in the Source block a
   Depot first opened, and the premium is paid *"unter der Bedingung ..., dass Wertpapiere beim
   uebernehmenden/eroeffnenden Kreditinstitut erworben werden"*, the premium instead **mindert ...
   die Anschaffungskosten** of those securities, offset in the order of their acquisition. It is not
-  income under Nr. 3.
+  income under Nr. 3. Quoted verbatim, and relied on for what reduces a cost basis, at
+  [GT-ESTG20-069].
 
 ¶1 addresses a **Geldpraemie for a Depotuebertrag** and ¶2 a **cash premium conditioned on a
 securities purchase**. Neither is verbatim a share award for deposits of cash or assets; ¶1 is cited

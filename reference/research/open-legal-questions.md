@@ -22,6 +22,7 @@ An unresolved question recorded is ground truth. An unresolved question silently
 | Q11 | [GT-ESTG20-038] | How is unallocated spot precious metal held at a broker taxed -- Termingeschaeft, privates Veraeusserungsgeschaeft, or sonstige Kapitalforderung? | this file |
 | Q15 | [GT-FX-010] | Rz. 131 makes an Umbuchung between two foreign-currency accounts a Veraeusserung. What is the Veraeusserungspreis, when nothing is paid? | `../bmf-guidance/fremdwaehrung-konten.md` |
 | Q17 | [GT-ESTG20-064], [GT-ESTG20-065], [GT-ESTG20-067] | Receipt of IBKR Refer-A-Friend shares: booking or lapse of the transfer restriction? BMF 01.06.2024 Rn. 25–26 and BFH VI R 37/09 Rn. 12, 15, 17, 20 distinguish a holding restriction from legal impossibility of disposal. Reading B: actual shares booked, ordinary dividend/voting rights and price risk support receipt at award; a possible reclaim does not itself defer receipt (VI R 67/05). Reading A: if the quoted *void* clause makes transfer legally ineffective, receipt occurs at release, with release-date basis and no receipt/negative receipt for an earlier reclaim. Booking/dividends alone do not conclusively resolve the restriction’s proprietary effect. No programme-specific German determination was located; both applications and their limits remain documented | `../tax-law/estg-22-nr3-leistungen.md` |
+| Q21 | [GT-ESTG20-069], [GT-ESTG20-010] | Is a credit the broker books on a single securities trade -- a net commission that is positive -- a reduction of that trade's cost or an addition to its proceeds, or a besonderer Vorteil under § 20 Abs. 3 taxed on its own? | here, below; statute and case law at `../tax-law/estg-20-kapitalvermoegen.md` |
 
 **Retired on the same terms, and for the same reason -- a source that settles the point was found,
 or the point was never one.** Numbers are never reused. Each line says what answered it; the
@@ -201,6 +202,44 @@ produces gain and loss lines that Reading B does not.
 > correction -- that Rz. 131 does not carry separate measurement -- in two places.
 
 ---
+
+## Q21 -- a credit booked on a single securities trade
+
+**The question.** A broker's per-trade commission can come out as a credit -- a venue's rebate for
+the order exceeding the broker's own charge. Is that amount part of the trade, or income of its own?
+
+**Reading A -- part of the trade.** On a purchase it is an Anschaffungspreisminderung: § 255 Abs. 1
+Satz 3 HGB subtracts a reduction *"die dem Vermoegensgegenstand einzeln zugeordnet werden"* kann,
+and BFH IX R 46/03 (BStBl II 2004, 1046) reads the sentence as covering, *"ganz allgemein"*,
+*"Rueckfluesse von im Zusammenhang mit dem Erwerb geleisteten Aufwendungen"*, holds the payer's
+identity *"unerheblich"*, and asks only whether *"der massgebende Anlass fuer den Minderungsvorgang
+in der Anschaffung liegt"*. It rejected the separately-taxable-receipt alternative in that case.
+The administration decides its nearest case the same way: BMF 14.05.2025 Rz. 129b, third
+paragraph, lets a Geldpraemie paid *"unter der Bedingung ..., dass Wertpapiere ... erworben
+werden"* reduce *"die Anschaffungskosten dieser Wertpapiere"*. On a disposal the same logic nets
+the credit against the Aufwendungen of Abs. 4 Satz 1, or treats it as received for the disposal.
+**Weakness:** for the purchase, Rz. 129b is a premium for moving a balance and not a credit on one
+order's execution, so it is the nearest case and not this one; for the disposal, no sentence of Abs. 4 says it, and the § 17 definition of the
+Veraeusserungspreis speaks of *Gegenleistung*, which a third party's credit is not.
+
+**Reading B -- a besonderer Vorteil, § 20 Abs. 3.** Satz 2 names *"sonstige Aufwendungen"* that
+*"durch einen Dritten erstattet werden"*; Satz 1 reaches a Vorteil granted *"neben"* the Einnahmen of
+Abs. 2, which on a disposal describes a credit paid alongside the proceeds. BMF 14.05.2025 Rz. 84
+treats a refunded expense this way. **Weakness:** Satz 2 was added as a clarification, its materials
+name only running charges on a fund holding, each a *"Rueckfluss frueherer Aufwendungen"*; BFH
+VIII R 8/20 Rn. 26 ties Abs. 3 to *"ein Entgelt fuer die Kapitalueberlassung"*, which a credit for
+how an order was executed is not; and the refund-as-income rule the BFH states (Rn. 32) is a rule
+for Werbungskosten, which a Nebenkosten of an acquisition is not ([GT-ESTG20-068]).
+
+**What the choice moves.** The amount is taxable capital income under either reading. A puts it
+into the gain of the security, on that security's line and in the year of its disposal; B puts it
+into the general capital income of the year it was credited and leaves cost and proceeds alone.
+
+**What would settle it:** a BMF statement on credits or rebates booked on a securities trade, or a
+decision on § 20 Abs. 3 Satz 2 for a transaction cost. Neither was located (searched 2026-09-21:
+the whole of BMF 14.05.2025 for Erstattung, Rueckverguetung, Rabatt, Gutschrift, and for the legal
+effect itself -- *mindert / Minderung ... Anschaffungskosten* -- which is how Rz. 129b was found
+after a search by the fact pattern's vocabulary alone had missed it; BFH decisions on Anschaffungspreisminderungen by third parties and on Abs. 3).
 
 ## Pending legal developments
 

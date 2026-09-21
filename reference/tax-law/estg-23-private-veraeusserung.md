@@ -247,13 +247,20 @@ Herstellungskosten und den Werbungskosten andererseits."*
 
 **What the Anschaffungskosten comprise.** § 23 has no definition of its own any more than § 20
 has; the term is that of § 255 Abs. 1 HGB. So what [GT-ESTG20-068] says of a Nebenkosten of the
-purchase holds for an asset under § 23 as it does under § 20: a commission or a transaction tax
-paid to acquire it raises its cost.
+purchase, and what [GT-ESTG20-069] says of a reduction attributable to it, holds for an asset
+under § 23 as it does under § 20: a commission or a transaction tax paid to acquire it raises its
+cost, and a credit caused by the acquisition lowers it. That § 255 Abs. 1 HGB governs a private
+acquisition outside any bookkeeping is what BFH IX R 46/03 (BStBl II 2004, 1046) itself did -- it
+applied Satz 3 to a private buyer's dwelling; the passages are at [GT-ESTG20-069].
 
 **The disposal side differs in form and not in figure.** § 20 Abs. 4 Satz 1 deducts the costs of
 the disposal from the Einnahmen because § 20 Abs. 9 bars every other Werbungskosten; § 23 Abs. 3
 Satz 1 has no such bar and subtracts *"die Werbungskosten"* in terms, which takes in the costs of
 the disposal. A commission or a tax charged on the sale reduces the gain under either.
+
+**Not settled:** a *credit* caused by the disposal. Q21 in `../research/open-legal-questions.md`
+asks it for § 20; nothing located answers it for § 23 either, and the second reading there
+(§ 20 Abs. 3) has no counterpart in § 23.
 
 **What Abs. 3 otherwise contains** (read in full 2026-09-21): Satz 2 and Satz 3 put a substitute
 value in place of the Veraeusserungspreis or the Anschaffungskosten where the asset came from an
