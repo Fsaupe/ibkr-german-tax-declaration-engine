@@ -237,6 +237,32 @@ For assets acquired without consideration (gift, inheritance), the acquirer inhe
 ### [GT-ESTG23-008] Gain Calculation
 **Gain/Loss = Sale price - Acquisition/production costs - Advertising expenses (Werbungskosten)**
 
+**Abs. 3 Satz 1**, verbatim: *"Gewinn oder Verlust aus Veraeusserungsgeschaeften nach Absatz 1 ist
+der Unterschied zwischen Veraeusserungspreis einerseits und den Anschaffungs- oder
+Herstellungskosten und den Werbungskosten andererseits."*
+
+> Retrieved 2026-09-21 from gesetze-im-internet.de/estg/__23.html. Tier 1. Added because the
+> heading above stood for months as a paraphrase with no text under it (Validation Protocol
+> item 2).
+
+**What the Anschaffungskosten comprise.** § 23 has no definition of its own any more than § 20
+has; the term is that of § 255 Abs. 1 HGB. So what [GT-ESTG20-068] says of a Nebenkosten of the
+purchase holds for an asset under § 23 as it does under § 20: a commission or a transaction tax
+paid to acquire it raises its cost.
+
+**The disposal side differs in form and not in figure.** § 20 Abs. 4 Satz 1 deducts the costs of
+the disposal from the Einnahmen because § 20 Abs. 9 bars every other Werbungskosten; § 23 Abs. 3
+Satz 1 has no such bar and subtracts *"die Werbungskosten"* in terms, which takes in the costs of
+the disposal. A commission or a tax charged on the sale reduces the gain under either.
+
+**What Abs. 3 otherwise contains** (read in full 2026-09-21): Satz 2 and Satz 3 put a substitute
+value in place of the Veraeusserungspreis or the Anschaffungskosten where the asset came from an
+Einlage or out of a Betriebsvermoegen; Satz 4 reduces the Anschaffungskosten by AfA taken against
+other Einkunftsarten; Satz 5 is the Freigrenze ([GT-ESTG23-009]); Satz 6 fixes the year in the
+Einlage cases; Saetze 7 and 8 are the loss rules ([GT-ESTG23-010]). None of Saetze 2, 3, 4 or 6
+reaches a security bought for consideration and held privately. Applicable tax years: Satz 1 is
+not year-specific.
+
 ### [GT-ESTG23-009] Exemption Threshold (Freigrenze) -- Abs. 3 Satz 5
 
 Statutory text: *"Gewinne bleiben steuerfrei, wenn der aus den privaten Veraeusserungsgeschaeften

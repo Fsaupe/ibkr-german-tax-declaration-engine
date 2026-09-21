@@ -81,6 +81,14 @@ Rz. 87 (14.05.2025, PDF pages 39-40, read 2026-09-20) puts the Anschaffungskoste
 Faellen, in denen der geldwerte Vorteil ... nicht der Besteuerung unterworfen wurde"*. It is written
 for § 19 EStG and refers on to the BMF-Schreiben vom 1. Juni 2024 (BStBl I S. 946).
 
+#### Anschaffungsnebenkosten and Veraeusserungskosten reduce the gain (Rz. 93-94; Rz. 21, 28)
+
+Rz. 93 Satz 2 (14.05.2025, PDF pages 42-43, read 2026-09-21) sets Anschaffungsnebenkosten and
+Veraeusserungskosten against the no longer deductible Depot- and Vermoegensverwaltungsgebuehren;
+Rz. 94 extends it to the Veranlagung. Rz. 21 and 28 put *"Bankspesen, Provisionen und andere
+Transaktionskosten"* of an option purchase into its Anschaffungskosten. Verbatim text and the
+statutory ground at [GT-ESTG20-068] in `../tax-law/estg-20-kapitalvermoegen.md`.
+
 #### A premium for moving or retaining capital (Rz. 129b)
 
 Supporting authority for the subsumption at GT-ESTG20-063; the normative claim is defined there.

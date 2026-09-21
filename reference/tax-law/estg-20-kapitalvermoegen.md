@@ -8,6 +8,8 @@
 - **Also cited here:** [gesetze-im-internet.de -- 2 EStG](https://www.gesetze-im-internet.de/estg/__2.html)
   and [25 EStG](https://www.gesetze-im-internet.de/estg/__25.html), for the taxable subject and the
   unit of assessment ([GT-ESTG20-061]). Both retrieved 2026-08-11.
+- **Also cited here:** [gesetze-im-internet.de -- 255 HGB](https://www.gesetze-im-internet.de/hgb/__255.html),
+  Abs. 1 Satz 2, for what the Anschaffungskosten comprise ([GT-ESTG20-068]). Retrieved 2026-09-21.
 
 ## Scope
 
@@ -457,7 +459,7 @@ separately because a figure turns on each:
 
 | Satz | Content | Where stated |
 |---|---|---|
-| 1, 1. Hs. | the gain | here, [GT-ESTG20-011] |
+| 1, 1. Hs. | the gain | here, [GT-ESTG20-011]; what the Anschaffungskosten comprise, [GT-ESTG20-068] |
 | 1, 2. Hs. | **currency conversion, leg by leg** | [GT-ESTG20-022] |
 | 2 | verdeckte Einlage: gemeiner Wert replaces the proceeds; gain assessed in the calendar year of the Einlage | -- |
 | 3 | asset moved into Privatvermoegen by Entnahme/Betriebsaufgabe: the § 6 Abs. 1 Nr. 4 or § 16 Abs. 3 value replaces the Anschaffungskosten | -- |
@@ -468,6 +470,83 @@ separately because a figure turns on each:
 | 8, 9 | Zinsschein separated from the Stammrecht, and the allocation of that value | -- |
 
 Saetze 2, 3, 4 and 6 do not reach a directly held private portfolio bought for consideration.
+
+### [GT-ESTG20-068] Anschaffungskosten include the Nebenkosten of the purchase
+
+[GT-ESTG20-011] subtracts the *Anschaffungskosten*, and § 20 does not say what they comprise. The
+EStG has no definition of its own and uses the general one of **§ 255 Abs. 1 HGB** (so already
+[GT-ESTG20-065], which rests on Satz 1). The sentence this claim turns on is **Satz 2**:
+
+> *"Anschaffungskosten sind die Aufwendungen, die geleistet werden, um einen Vermoegensgegenstand
+> zu erwerben und ihn in einen betriebsbereiten Zustand zu versetzen, soweit sie dem
+> Vermoegensgegenstand einzeln zugeordnet werden koennen. **Zu den Anschaffungskosten gehoeren auch
+> die Nebenkosten** sowie die nachtraeglichen Anschaffungskosten. Anschaffungspreisminderungen, die
+> dem Vermoegensgegenstand einzeln zugeordnet werden koennen, sind abzusetzen."*
+>
+> Tier 1. Retrieved 2026-09-21 from
+> [gesetze-im-internet.de/hgb/__255.html](https://www.gesetze-im-internet.de/hgb/__255.html).
+> Saetze 2 and 3 read the same day in identical wording on buzer.de/255_HGB.htm; dejure.org
+> returned no text to the retrieval and was not compared.
+
+A charge that is levied on the purchase of a security and is individually attributable to that
+purchase is such a Nebenkosten: the broker's commission, and a transaction tax on the purchase --
+a stamp duty, a Finanztransaktionssteuer. It is part of the Anschaffungskosten of the units
+acquired, so it reduces the later Abs. 2 gain through [GT-ESTG20-011], and it is converted into
+Euro at the time of the acquisition like the rest of them ([GT-ESTG20-022]).
+
+**The administration says so for § 20 directly (Tier 2), BMF 14.05.2025:**
+
+- **Rz. 93 Satz 1 and 2:** *"Im Rahmen der Abgeltungsteuer sind Depot- und
+  Vermoegensverwaltungsgebuehren nicht mehr als Werbungskosten abziehbar. Hingegen wirken sich
+  Anschaffungsnebenkosten und Veraeusserungskosten (Aufwendungen, die in unmittelbarem
+  Zusammenhang mit dem Veraeusserungsgeschaeft stehen) steuermindernd aus."* **Rz. 94:** *"Dies
+  gilt auch fuer ein Veranlagungsverfahren nach § 32d EStG."* The two Randziffern stand under the
+  heading on the all-in-fee, and the rest of Rz. 93 and Rz. 95-96 concern only how a flat fee's
+  transaction-cost share is recognised; Satz 2 is the general rule that discussion starts from.
+- **Rz. 21 Satz 2** (purchase of a call; **Rz. 28 Satz 2** says the same of a put, closing
+  *"... gehoeren zu den Anschaffungskosten"*): *"Beim
+  Erwerb der Option anfallende Bankspesen, Provisionen und andere Transaktionskosten sind Teil der
+  Anschaffungskosten."* The enumeration is open -- *"andere Transaktionskosten"* -- and names no
+  kind of charge that would be excluded.
+- **Rn. 184a** states the Anschaffungskosten of Investmentanteile as the *"Kaufpreis einschliesslich
+  Anschaffungsnebenkosten"* ([GT-ESTG20-041]).
+
+> PDF read 2026-09-21 (137 pages, PDF metadata `Author: BMF`); URL and retrieval record in
+> `../bmf-guidance/abgeltungsteuer-einzelfragen.md`. Rz. 93 is on PDF pages 42-43.
+
+Tier 3, illustration only: the Anlage KAP Anleitung for 2024 and 2025 both carry a worked example
+in which *"Transaktionskosten"* the bank did not take into account *"sind von dem in der
+Steuerbescheinigung ausgewiesenen Betrag abzuziehen"*.
+
+**The line against Abs. 9.** [GT-ESTG20-024] excludes the actual Werbungskosten. A Nebenkosten of
+the purchase is not one: it is part of the Anschaffungskosten, which Abs. 4 Satz 1 subtracts in
+terms. Rz. 93 draws exactly this line -- Depot- and Vermoegensverwaltungsgebuehren on the one
+side, Anschaffungsnebenkosten and Veraeusserungskosten on the other.
+
+**The mirror case on a disposal** needs no import from the HGB. A transaction tax charged on a
+*sale* is an Aufwendung *"im unmittelbaren sachlichen Zusammenhang mit dem
+Veraeusserungsgeschaeft"* and reduces the Einnahmen under Abs. 4 Satz 1 itself ([GT-ESTG20-011]);
+Rz. 93 Satz 2 names both sides in one sentence. For a Termingeschaeft the corresponding rule is
+Abs. 4 Satz 5 ([GT-ESTG20-023]).
+
+**What this claim does not decide.** Whether the foreign currency spent on a Nebenkosten is itself
+a disposal of that currency, measured on its own, is the question registered as Q9 in
+`../research/open-legal-questions.md` ([GT-FX-007], [GT-FX-001]). This claim fixes only that the
+amount belongs to the Anschaffungskosten of the security.
+
+> **What § 255 otherwise contains (Validation Protocol item 2).** Abs. 1 Satz 1 is the definition
+> and carries the limit *"einzeln zugeordnet werden koennen"* -- a charge not attributable to one
+> acquisition is outside it. Satz 2 also names the *nachtraegliche Anschaffungskosten*, and Satz 3
+> subtracts *Anschaffungspreisminderungen*; neither is relied on here. Abs. 2 and 2a define
+> Herstellungskosten, Abs. 3 the treatment of Fremdkapitalzinsen within them, Abs. 4 the
+> beizulegender Zeitwert. None of those reaches a security bought for consideration.
+
+**Amendment history and applicable years (items 3 and 6).** § 255 was last amended by Art. 1
+BilRUG v. 17.07.2015 (BGBl. I S. 1245) with effect from 23.07.2015, which reworded Abs. 1 Satz 3;
+before that by Art. 1 BilMoG v. 25.05.2009 (BGBl. I S. 1102). buzer.de lists no other version
+since 2006 (read 2026-09-21). Satz 2 is therefore unchanged across every year the Abs. 2 / Abs. 4
+gain regime has applied, and the claim carries no regime floor of its own: it inherits that of
+[GT-ESTG20-011]. BMF 14.05.2025 applies to all open cases (Rz. 324, see [GT-ESTG20-060]).
 
 ### [GT-ESTG20-022] Satz 1 zweiter Halbsatz -- currency conversion, each leg at its own date
 

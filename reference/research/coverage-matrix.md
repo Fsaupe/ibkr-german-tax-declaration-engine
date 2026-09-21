@@ -30,6 +30,7 @@ have is worse than one with a visible hole.
 | Stueckzinsen (paid) | EStG | 20 Abs. 4 | KAP Z19 (neg.) | **no substantive entry** -- listed as a topic in `bmf-guidance/abgeltungsteuer-einzelfragen.md`, stated nowhere |
 | Currency conversion of a non-EUR transaction | EStG | 20 Abs. 4 S. 1 Hs. 2 (each leg at its own date) | (every non-EUR figure) | estg-20-kapitalvermoegen.md [GT-ESTG20-022] |
 | Gain on a Termingeschaeft | EStG | 20 Abs. 4 S. 5 (Differenzausgleich less direct costs) | KAP Z21/19 | estg-20-kapitalvermoegen.md [GT-ESTG20-023] |
+| Nebenkosten of a purchase (commission, transaction tax) | EStG / HGB / BMF | 20 Abs. 4 S. 1 (the Anschaffungskosten are subtracted) + HGB 255 Abs. 1 S. 2 (the Nebenkosten belong to them); BMF 14.05.2025 Rz. 93 S. 2, Rz. 94, Rz. 21 S. 2 | (no line of its own: the cost basis of every later disposal) | estg-20-kapitalvermoegen.md [GT-ESTG20-068] |
 | Sparer-Pauschbetrag; no actual Werbungskosten | EStG | 20 Abs. 9 | KAP Z16/17 (portion already used) | estg-20-kapitalvermoegen.md [GT-ESTG20-024] |
 | Whose holding is declared | EStG | 2 Abs. 1 S. 1 Nr. 5 i.V.m. 25 Abs. 1, Abs. 3 S. 1 (the person and the Veranlagungszeitraum are the units) | (every figure) | estg-20-kapitalvermoegen.md [GT-ESTG20-061] |
 | Lot identification (Fifo), securities | EStG | 20 Abs. 4 S. 7 + BMF 14.05.2025 Rz. 97-99 (je Depot) | (all disposals) | estg-20-kapitalvermoegen.md |
