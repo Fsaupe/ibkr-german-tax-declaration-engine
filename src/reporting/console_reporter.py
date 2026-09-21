@@ -446,11 +446,14 @@ def generate_stock_trade_report_for_symbol(
         commission_local = trade.commission_foreign_currency or Decimal(0)
         tax_local = trade.transaction_tax_foreign  # a positive charge, see TradeEvent
 
+        # The commission is signed as exported: a charge is negative, a rebate positive. So
+        # it is subtracted from a cost and added to proceeds -- a charge raises what a buy
+        # cost and lowers what a sale brought in.
         net_value_local: Decimal
         if trade.event_type in [FinancialEventType.TRADE_BUY_LONG, FinancialEventType.TRADE_BUY_SHORT_COVER]:
-            net_value_local = gross_value_local + commission_local + tax_local
+            net_value_local = gross_value_local - commission_local + tax_local
         else:
-            net_value_local = gross_value_local - commission_local - tax_local
+            net_value_local = gross_value_local + commission_local - tax_local
 
         net_value_eur = trade.net_proceeds_or_cost_basis_eur or Decimal(0)
         realized_gl_eur_sum = Decimal(0)
@@ -518,7 +521,8 @@ def generate_stock_trade_report_for_symbol(
     print("  - 'Price' is per share in local currency.")
     print("  - 'Value (Local)' is Qty * Price.")
     print("  - 'Tax (Local)' is the transaction tax charged on the trade (e.g. a stamp duty), as a positive amount.")
-    print("  - 'Net Val (Local)' is Value (Local) +/- Commission (Local) +/- Tax (Local).")
+    print("  - 'Comm (Local)' is signed as the broker reports it: a charge is negative, a rebate positive.")
+    print("  - 'Net Val (Local)' is what the trade cost (buy: Value + charges) or brought in (sale: Value - charges).")
     print("  - 'Avg Acq/Open EUR' is the weighted average EUR cost per share for shares sold (long positions),")
     print("    or the weighted average EUR proceeds per share from opening short sales (for short covers). N/A for opening trades.")
     print("  - 'Net Val (EUR)' is the trade's net cost or proceeds in EUR from IBKR data, including EUR commissions, transaction tax and option premium adjustments.")
