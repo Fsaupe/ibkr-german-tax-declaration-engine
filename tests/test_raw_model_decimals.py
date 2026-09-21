@@ -228,6 +228,27 @@ def test_a_blank_required_decimal_is_rejected(model_name):
             model.parse_obj({**payload, alias: ""})
 
 
+def test_the_trade_tax_is_required_and_a_blank_one_is_rejected():
+    """
+    The test above reads *required* off the model, so it holds a rule only for as long as
+    the model states it: a field turned `Optional` moves to the blank-is-`None` cases and
+    this file stays green. For `Taxes` the requirement is the point -- a blank read as
+    "no tax" leaves the lot it was charged on costing too little [GT-ESTG20-068] -- so it
+    is named here and not derived. Blank on 0 of 236 trade rows (`input_data_spec.md`).
+
+    Probed: `taxes: Optional[Decimal] = Field(Decimal("0"), alias="Taxes")` turns this red
+    and nothing else in the suite.
+    """
+    assert rm.RawTradeRecord.__fields__["taxes"].required, (
+        "RawTradeRecord.taxes is no longer required. A trade row without a tax value "
+        "must stop the run, not be read as untaxed.")
+    payload = PAYLOADS["RawTradeRecord"]
+    with pytest.raises(ValidationError):
+        rm.RawTradeRecord.parse_obj({**payload, "Taxes": ""})
+    with pytest.raises(ValidationError):
+        rm.RawTradeRecord.parse_obj({k: v for k, v in payload.items() if k != "Taxes"})
+
+
 CASH_BALANCE_PAYLOAD = {"CurrencyPrimary": "EUR", "FromDate": "20240101",
                         "ToDate": "20241231", "StartingCash": "1", "EndingCash": "1"}
 
