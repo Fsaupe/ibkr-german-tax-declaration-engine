@@ -1077,6 +1077,9 @@ class PdfReportGenerator:
         option_heading = Paragraph("2.2 Optionsprämien und Termingeschäfte (§20 Abs. 1 Nr. 11 / Abs. 2 S. 1 Nr. 3 EStG)", self.styles['H3'])
         option_heading.keepWithNext = True
         self.story.append(option_heading)
+        for gap in self.data_gaps:
+            if gap.code == 'OPTION_PREMIUM_YEAR_BOUNDARY':
+                self.story.append(Paragraph(escape(gap.detail), self.styles['BodyText']))
         derivative_rgls = [rgl for rgl in self.realized_gains_losses if rgl.asset_category_at_realization in [AssetCategory.OPTION, AssetCategory.CFD, AssetCategory.FUTURE]]
         if derivative_rgls:
             data = [["Instrument", "Underlying", "Real. Datum", "Real. Typ", "Menge", "G/V Brutto EUR", "Stillhalter?"]]
