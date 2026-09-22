@@ -289,6 +289,14 @@ pages 80-81 of 137.
 #### Foreign Withholding Tax
 - Creditable under 32d Abs. 5, subject to treaty limitations
 - Report on Zeile 41 Anlage KAP
+- **Rn. 148** (page 68), *Anrechnung auslaendischer Steuern bei auslaendischen Investmentertraegen*:
+  the 25 % ceiling is computed on the Investmentertrag *after* Teilfreistellung; two worked examples
+  (Auslands-Immobilienfonds, Aktienfonds). **Rn. 204, 207, 207a, 208a** (Steuerabzugsverfahren of a
+  domestic paying agent): no Anrechnung over 25 %, no § 34c Abs. 2 deduction in the Veranlagung, the
+  Ermaessigungsanspruch judged *"nach dem Recht dieses [Quellen-]Staates"*, and the BZSt table as the
+  standard for paying agents. Load-bearing verbatim text lives in the statute file it interprets,
+  `../tax-law/estg-32d-abgeltungsteuer.md` [GT-CREDIT-026]; the US treaty rate is [GT-CREDIT-027] in
+  `../tax-law/dba-usa.md`. Retrieved 2026-09-22.
 
 ---
 

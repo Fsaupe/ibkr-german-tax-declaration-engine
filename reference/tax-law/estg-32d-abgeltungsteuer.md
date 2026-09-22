@@ -75,6 +75,61 @@ deutsche Steuer vorgesehen ist, gilt Satz 1 entsprechend."* This is the route by
 Quellensteuer** under a DBA is credited -- the figure the form takes on Zeile 42, separately from
 the Zeile 41 amount. Retrieved 2026-08-03.
 
+### [GT-CREDIT-026] Satz 1 -- the Ermaessigungsanspruch, measured by the source state's law
+
+Satz 1 credits the foreign tax *"um einen entstandenen Ermaessigungsanspruch gekuerzte"*. Where the
+source state withheld more than it may keep, the excess is an Ermaessigungsanspruch and is **not
+creditable in Germany**; only the tax the source state will not refund is. Two things fix how far
+this bites, and both were previously unstated here.
+
+**Whose law judges the Ermaessigungsanspruch: the source state's.** BMF-Schreiben vom 14.05.2025,
+Rn. 207a (retrieved 2026-09-22, page reference in `../bmf-guidance/abgeltungsteuer-einzelfragen.md`):
+*"Die auszahlende Stelle hat keine Anrechnung der auslaendischen Quellensteuer vorzunehmen, wenn im
+betreffenden auslaendischen Staat nach dem Recht dieses Staates ein Anspruch auf teilweise oder
+vollstaendige Erstattung der auslaendischen Steuer besteht. Besteht lediglich der Anspruch auf eine
+teilweise Erstattung, kann der Steuerpflichtige die Anrechnung im Wege der Veranlagung gemaess § 32d
+Absatz 4 EStG beantragen. In diesen Faellen hat er dem zustaendigen Finanzamt die Hoehe der
+moeglichen Erstattung im auslaendischen Staat nachzuweisen ..."* The test is *"nach dem Recht dieses
+[Quellen-]Staates"*. The BZSt states the same for the Veranlagung
+(`../bmf-guidance/abgeltungsteuer-einzelfragen.md` pointer; BZSt Erlaeuterungen 2026): *"Es ist nur
+die auslaendische Steuer anrechenbar, die festgesetzt und gezahlt worden ist und fuer die im
+Quellenstaat -- nach dessen nationalem Recht oder aufgrund eines DBA -- kein Ermaessigungsanspruch
+geltend gemacht werden kann (§ 43a Abs. 3 Satz 1 in Verbindung mit § 32d Abs. 5 EStG)."* The
+creditable amount is therefore the withheld tax capped at the treaty rate the source state applies;
+for a US dividend or payment in lieu that rate is 15 % ([GT-CREDIT-027]).
+
+**§ 32d Abs. 5 has no § 34c Abs. 6 Satz 3 analogue.** § 34c Abs. 6 Satz 3 removes from the credit base
+income the treaty does not let the source state tax; § 32d Abs. 5 Satz 1 is a unilateral credit
+reduced only by an *entstandenen Ermaessigungsanspruch*, and its Satz 2 applies Satz 1 *entsprechend*
+in treaty cases rather than substituting a treaty-conformity test. So even where the treaty character
+of a payment is contested ([GT-CREDIT-028]), the credit is reduced only to the extent the source
+state itself grants a refund. § 34c Abs. 1 is in any case carved out for this income by its own Satz 1
+zweiter Halbsatz ([GT-CREDIT-012]).
+
+**The ceiling and the treaty cap are two different reductions.** The Ermaessigungsanspruch reduction
+here (down to the treaty rate) is distinct from the Satz 1 25 %-per-Kapitalertrag ceiling
+([GT-CREDIT-005]) and the Satz 3 per-VZ ceiling ([GT-CREDIT-006]); the ceilings can bite below the
+treaty rate on a fund item after Teilfreistellung. BMF-Schreiben vom 14.05.2025, Rn. 148 (retrieved
+2026-09-22): *"Nach § 32d Absatz 5 Satz 1 EStG sind hoechstens 25 % auslaendische Steuer auf den
+einzelnen Kapitalertrag anzurechnen. Bei auslaendischen Investmentertraegen ist fuer die Berechnung
+des anrechenbaren Hoechstbetrages der nach Beruecksichtigung der Teilfreistellung nach § 20 InvStG
+verbleibende steuerpflichtige Investmentertrag massgebend."* For an Aktienfonds the ceiling is
+25 % x 70 % = 17.5 % of gross, above the 15 % treaty rate, so it does not bite; for the two
+real-estate fund types (Teilfreistellung 60 % / 80 %) it does. The Rn. 148 worked examples (an
+Auslands-Immobilienfonds where the ceiling binds below the treaty rate, and an Aktienfonds where it
+does not) are indexed in `../bmf-guidance/abgeltungsteuer-einzelfragen.md`.
+
+**Substantiation.** The taxpayer must be able to prove the withheld tax, the treaty rate, and any
+refund available abroad. The Tier 1 ground is § 90 Abs. 2 AO (foreign-fact cooperation duty),
+gesetze-im-internet.de/ao_1977/__90.html, retrieved 2026-09-22: *"... so haben die Beteiligten diesen
+Sachverhalt aufzuklaeren und die erforderlichen Beweismittel zu beschaffen. Sie haben dabei alle fuer
+sie bestehenden rechtlichen und tatsaechlichen Moeglichkeiten auszuschoepfen. ..."*; Rn. 207a states
+the administration's matching expectation.
+
+**Applicable tax years:** all years in scope (regime floor is the Abgeltungsteuer). BMF 14.05.2025
+applies to all open cases (Rn. 324). The DBA rate is 2006-Protokoll and unchanged in the window
+([GT-CREDIT-027]).
+
 The form takes the figure on **Zeile 41**, *"noch nicht angerechnete auslaendische Steuer"*
 (verified identical in the 2024 and 2025 Anleitung). The declared amount is the foreign tax
 withheld; the Finanzamt applies Satz 1 and Satz 3.
