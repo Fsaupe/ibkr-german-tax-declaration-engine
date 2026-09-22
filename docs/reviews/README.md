@@ -2,16 +2,17 @@
 
 Start here after context clearing. Last updated: 2026-09-22.
 
-**#11 selected disclosed position implemented locally.** The maintainer chose
+**#11 merged as `5bc506a`, pushed, and CLOSED/COMPLETED.** The maintainer chose
 zero contribution until covering, with a conditional complete year-end inventory
 and explicit legal argument/counterargument. Final code `724a27d`, branch
 `fix/issue11-short-sale-timing`, base `93b2b0c`. Clean suite: **1,572 passed,
 1 skipped**; 14 focused checks; VZ 2023–2025 declared figures unchanged.
 All open quantities match raw snapshots; PDF annexes visually checked.
 [Authorization, implementation and verification](issue11-disclosed-position.md).
-The maintainer has authorised merge, publication of the legal explanation and
-closure of #11. Q22 remains legally unresolved; the implementation record
-contains the completion checkpoint.
+The [legal explanation](https://github.com/uebber/ibkr-german-tax-declaration-engine/issues/11#issuecomment-5784403722)
+was published and verified; GitHub confirms closure on 2026-09-22 at 21:24:41 UTC.
+Q22 remains legally unresolved; the implementation record contains the completion
+checkpoint. Existing deferred work and the local issue #76 branch are preserved.
 
 **Current handoff: #92 accepted for the authorized merge.** Code/test revision
 `011e4ff` resolves the false verified-year warning; the Z22/Z24 reconciliation

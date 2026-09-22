@@ -130,3 +130,20 @@ outcome is recorded in the completion checkpoint below.
 The earlier investigation and research passes are historical;
 this record is authoritative for the selected implementation. Q22's unresolved
 legal amount is not closed merely because this alternative is implemented.
+
+## Completion checkpoint — 2026-09-22
+
+- Accepted branch head `4318415` was merged into main as
+  **`5bc506add5bd433c018260e152c1433835a66178`** and pushed. GitHub confirmed
+  the merge tree equals the accepted candidate tree
+  `62b4ff24ec644f93e8d7c4c16b84176ed2b1cde4` exactly.
+- Application/tests remain identical to verified `724a27d`. The final § 44
+  scope clarification changed only reference/documentation; all **32**
+  reference-integrity checks passed again. No new figure or report change.
+- The [legal explanation](https://github.com/uebber/ibkr-german-tax-declaration-engine/issues/11#issuecomment-5784403722)
+  was published and verified text-identical to the saved closing message.
+- GitHub confirms **#11 CLOSED / COMPLETED**, at **2026-09-22 21:24:41 UTC**.
+  Closure records the implemented selected policy, not original-year tax-law
+  compliance or resolution of Q22.
+- The main workspace's issue #76 changes and unrelated review work are preserved.
+  No other issue or deferred-work item was closed.

@@ -1,5 +1,14 @@
 # PR review and merge train
 
+**2026-09-22 — #11 disclosed short-sale position merged and issue closed.**
+Merge `5bc506a`, accepted candidate `4318415` (verified code `724a27d`).
+The maintainer authorised merge, the legal explanation and closure after the
+§ 43a/§ 44 withholding-versus-assessment clarification. GitHub's merge tree
+matches the candidate exactly; #11 is CLOSED/COMPLETED and the explanation is
+published. Clean suite: 1,572 passed/1 skipped; VZ 2023–2025 figures unchanged.
+[Decision, limits and completion](issue11-disclosed-position.md).
+Q22 remains legally unresolved. No other deferred item was closed.
+
 Last updated: **2026-09-22**. Repository:
 [`uebber/ibkr-german-tax-declaration-engine`](https://github.com/uebber/ibkr-german-tax-declaration-engine).
 
