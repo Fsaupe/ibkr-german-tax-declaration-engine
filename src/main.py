@@ -235,7 +235,8 @@ def main_application():
                 tax_year=tax_year,
                 eoy_mismatch_count=processing_results.eoy_mismatch_error_count,
                 loss_offsetting_summary=loss_offsetting_summary,
-                data_gaps=processing_results.data_gaps
+                data_gaps=processing_results.data_gaps,
+                short_sale_disclosures=processing_results.short_sale_disclosures,
             )
         else:
             logger.error("Console tax declaration report cannot be generated because loss offsetting calculation failed or was skipped.")
@@ -259,7 +260,8 @@ def main_application():
                 eoy_mismatch_details=eoy_mismatch_details_for_pdf,
                 report_version="v3.2.3", # Updated to match PRD version reflecting this fix
                 eoy_mismatch_count=processing_results.eoy_mismatch_error_count,
-                data_gaps=processing_results.data_gaps
+                data_gaps=processing_results.data_gaps,
+                short_sale_disclosures=processing_results.short_sale_disclosures,
             )
             pdf_generator.generate_report(args.pdf_output_file)
         else:

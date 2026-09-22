@@ -616,6 +616,7 @@ def run_main_calculations(
     # years missing from a supplied one (a hole). Drive `_require_a_complete_grants_window`.
     grants_file_supplied: bool = False,
     grants_missing_years: str = "",
+    short_sale_disclosures: Optional[List] = None,
 ) -> Tuple[List[RealizedGainLoss], List[VorabpauschaleData], List[FinancialEvent], int]:
     """
     Runs the main calculation logic:
@@ -1844,6 +1845,11 @@ def run_main_calculations(
         unattributed_fund_years, realized_gains_losses, tax_year, data_gap_collector)
 
     processed_income_events_for_output: List[FinancialEvent] = list(current_year_events)
+
+    if short_sale_disclosures is not None:
+        from src.engine.short_sale_disclosure import build_short_sale_disclosures
+        short_sale_disclosures.extend(build_short_sale_disclosures(
+            fifo_ledgers, realized_gains_losses, tax_year))
 
     logger.info(f"Calculation engine finished. Produced {len(realized_gains_losses)} RealizedGainLoss records.")
     logger.info(f"Calculation engine produced {len(vorabpauschale_data_items)} VorabpauschaleData records.")
