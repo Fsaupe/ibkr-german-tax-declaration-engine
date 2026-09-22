@@ -9,8 +9,8 @@ reports the excess as an IRS-refund matter (cap-and-report). It never defaults a
 unknown source state, and it compares in the row's own currency to the cent so a
 rounded 15 % on a sub-unit gross is not read as an over-withholding.
 
-Measured incidence of a US row above the treaty rate is 0 of 24 stock/ETF rows
-VZ 2023–2025; these fixtures are the hypothetical the issue named (a lapsed W-8BEN
+Measured incidence of a US row above the treaty rate is 0 of 28 US-suffixed
+dividend/PIL withholding rows VZ 2023–2025 (2026-09-22); these fixtures are the hypothetical the issue named (a lapsed W-8BEN
 puts every US row at 30 %). Every over-withholding test below is red on the tree
 before the guard (Zeile 41 uncapped, no gap).
 
@@ -149,6 +149,22 @@ def test_b2_us_share_dividend_at_thirty_percent_is_capped_the_same_way(tmp_path)
     assert form.form_line_values[Z19] == Decimal("900.00")
     assert form.form_line_values[Z41] == Decimal("135.00")
     assert "FOREIGN_WHT_ABOVE_TREATY_RATE" in _codes(gaps)
+
+
+def test_b2_the_capped_amount_keeps_the_tax_rows_own_conversion(tmp_path):
+    """The Ermäßigungsanspruch reduces the withheld tax ([GT-CREDIT-026]), so the capped
+    amount is that tax's own EUR value scaled to the treaty share, not 15 % of the
+    income converted at the income row's rate. Income at 0.90, tax at 0.92 EUR/USD:
+    withheld 300 USD = EUR 276.00, of which 150/300 creditable = EUR 138.00. Converting
+    the treaty tax at the income's rate instead gives EUR 135.00."""
+    resolver = _resolver(tmp_path)
+    stock = _stock(resolver)
+    inc = _income(stock, "1000")
+    wht = _wht(stock, "300", linked_to=inc)
+    wht.gross_amount_eur = Decimal("300") * Decimal("0.92")
+    form, _ = _run([inc, wht], resolver)
+
+    assert form.form_line_values[Z41] == Decimal("138.00")
 
 
 # --------------------------------------------------------------------------- #
