@@ -104,7 +104,9 @@ The maintainer requested the fix. The specific request to correct the eight old 
 openings and the historical-transfer test received `pl`, interpreted and acknowledged in
 the session as “please proceed.” Expected tax values were not fitted to new output.
 
-Implementation and verification are local. This is not a merge/publication authorization
-or approval of the measured declaration differences. The hard real-data merge gate still
-requires approval of those specific differences before integration. Existing post-merge
-work remains open; no issue, PR, remote branch or main branch is changed by this handoff.
+On 2026-09-22, after the measured VZ 2023–2025 KAP Z19/Z22 changes and verification
+were reported, the maintainer approved integration with “ok merge and push” and then
+requested closure of #67. The accepted implementation is `86f2f83`; only this authorization
+record follows it. Live main was refreshed at `f6c9c91`, the tested base, before merging.
+Existing unrelated post-merge work remains open. Issue closure follows verification that
+the fix has reached GitHub main; the historical input limitations above remain documented.
