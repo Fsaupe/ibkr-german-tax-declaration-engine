@@ -538,7 +538,7 @@ class TestTheDisposalReachesTheReports:
         assert "sonstigen Kapitalforderungen" not in text
 
 
-def _summary_kap_text(rgls):
+def _summary_kap_text(rgls, tax_year=2023):
     """Render the KAP chapter with the REAL loss-offsetting figures (not an empty
     result), so the §2.3 summary total is the engine's declared figure and can be
     compared against the itemised components."""
@@ -550,7 +550,7 @@ def _summary_kap_text(rgls):
         vorabpauschale_items=[],
         current_year_financial_events=[],
         asset_resolver=_SingleAssetResolver(_spot_metal_asset()),
-        tax_year=2023,
+        tax_year=tax_year,
     ).calculate_reporting_figures()
 
     generator = PdfReportGenerator(
@@ -559,7 +559,7 @@ def _summary_kap_text(rgls):
         realized_gains_losses=rgls,
         vorabpauschale_items=[],
         assets_by_id={},
-        tax_year=2023,
+        tax_year=tax_year,
         eoy_mismatch_details=None,
         eoy_mismatch_count=0,
     )
@@ -642,6 +642,37 @@ class TestTheZeile19DerivativeLossMemo:
     def test_a_fold_in_year_omits_the_memo_because_the_loss_is_inside_zeile_19(self):
         text, _ = _calc_explanations_text(self._RGLS, tax_year=2025)
         assert "nachrichtlich" not in text
+
+
+class TestTheSonstigeChapterZeile22FootsToTheCompleteFigure:
+    """The §2.3 loss table must foot to the WHOLE Anlage KAP Zeile 22, not a component of it.
+    In a fold-in year (VZ 2025) Zeile 22 = non-stock non-derivative losses PLUS Termingeschäft
+    losses ([GT-FORM-005]), so the table carries a Termingeschäfte row (→ §2.2) and the drift
+    guard checks the complete figure. In a separate year (VZ 2023/2024) derivative losses are
+    ausschließlich Zeile 24, so Zeile 22 is the sonstige sum alone."""
+
+    # 60,00 sonstige (FX) loss + 40,00 derivative loss.
+    _RGLS = [
+        _rgl(uuid.uuid4(), AssetCategory.CASH_BALANCE, Decimal("-60.00")),
+        _rgl(uuid.uuid4(), AssetCategory.OPTION, Decimal("-40.00")),
+    ]
+
+    def test_a_fold_in_year_bridges_derivative_losses_into_the_zeile_22_total(self):
+        text, result = _summary_kap_text(self._RGLS, tax_year=2025)
+        assert result.form_line_values[
+            TaxReportingCategory.ANLAGE_KAP_SONSTIGE_VERLUSTE] == Decimal("100.00")
+        assert "Verluste aus Termingeschäften" in text
+        assert "60,00" in text and "40,00" in text and "100,00" in text
+        # The table now foots to the complete Zeile 22, so the drift guard stays silent.
+        assert "⚠️ Differenz" not in text
+
+    def test_a_separate_year_keeps_derivative_losses_out_of_zeile_22(self):
+        text, result = _summary_kap_text(self._RGLS, tax_year=2023)
+        # Zeile 22 excludes the derivative loss (ausschließlich Zeile 24), so it is the 60,00
+        # sonstige sum, and the §2.3 table still foots without a bridge.
+        assert result.form_line_values[
+            TaxReportingCategory.ANLAGE_KAP_SONSTIGE_VERLUSTE] == Decimal("60.00")
+        assert "⚠️ Differenz" not in text
 
 
 class TestTheSonstigeChapterFootsToTheDeclaredFigures:

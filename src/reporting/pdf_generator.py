@@ -1176,10 +1176,12 @@ class PdfReportGenerator:
         kap_losses_total = self.loss_offsetting_result.raw_other_losses_abs
 
         self.story.append(Paragraph(
-            "Die folgende Übersicht schlüsselt die in 'Erläuterung der Berechnungen' als "
-            "'Sonstige Kapitalerträge' (Zeile 19) bzw. 'Sonstige Verluste' (Zeile 22) genannten "
-            "Summen nach Komponenten auf. Jede Zeile verweist auf den Abschnitt (2.3.x), in dem "
-            "die Einzelpositionen aufgeführt sind.", self.styles['BodyText']))
+            "Die folgende Übersicht schlüsselt die positiven 'Sonstige Kapitalerträge' (ein "
+            "Beitrag zu Anlage KAP Zeile 19) und die vollständigen Verluste der Anlage KAP "
+            "Zeile 22 nach Komponenten auf. Ab VZ 2025 gehören die Termingeschäft-Verluste "
+            "(§2.2) mit zur Zeile 22; bis VZ 2024 werden sie ausschließlich in Zeile 24 erklärt "
+            "und sind hier nicht enthalten. Jede Zeile verweist auf den Abschnitt (2.3.x bzw. "
+            "2.2), in dem die Einzelpositionen aufgeführt sind.", self.styles['BodyText']))
 
         def _component_table(rows, total_label, total_value):
             data = [[Paragraph("Komponente", self.styles['TableHeader']),
@@ -1223,14 +1225,26 @@ class PdfReportGenerator:
         ]
         if skf_losses_abs > Decimal(0):
             losses_rows.append(["Verluste aus sonstigen Kapitalforderungen", skf_losses_abs, "siehe 2.3.7"])
-        self.story.append(KeepTogether(_component_table(
-            losses_rows, "Summe fließt ein in Anlage KAP Zeile 22", kap_losses_total)))
+        # From VZ 2025 derivative losses are no longer "ausschließlich Zeile 24": they enter
+        # Zeile 22 alongside the other non-stock losses (GT-FORM-005). So in a fold-in year the
+        # complete Zeile 22 is these sonstige losses PLUS the Termingeschäft losses (§2.2), and
+        # this table must foot to that -- not to the sonstige subtotal alone. In a separate year
+        # (2021-2024) derivative losses stay on Zeile 24 and Zeile 22 is exactly the sonstige sum.
+        derivative_losses_abs = self.loss_offsetting_result.raw_derivative_losses_abs
+        z22_total = self.loss_offsetting_result.form_line_values.get(
+            TaxReportingCategory.ANLAGE_KAP_SONSTIGE_VERLUSTE, kap_losses_total)
         losses_component_sum = bond_losses_abs + fx_losses_abs + stueckzinsen_abs + skf_losses_abs
-        if (losses_component_sum - kap_losses_total).copy_abs() > Decimal("0.005"):
+        z22_form_rules = get_form_rules(self.tax_year)
+        if z22_form_rules.z22_includes_derivative_losses:
+            losses_rows.append(["Verluste aus Termingeschäften", derivative_losses_abs, "siehe Abschnitt 2.2"])
+            losses_component_sum = losses_component_sum + derivative_losses_abs
+        self.story.append(KeepTogether(_component_table(
+            losses_rows, "Summe fließt ein in Anlage KAP Zeile 22", z22_total)))
+        if (losses_component_sum - z22_total).copy_abs() > Decimal("0.005"):
             self.story.append(Paragraph(
                 f"⚠️ Differenz zwischen der Summe der Komponenten "
                 f"({self._format_decimal(losses_component_sum).replace('.', ',')}) und dem Wert in "
-                f"Zeile 22 ({self._format_decimal(kap_losses_total).replace('.', ',')}) EUR.",
+                f"Zeile 22 ({self._format_decimal(z22_total).replace('.', ',')}) EUR.",
                 self.styles['SmallText']))
         self.story.append(Spacer(1, 0.3*cm))
 
