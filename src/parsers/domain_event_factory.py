@@ -2,7 +2,8 @@
 import logging
 import re
 from decimal import Decimal
-from typing import List, Optional, Set, Union, Tuple # Ensure Tuple is here
+from collections import defaultdict
+from typing import Dict, List, Optional, Set, Union, Tuple # Ensure Tuple is here
 from datetime import date, datetime
 
 from src.domain.assets import Asset, Option, CashBalance, InvestmentFund, Derivative, Stock, Bond
@@ -509,10 +510,81 @@ class DomainEventFactory:
         "DEPOSITS/WITHDRAWALS",
     }
 
+    @staticmethod
+    def _reversal_kind(rct: RawCashTransactionRecord) -> Optional[str]:
+        """"DIVIDEND" or "WHT" if the row reverses an earlier booking, else None.
+
+        The broker reverses a dividend with a negative row whose description adds
+        " - REVERSAL", and a withholding with a positive row of the same description.
+        A negative Payment In Lieu is a fee the lender pays, not a reversal.
+        """
+        type_upper = (rct.type or "").upper()
+        if "DIVIDEND" in type_upper and "PAYMENT IN LIEU" not in type_upper and rct.amount < 0:
+            return "DIVIDEND"
+        if "WITHHOLDING TAX" in type_upper and rct.amount > 0:
+            return "WHT"
+        return None
+
+    @staticmethod
+    def _reversal_key(rct: RawCashTransactionRecord, kind: str) -> tuple:
+        description = (rct.description or "").upper().replace(" - REVERSAL", "")
+        return (kind, rct.client_account_id, rct.isin, rct.conid, rct.symbol,
+                rct.currency_primary, description, rct.amount.copy_abs())
+
+    def _cancel_reversals(self, raw_cash_transactions: List[RawCashTransactionRecord],
+                          data_errors: List[str]) -> List[RawCashTransactionRecord]:
+        """Drop each reversal row together with the booking it reverses.
+
+        Every row used to be stored as a magnitude, so a reversal counted as a second
+        dividend and a second payment of tax. The income is the dividend credited
+        ([GT-ESTG20-001]) and the credit is for tax *festgesetzt und gezahlt*
+        ([GT-CREDIT-004]); a reversed booking is neither. A reversal cancels the latest
+        earlier row (by TransactionID) of the opposite sign with the same account,
+        instrument, currency, amount and description. One that matches none is recorded
+        in `data_errors` -- it cannot be read either way.
+        """
+        originals: Dict[tuple, List[RawCashTransactionRecord]] = defaultdict(list)
+        reversals: List[tuple] = []
+        for rct in raw_cash_transactions:
+            reversal_kind = self._reversal_kind(rct)
+            if reversal_kind:
+                reversals.append((reversal_kind, rct))
+                continue
+            type_upper = (rct.type or "").upper()
+            if "PAYMENT IN LIEU" not in type_upper:
+                if "DIVIDEND" in type_upper and rct.amount > 0:
+                    originals[self._reversal_key(rct, "DIVIDEND")].append(rct)
+                elif "WITHHOLDING TAX" in type_upper and rct.amount < 0:
+                    originals[self._reversal_key(rct, "WHT")].append(rct)
+        if not reversals:
+            return raw_cash_transactions
+
+        def _tx_number(rct):
+            return int(rct.transaction_id) if (rct.transaction_id or "").isdigit() else None
+
+        cancelled = set()
+        for reversal_kind, rev in sorted(reversals, key=lambda kr: _tx_number(kr[1]) or 0):
+            rev_no = _tx_number(rev)
+            candidates = [o for o in originals[self._reversal_key(rev, reversal_kind)]
+                          if id(o) not in cancelled and rev_no is not None
+                          and _tx_number(o) is not None and _tx_number(o) < rev_no]
+            if not candidates:
+                data_errors.append(
+                    f"Cash transaction {rev.transaction_id} (Type: {rev.type}, Desc: '{rev.description}', "
+                    f"Date: {rev.settle_date}) reverses a booking, but no earlier row of the opposite sign "
+                    f"with the same account, instrument, amount and description is in the input.")
+                continue
+            original = max(candidates, key=_tx_number)
+            cancelled.update((id(original), id(rev)))
+            logger.info(f"Cash transaction {rev.transaction_id} reverses {original.transaction_id} "
+                        f"({reversal_kind}, {rev.settle_date}); both dropped.")
+        return [r for r in raw_cash_transactions if id(r) not in cancelled]
+
     def create_events_from_cash_transactions(self, raw_cash_transactions: List[RawCashTransactionRecord]) -> List[FinancialEvent]:
         logger.info(f"Processing {len(raw_cash_transactions)} raw cash transaction records into domain events...")
         domain_events: List[FinancialEvent] = []
         data_errors: List[str] = []
+        raw_cash_transactions = self._cancel_reversals(raw_cash_transactions, data_errors)
         for rct in raw_cash_transactions:
             tx_id_for_event = rct.transaction_id
             if not tx_id_for_event:

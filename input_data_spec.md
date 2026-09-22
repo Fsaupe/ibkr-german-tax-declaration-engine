@@ -130,6 +130,16 @@ The Flex Query must include **all** of the following transaction types to ensure
 
 Missing transaction types cause currency EOY balance mismatches (FIFO-tracked balance diverges from IBKR-reported balance).
 
+**A reversal is a row of the opposite sign, and it cancels an earlier row.** The broker corrects a
+dividend by reversing it and booking it again. The dividend reversal is a negative `Dividends` row
+whose `Description` adds ` - REVERSAL`; the withholding reversal is a positive `Withholding Tax` row
+with the same `Description`. Each carries the same account, instrument, currency and magnitude as the
+row it reverses, and a higher `TransactionID`. The parser drops each reversal together with the
+latest such earlier row, so only the rebooking remains. A reversal with no such earlier row in the
+input stops the run. Measured 2026-09-22 across `Cash_Transactions-{2021..2025}.csv`: one correction,
+in 2025 -- one dividend reversal and one withholding reversal, each matched. A negative
+`Payment In Lieu Of Dividends` is not a reversal; it is the fee in the table above.
+
 ---
 
 ## 3. Positions File (Start of Year / End of Year)
