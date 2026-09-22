@@ -1062,14 +1062,12 @@ class ParsingOrchestrator:
     def _process_cash_balance_positions(self, tax_year: Optional[int] = None):
         """
         Process cash balance records to set SOY/EOY quantities on CashBalance assets.
-        Filters out tiny balances and EUR (base currency).
+        Retains zero/tiny observations; excludes EUR and the base summary.
         Validates that cash balance dates match the configured tax year.
 
         Supports both positive (long) and negative (short) currency positions.
         Negative positions occur with margin trading.
         """
-        MIN_BALANCE_THRESHOLD = Decimal("0.01")  # Filter tiny balances
-
         logger.info("Processing cash balance positions for SOY/EOY quantities...")
         balances_processed = 0
         balances_skipped = 0
@@ -1104,24 +1102,6 @@ class ParsingOrchestrator:
                 balances_skipped += 1
                 continue
 
-            # A balance below the threshold is rounding dust for the OPENING: a
-            # sub-threshold SOY is not fed to the ledger's SOY reconciler, exactly as
-            # before -- feeding it could move a figure (see _reconcile_currency_soy, which
-            # would adjust a ledger against a dust opening). But the reported CLOSING is a
-            # different thing: it is the value the end-of-year reconciliation compares the
-            # ledger against, and a supplied zero or tiny balance is a comparison value, not
-            # the absence of a report. Dropping the whole row made the reconciler read a
-            # filtered observation as absent and record CURRENCY_EOY_UNRECONCILED against a
-            # balance the broker had in fact reported (F4). So the row is no longer dropped;
-            # only the SOY seeding keeps its threshold.
-            both_tiny = (abs(raw_balance.starting_cash) < MIN_BALANCE_THRESHOLD and
-                         abs(raw_balance.ending_cash) < MIN_BALANCE_THRESHOLD)
-            if both_tiny:
-                logger.debug(
-                    f"Sub-threshold cash balance {raw_balance.currency_primary}: "
-                    f"SOY={raw_balance.starting_cash}, EOY={raw_balance.ending_cash} -- "
-                    f"opening not seeded, closing kept as a reconciliation value")
-
             # Get or create CashBalance asset
             cash_asset = self.asset_resolver.get_or_create_asset(
                 raw_isin=None,
@@ -1144,13 +1124,12 @@ class ParsingOrchestrator:
             # it. Keyed by account, so a Positions row for a currency in a DIFFERENT
             # account survives; there is no such row in any export this engine has seen.
             key = (account_key(raw_balance.client_account_id), cash_asset.internal_asset_id)
-            # SOY seeds the opening ledger. Recorded exactly as before -- dropped only when
-            # BOTH sides are dust -- so the seeding this change must not move stays identical.
-            if not both_tiny:
-                self.soy_positions[key] = _replace_snapshot_quantity(
-                    self.soy_positions.get(key), raw_balance.starting_cash)
-            # EOY is the reported closing the reconciliation compares against; recorded
-            # whatever its size.
+            # [GT-FX-009] The account's observed opening bounds its replayed holdings.
+            # Keep the exact observation, including zero and rounding dust. Whether the
+            # opening exists must not depend on the later closing; numerical tolerance
+            # belongs to reconciliation, not to the representation of broker evidence.
+            self.soy_positions[key] = _replace_snapshot_quantity(
+                self.soy_positions.get(key), raw_balance.starting_cash)
             self.eoy_positions[key] = _replace_snapshot_quantity(
                 self.eoy_positions.get(key), raw_balance.ending_cash)
 
