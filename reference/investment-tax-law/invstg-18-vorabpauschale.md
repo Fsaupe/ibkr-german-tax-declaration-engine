@@ -433,13 +433,12 @@ letter puts the burden of showing attribution to the borrower on the borrower, a
 duration across the record date, pricing, liquidity, voting, and how easily the position can be
 withdrawn -- are terms of the lending arrangement.
 
-**The associated foreign withholding is credited the same way on either branch.** On branch A the
-substitute payment is the fund's Ausschuettung and its foreign tax is *anrechenbare auslaendische
-Steuer* under § 32d Abs. 5 on Anlage KAP Zeile 41, reduced to the treaty rate the source state
-applies ([GT-CREDIT-026]); for a US payer that rate is 15 % ([GT-CREDIT-027]). On branch B the
-payment is a substitute leistung and the treaty article differs, but the German credit is the same
-§ 32d Abs. 5 Satz 1 and yields the same 15 % ([GT-CREDIT-028]). The credit figure therefore does not
-turn on the branch.
+**The associated foreign withholding.** On branch A the substitute payment is the fund's
+Ausschuettung and its foreign tax is *anrechenbare auslaendische Steuer* under § 32d Abs. 5 on
+Anlage KAP Zeile 41, reduced by the Ermaessigungsanspruch ([GT-CREDIT-026]); for a US payer the
+creditable rate is 15 % ([GT-CREDIT-027], [GT-CREDIT-028]). On branch B the payment is a substitute
+leistung, the treaty article is Art. 21, and whether any of the US tax is then creditable is open:
+`../research/open-legal-questions.md` Q22.
 
 ## [GT-INVSTG-016] Units disposed of during the calendar year
 

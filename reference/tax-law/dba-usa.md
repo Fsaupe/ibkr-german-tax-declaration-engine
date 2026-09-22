@@ -88,8 +88,9 @@ replaces: the US applies Art. 10 to it, withholds 15 % on a valid W-8BEN, and gr
 **Independent confirmation of the 15 % result (Tier 2).** BZSt table, Stand 1.1.2026, row
 *Vereinigte Staaten*, Dividenden: national 0/30, nach DBA hoechstens 15, Ergebnis anrechenbar **15**,
 *"falls keine Befreiung"*; Hinweis column verbatim *"Dividenden: Steuerbefreiung fuer bestimmte
-Dividenden von regulierten Kapitalanlagegesellschaften"*. An exempt RIC dividend carries no tax and
-produces no withholding, so the qualification changes nothing that reaches a withholding figure.
+Dividenden von regulierten Kapitalanlagegesellschaften"*. The 15 % is therefore conditional: where
+the exemption applies, the United States levies no tax on the dividend, so any tax withheld on it is
+wholly subject to an Ermaessigungsanspruch and none of it is creditable ([GT-CREDIT-026]).
 Zinsen: anrechenbar 0.
 
 ---
@@ -139,23 +140,28 @@ applies follows the § 39 AO attribution decided at [GT-INVSTG-059] / [GT-ESTG20
   clause does not cure it; Art. 21 Abs. 1 gives Germany the exclusive right and the US tax is then not
   paid *"in Uebereinstimmung mit diesem Abkommen"* for Art. 23 Abs. 3 b.
 
-**Why the creditable amount is 15 % under either reading, and this is therefore not an open
-question.** The German credit is § 32d Abs. 5 Satz 1, a unilateral credit reduced only by an
-*entstandenen Ermaessigungsanspruch* ([GT-CREDIT-026]); Satz 2 applies Satz 1 *entsprechend* in
-treaty cases rather than substituting a treaty-conformity test, and § 32d Abs. 5 has **no counterpart
-to § 34c Abs. 6 Satz 3**, the sentence that would remove treaty-nonconforming tax from the credit
-base ([GT-CREDIT-026]). The Ermaessigungsanspruch is measured by the source state's law, and the US
-refunds nothing below 15 %. So on both readings, and on both attribution branches, the creditable
-amount is 15 % of the gross. The readings would diverge only if a Finanzamt constructed an abstract,
-German-side treaty entitlement as the Ermaessigungsanspruch and referred the taxpayer to a
-Verstaendigungsverfahren under Art. 25; no located source does that for § 32d Abs. 5. Because no
-declared figure depends on the choice, it is recorded here with both readings rather than as a point
-in `open-legal-questions.md` (Validation Protocol item 7: a point that must be answered either way is
-an open question; this one need not be answered to produce the figure).
+**The credit on reading A: 15 %.** On branch A the payment is an Art. 10 dividend, the US may keep
+15 % (Art. 10 Abs. 2 b, Abs. 4 Satz 2 for a RIC), and the tax up to that rate is paid *"in
+Uebereinstimmung mit diesem Abkommen"* for Art. 23 Abs. 3 b aa. Above it the US refunds, so an
+Ermaessigungsanspruch exists both under US law and *"aufgrund eines DBA"*; the two grounds the BZSt
+names coincide ([GT-CREDIT-026]). The creditable amount under § 32d Abs. 5 Satz 1 is 15 % of the
+gross.
 
-**Residual risk, stated.** The invariance argument rests on an argument from silence in § 32d Abs. 5
-and on the administration measuring the Ermaessigungsanspruch by the source state's law (Rn. 207a,
-[GT-CREDIT-026]), not on a source naming this case. If a Finanzamt takes the abstract view, the 15 %
-on a branch-B payment could be denied. That is a position the Finanzamt can assess differently, which
-is the normal working of the process; it is not the "lean to the taxpayer" case, because no Tier 1 or
-Tier 2 source stands against the 15 %.
+**The credit on reading B is an open question** (`../research/open-legal-questions.md` Q22). Art. 21
+Abs. 1 gives Germany the exclusive right, while the US, which treats the payment as a dividend under
+its own law (above), refunds only down to 15 %. The two grounds of an Ermaessigungsanspruch then
+diverge:
+
+- **15 % creditable.** Rn. 207a measures the refund claim *"nach dem Recht dieses Staates"*, and the
+  US refunds nothing below 15 %. § 32d Abs. 5 Satz 1 names only the Ermaessigungsanspruch, unlike
+  § 34c Abs. 6 Satz 2, which adds the separate condition *"nach dem Abkommen anzurechnende"* and
+  withdraws itself from Abgeltungsteuer income ([GT-CREDIT-012]). Argued from the text of § 32d
+  Abs. 5; no source names this case.
+- **0 % creditable.** The BZSt makes creditable only the tax for which no Ermaessigungsanspruch
+  exists *"nach dessen nationalem Recht oder aufgrund eines DBA"* ([GT-CREDIT-026]). Under Art. 21
+  the whole US tax is reducible *"aufgrund eines DBA"*, so none of it would be creditable, and the
+  taxpayer is referred to the US refund procedure or a Verstaendigungsverfahren under Art. 25. No
+  source names this case either.
+
+Which branch applies is the § 39 AO attribution at [GT-INVSTG-059] / [GT-ESTG20-042] ff.; this
+claim states the treaty consequence of each.

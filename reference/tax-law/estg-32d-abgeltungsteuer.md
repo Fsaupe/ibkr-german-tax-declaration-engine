@@ -75,36 +75,46 @@ deutsche Steuer vorgesehen ist, gilt Satz 1 entsprechend."* This is the route by
 Quellensteuer** under a DBA is credited -- the figure the form takes on Zeile 42, separately from
 the Zeile 41 amount. Retrieved 2026-08-03.
 
-### [GT-CREDIT-026] Satz 1 -- the Ermaessigungsanspruch, measured by the source state's law
+### [GT-CREDIT-026] Satz 1 -- the Ermaessigungsanspruch
 
 Satz 1 credits the foreign tax *"um einen entstandenen Ermaessigungsanspruch gekuerzte"*. Where the
 source state withheld more than it may keep, the excess is an Ermaessigungsanspruch and is **not
-creditable in Germany**; only the tax the source state will not refund is. Two things fix how far
-this bites, and both were previously unstated here.
+creditable in Germany**; only the tax for which no reduction can be claimed is. Two things fix how
+far this bites, and both were previously unstated here.
 
-**Whose law judges the Ermaessigungsanspruch: the source state's.** BMF-Schreiben vom 14.05.2025,
+**What grounds an Ermaessigungsanspruch: the source state's law, or a DBA.** BMF-Schreiben vom 14.05.2025,
 Rn. 207a (retrieved 2026-09-22, page reference in `../bmf-guidance/abgeltungsteuer-einzelfragen.md`):
 *"Die auszahlende Stelle hat keine Anrechnung der auslaendischen Quellensteuer vorzunehmen, wenn im
 betreffenden auslaendischen Staat nach dem Recht dieses Staates ein Anspruch auf teilweise oder
 vollstaendige Erstattung der auslaendischen Steuer besteht. Besteht lediglich der Anspruch auf eine
 teilweise Erstattung, kann der Steuerpflichtige die Anrechnung im Wege der Veranlagung gemaess § 32d
 Absatz 4 EStG beantragen. In diesen Faellen hat er dem zustaendigen Finanzamt die Hoehe der
-moeglichen Erstattung im auslaendischen Staat nachzuweisen ..."* The test is *"nach dem Recht dieses
-[Quellen-]Staates"*. The BZSt states the same for the Veranlagung
-(`../bmf-guidance/abgeltungsteuer-einzelfragen.md` pointer; BZSt Erlaeuterungen 2026): *"Es ist nur
-die auslaendische Steuer anrechenbar, die festgesetzt und gezahlt worden ist und fuer die im
-Quellenstaat -- nach dessen nationalem Recht oder aufgrund eines DBA -- kein Ermaessigungsanspruch
-geltend gemacht werden kann (§ 43a Abs. 3 Satz 1 in Verbindung mit § 32d Abs. 5 EStG)."* The
-creditable amount is therefore the withheld tax capped at the treaty rate the source state applies;
-for a US dividend or payment in lieu that rate is 15 % ([GT-CREDIT-027]).
+moeglichen Erstattung im auslaendischen Staat nachzuweisen ..."* Rn. 207a names a refund claim
+*"nach dem Recht dieses [Quellen-]Staates"*. The BZSt, for the Veranlagung
+(`../bmf-guidance/abgeltungsteuer-einzelfragen.md` pointer; BZSt Erlaeuterungen 2026), names **two**
+grounds: *"Es ist nur die auslaendische Steuer anrechenbar, die festgesetzt und gezahlt worden ist
+und fuer die im Quellenstaat -- nach dessen nationalem Recht oder aufgrund eines DBA -- kein
+Ermaessigungsanspruch geltend gemacht werden kann (§ 43a Abs. 3 Satz 1 in Verbindung mit § 32d
+Abs. 5 EStG)."* An Ermaessigungsanspruch therefore exists where either the source state's own law
+**or a DBA** grants a reduction. Where both point to the same rate -- a dividend within DBA Art. 10,
+which the source state applies -- the creditable amount is the withheld tax capped at that treaty
+rate; for a US dividend, including a payment in lieu on lent units whose attribution stays with the
+lender, that rate is 15 % ([GT-CREDIT-027], [GT-CREDIT-028]). Where the two grounds diverge -- a DBA
+that would deny the source state any tax, applied by a source state that refunds only to a treaty
+rate -- the extent of the Ermaessigungsanspruch is not settled by any located Tier 1 or Tier 2 source:
+`../research/open-legal-questions.md` Q22.
 
-**§ 32d Abs. 5 has no § 34c Abs. 6 Satz 3 analogue.** § 34c Abs. 6 Satz 3 removes from the credit base
-income the treaty does not let the source state tax; § 32d Abs. 5 Satz 1 is a unilateral credit
-reduced only by an *entstandenen Ermaessigungsanspruch*, and its Satz 2 applies Satz 1 *entsprechend*
-in treaty cases rather than substituting a treaty-conformity test. So even where the treaty character
-of a payment is contested ([GT-CREDIT-028]), the credit is reduced only to the extent the source
-state itself grants a refund. § 34c Abs. 1 is in any case carved out for this income by its own Satz 1
-zweiter Halbsatz ([GT-CREDIT-012]).
+**§ 34c Abs. 6 Satz 2 names two limits; § 32d Abs. 5 Satz 1 names one.** For treaty cases outside
+the Abgeltungsteuer, § 34c Abs. 6 Satz 2 applies the credit *"auf die nach dem Abkommen anzurechnende
+und um einen entstandenen Ermaessigungsanspruch gekuerzte auslaendische Steuer"* -- treaty conformity
+and the Ermaessigungsanspruch as two separate conditions -- and its second Halbsatz withdraws itself
+from Abgeltungsteuer income: *"das gilt nicht fuer Einkuenfte, auf die § 32d Absatz 1 und 3 bis 6
+anzuwenden ist"* (quoted with Satz 3 at [GT-CREDIT-012]). § 32d Abs. 5 Satz 1 names only the
+Ermaessigungsanspruch, and its Satz 2 applies Satz 1 *entsprechend* in treaty cases. This is the
+textual ground for the reading that § 32d Abs. 5 knows no separate treaty-conformity limit; whether
+the BZSt's *"aufgrund eines DBA"* brings one in through the Ermaessigungsanspruch itself is Q22.
+§ 34c Abs. 1 is in any case carved out for this income by its own Satz 1 zweiter Halbsatz
+([GT-CREDIT-012]).
 
 **The ceiling and the treaty cap are two different reductions.** The Ermaessigungsanspruch reduction
 here (down to the treaty rate) is distinct from the Satz 1 25 %-per-Kapitalertrag ceiling
@@ -131,8 +141,11 @@ applies to all open cases (Rn. 324). The DBA rate is 2006-Protokoll and unchange
 ([GT-CREDIT-027]).
 
 The form takes the figure on **Zeile 41**, *"noch nicht angerechnete auslaendische Steuer"*
-(verified identical in the 2024 and 2025 Anleitung). The declared amount is the foreign tax
-withheld; the Finanzamt applies Satz 1 and Satz 3.
+(verified identical in the 2024 and 2025 Anleitung). The Anleitung places Zeilen 37 to 42 under
+*"anzurechnende Steuern"* ([GT-FORM-006]), so the amount entered is the tax to be credited: the
+withheld tax reduced by the Ermaessigungsanspruch of Satz 1 (this claim). The per-Kapitalertrag
+ceiling of Satz 1 ([GT-CREDIT-005]) and the per-VZ ceiling of Satz 3 ([GT-CREDIT-006]) are applied
+in the assessment.
 
 ## [GT-CREDIT-007] Abs. 6 -- Guenstigerpruefung (assessment at the individual rate)
 

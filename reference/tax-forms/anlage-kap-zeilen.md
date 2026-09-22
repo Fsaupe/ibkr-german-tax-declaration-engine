@@ -136,6 +136,16 @@ governed by 32d Abs. 5, not by 34c Abs. 1: see
 [`../tax-law/estg-32d-abgeltungsteuer.md`](../tax-law/estg-32d-abgeltungsteuer.md),
 [GT-CREDIT-004].
 
+**What the line takes: the tax to be credited.** The Anleitung heads Zeilen 37 to 42 *"Wo koennen
+Sie anzurechnende Steuern geltend machen?"* and says of Zeilen 40 and 41: *"Die bereits durch das
+Kreditinstitut angerechnete auslaendische Steuer tragen Sie in Zeile 40, die noch nicht angerechnete
+auslaendische Steuer in Zeile 41 (und nicht in der Anlage AUS) ein."*, closing the block with *"Die
+anzurechnenden Betraege weisen Sie bitte anhand von Steuerbescheinigungen nach."*
+(`../Anltg_KAP_24.md` and `../Anltg_KAP_25.md`, same wording in both; read 2026-09-22). The Anleitung
+names the amount by its function -- *anzurechnend* -- and does not itself state how it is reduced;
+what is anzurechnen is fixed by § 32d Abs. 5 Satz 1, the withheld tax *"um einen entstandenen
+Ermaessigungsanspruch gekuerzt"* ([GT-CREDIT-026]).
+
 ## [GT-FORM-007] Zeilen 7 and 37-39 -- German KESt via a foreign depot
 
 German Kapitalertragsteuer withheld on a German issuer's dividend is **not** an auslaendische
