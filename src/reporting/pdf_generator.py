@@ -18,7 +18,7 @@ from src.domain.events import FinancialEvent, CashFlowEvent, WithholdingTaxEvent
 from src.domain.assets import Asset, InvestmentFund, Stock, Bond, Derivative
 from src.domain.enums import AssetCategory, InvestmentFundType, FinancialEventType, RealizationType, TaxReportingCategory
 from src.reporting.reporting_utils import _q, _q_price, _q_qty, format_date_german
-from src.reporting.form_rules import form_rules_are_carried, get_form_rules
+from src.reporting.form_rules import get_form_rules, unverified_form_rules_source
 import src.config as app_config 
 from src.utils.tax_utils import get_teilfreistellung_rate_for_fund_type
 
@@ -262,7 +262,7 @@ class PdfReportGenerator:
         self.story.append(Paragraph(disclaimer_text, self.styles['Disclaimer']))
 
     def _add_declared_values_summary(self):
-        carried_from = form_rules_are_carried(self.tax_year)
+        carried_from = unverified_form_rules_source(self.tax_year)
         if carried_from is not None:
             self.story.append(Paragraph(
                 f"<b><font color='red'>⚠️ ACHTUNG: Für VZ {self.tax_year} sind keine geprüften "

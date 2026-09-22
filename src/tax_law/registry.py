@@ -163,7 +163,12 @@ _FORM_RULES_BY_YEAR: dict[int, FormYearRules] = {
 }
 
 
-# Forward-carry is warned once per year, not per call (get_form_rules is called
+# GT-FORM-012 records independent verification of the 2022 and 2023 forms,
+# including their identical Kennzahlen. Reusing the 2021 rule entry for those
+# years is verified reuse, not an assumption about an unpublished form.
+_VERIFIED_FORM_YEAR_SOURCES: dict[int, int] = {2022: 2021, 2023: 2021}
+
+# Unverified forward-carry is warned once per year, not per call (get_form_rules is called
 # several times a run). Reset in tests that assert the warning.
 _warned_carry_years: set[int] = set()
 
@@ -204,26 +209,39 @@ def form_rules_are_carried(tax_year: int) -> Optional[int]:
     """The source year when `tax_year`'s rules are carried FORWARD from an
     earlier year (i.e. `tax_year` has no explicit entry), else None.
 
-    The reports use this to print an ACHTUNG banner: the carried rules drive the
-    DECLARED Z19/Z21/Z22/Z24 figures (src/engine/loss_offsetting.py), not only
-    their labels, so an unreviewed year silently declares figures on an earlier
-    year's form structure."""
+    This describes rule storage, not verification: GT-FORM-012 independently
+    verifies years that share an earlier entry. Reports use
+    unverified_form_rules_source() to decide whether to show a warning."""
     source = resolved_form_year(tax_year)
     return source if source != tax_year else None
+
+
+def unverified_form_rules_source(tax_year: int) -> Optional[int]:
+    """Source year of an unverified carry, or None for verified form rules.
+
+    An explicit entry or a verified source mapping establishes verification.
+    Require the mapped source to match the actual lookup, so later registry
+    changes cannot silently reuse evidence for a different rule entry.
+    """
+    source = form_rules_are_carried(tax_year)
+    if source is None or _VERIFIED_FORM_YEAR_SOURCES.get(tax_year) == source:
+        return None
+    return source
 
 
 def get_form_rules(tax_year: int) -> FormYearRules:
     """Form rules for an assessment year (see resolved_form_year for how the
     year is chosen; a year before the earliest configured one raises).
 
-    A forward-carry is deliberately NOT silent. It drives the declared
+    An unverified forward-carry is deliberately NOT silent. It drives the declared
     Z19/Z21/Z22/Z24 figures (src/engine/loss_offsetting.py), so it emits a
     prominent WARNING (once per year) and the console/PDF reports print an
-    ACHTUNG banner via form_rules_are_carried(). The figures still compute — on
+    ACHTUNG banner via unverified_form_rules_source(). Verified reuse of an
+    earlier entry needs no warning. For an unverified year the figures compute on
     the carried year's UNVERIFIED structure, to be checked against that year's
     official form. See reference/tax-law/estg-20-abs6-verlustverrechnung.md."""
     source = resolved_form_year(tax_year)
-    if source != tax_year and tax_year not in _warned_carry_years:
+    if unverified_form_rules_source(tax_year) is not None and tax_year not in _warned_carry_years:
         _warned_carry_years.add(tax_year)
         bar = "=" * 74
         logger.warning(

@@ -294,11 +294,13 @@ currency half is now closed too: each account's foreign-currency balance is its 
 | GT-FORM-009 | implements | classification decides the Anlage | `test_futures.py::TestFuturesClassification`, `test_section23_holding_period.py` | Fund → KAP-INV, private sale asset → SO, Einlagenrückgewähr (`CAPITAL_REPAYMENT`) → not taxable. |
 | GT-FORM-010 | implements | `src/tax_law/registry.py` `FormYearRules(separate_derivative_lines=True)` for 2021 and 2024 | `test_tax_law_registry.py::TestFormYearRules` | |
 | GT-FORM-011 | implements | `FormYearRules(separate_derivative_lines=False)` for 2025 | `test_tax_law_registry.py::TestFormYearRules::test_2024_vs_2025_form_structure` | |
-| GT-FORM-012 | implements | `src/tax_law/registry.py:139-145` — 2021 is the earliest entry; `get_form_rules` **raises** for any earlier year rather than falling back | `test_tax_law_registry.py::test_years_before_the_earliest_verified_form_raise`, `test_every_configured_year_2021_to_2023_matches_2024` | Backward projection refused because Zeilen 21/24 were *frei* on the VZ 2020 form. Forward carry-over is a deliberate silent default. The raising behaviour used to be stated in the reference file itself, naming the function; moved here 2026-08-03 under the Purity Rule. |
+| GT-FORM-012 | implements | `src/tax_law/registry.py` — 2021 is the earliest entry; `get_form_rules` **raises** for any earlier year rather than falling back | `test_tax_law_registry.py::test_years_before_the_earliest_verified_form_raise`, `test_every_configured_year_2021_to_2023_matches_2024`; `test_form_verification_warning.py` | Backward projection refused because Zeilen 21/24 were *frei* on the VZ 2020 form. Verified 2022/2023 reuse of the 2021 entry is distinguished from unverified forward carry-over; only the latter warns in the log and reports. The raising behaviour used to be stated in the reference file itself, naming the function; moved here 2026-08-03 under the Purity Rule. |
 
 **`FormYearRules`** (`src/tax_law/registry.py`, re-exported by `src/reporting/form_rules.py`) is
 the single place year-specific form structure lives. Entries for **2021** (covering 2021–2023 by
-forward carry-over), **2024** and **2025**. Only `separate_derivative_lines`,
+verified reuse recorded in `_VERIFIED_FORM_YEAR_SOURCES`), **2024** and **2025**.
+`form_rules_are_carried` describes source reuse; `unverified_form_rules_source`
+determines whether that reuse lacks year-specific verification. Only `separate_derivative_lines`,
 `z19_subtracts_derivative_losses` and `z22_includes_derivative_losses` vary by year;
 `derivative_loss_cap_applies` is `False` throughout.
 

@@ -15,7 +15,7 @@ import src.config as config
 from src.utils.type_utils import parse_ibkr_date
 from src.engine.loss_offsetting import LossOffsettingResult
 from src.reporting.reporting_utils import _q, _q_qty, _q_price, get_kap_inv_category_for_reporting
-from src.reporting.form_rules import form_rules_are_carried, get_form_rules
+from src.reporting.form_rules import get_form_rules, unverified_form_rules_source
 
 
 logger = logging.getLogger(__name__)
@@ -93,7 +93,7 @@ def generate_console_tax_report(
     print(f"\n--- Tax Declaration Summary for Year {tax_year} (All amounts in EUR) ---")
     print("--- Figures for direct entry into German tax forms (as per PRD v3.2.2) ---")
 
-    _carried_from = form_rules_are_carried(tax_year)
+    _carried_from = unverified_form_rules_source(tax_year)
     if _carried_from is not None:
         _bar = "!" * 74
         print(f"\n{_bar}")

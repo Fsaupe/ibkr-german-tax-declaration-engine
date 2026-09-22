@@ -7,4 +7,5 @@ from src.tax_law.registry import (  # noqa: F401
     form_rules_are_carried,
     get_form_rules,
     resolved_form_year,
+    unverified_form_rules_source,
 )
