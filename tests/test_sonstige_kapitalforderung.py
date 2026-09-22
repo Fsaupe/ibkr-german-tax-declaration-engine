@@ -536,3 +536,186 @@ class TestTheDisposalReachesTheReports:
         text = _pdf_kap_text([_rgl(asset.internal_asset_id, AssetCategory.BOND,
                                    Decimal("10.00"))], asset)
         assert "sonstigen Kapitalforderungen" not in text
+
+
+def _summary_kap_text(rgls, tax_year=2023):
+    """Render the KAP chapter with the REAL loss-offsetting figures (not an empty
+    result), so the §2.3 summary total is the engine's declared figure and can be
+    compared against the itemised components."""
+    from src.engine.loss_offsetting import LossOffsettingEngine
+    from src.reporting.pdf_generator import PdfReportGenerator
+
+    result = LossOffsettingEngine(
+        realized_gains_losses=rgls,
+        vorabpauschale_items=[],
+        current_year_financial_events=[],
+        asset_resolver=_SingleAssetResolver(_spot_metal_asset()),
+        tax_year=tax_year,
+    ).calculate_reporting_figures()
+
+    generator = PdfReportGenerator(
+        loss_offsetting_result=result,
+        all_financial_events=[],
+        realized_gains_losses=rgls,
+        vorabpauschale_items=[],
+        assets_by_id={},
+        tax_year=tax_year,
+        eoy_mismatch_details=None,
+        eoy_mismatch_count=0,
+    )
+    generator._add_kap_details()
+    parts = []
+    for flowable in generator.story:
+        _flatten(flowable, parts)
+    return "\n".join(parts), result
+
+
+def _calc_explanations_text(rgls, tax_year):
+    """Render section 1 'Erläuterung der Berechnungen' (the Zeile 19/22 breakdown
+    tables) with the engine's real figures, for a given form year."""
+    from src.engine.loss_offsetting import LossOffsettingEngine
+    from src.reporting.pdf_generator import PdfReportGenerator
+
+    result = LossOffsettingEngine(
+        realized_gains_losses=rgls,
+        vorabpauschale_items=[],
+        current_year_financial_events=[],
+        asset_resolver=_SingleAssetResolver(_spot_metal_asset()),
+        tax_year=tax_year,
+    ).calculate_reporting_figures()
+
+    generator = PdfReportGenerator(
+        loss_offsetting_result=result,
+        all_financial_events=[],
+        realized_gains_losses=rgls,
+        vorabpauschale_items=[],
+        assets_by_id={},
+        tax_year=tax_year,
+        eoy_mismatch_details=None,
+        eoy_mismatch_count=0,
+    )
+    generator._add_calculation_explanations()
+    parts = []
+    for flowable in generator.story:
+        _flatten(flowable, parts)
+    return "\n".join(parts), result
+
+
+class TestTheZeile22BreakdownTable:
+    """Section 1 explains Zeile 22 the way it explains Zeile 19: its components and
+    a footing sum. Whether derivative losses belong in Zeile 22 or on the separate
+    Zeile 24 is a per-year form rule, so the table is year-specific."""
+
+    _RGLS = [
+        _rgl(uuid.uuid4(), AssetCategory.CASH_BALANCE, Decimal("-30.00")),
+        _rgl(uuid.uuid4(), AssetCategory.BOND, Decimal("-10.00")),
+    ]
+
+    def test_a_separate_derivative_year_shows_sonstige_only_and_points_to_zeile_24(self):
+        text, result = _calc_explanations_text(self._RGLS, tax_year=2023)
+        z22 = result.form_line_values[TaxReportingCategory.ANLAGE_KAP_SONSTIGE_VERLUSTE]
+        assert "Anlage KAP Zeile 22 (Sonstige Verluste)" in text
+        assert "Summe (Anlage KAP Zeile 22)" in text
+        assert f"{z22:.2f}".replace(".", ",") in text
+        assert "Verluste aus Termingeschäften werden separat in Zeile 24 ausgewiesen." in text
+
+    def test_a_fold_in_year_includes_the_termingeschaefte_row_and_drops_the_zeile_24_note(self):
+        text, _ = _calc_explanations_text(self._RGLS, tax_year=2025)
+        assert "Anlage KAP Zeile 22 (Verluste ohne Aktien, inkl. Termingeschäfte)" in text
+        assert "Verluste aus Termingeschäften" in text
+        assert "separat in Zeile 24" not in text
+
+
+class TestTheZeile19DerivativeLossMemo:
+    """In a separate-line year (Z21/Z24 present) derivative losses are "ausschließlich Zeile
+    24" and left out of the Zeile 19 net, while derivative GAINS are "zusätzlich Zeile 21" and
+    inside it ([GT-FORM-002]). The Zeile 19 breakdown makes that omission explicit with a memo
+    row after the total, so the asymmetry a reader sees is stated, not silent."""
+
+    _RGLS = [_rgl(uuid.uuid4(), AssetCategory.BOND, Decimal("-10.00"))]
+
+    def test_a_separate_year_shows_the_excluded_derivative_loss_memo(self):
+        text, _ = _calc_explanations_text(self._RGLS, tax_year=2023)
+        assert "nachrichtlich: Verluste aus Termingeschäften (nicht in Zeile 19)" in text
+        assert "ausschließlich Zeile 24" in text
+
+    def test_a_fold_in_year_omits_the_memo_because_the_loss_is_inside_zeile_19(self):
+        text, _ = _calc_explanations_text(self._RGLS, tax_year=2025)
+        assert "nachrichtlich" not in text
+
+
+class TestTheSonstigeChapterZeile22FootsToTheCompleteFigure:
+    """The §2.3 loss table must foot to the WHOLE Anlage KAP Zeile 22, not a component of it.
+    In a fold-in year (VZ 2025) Zeile 22 = non-stock non-derivative losses PLUS Termingeschäft
+    losses ([GT-FORM-005]), so the table carries a Termingeschäfte row (→ §2.2) and the drift
+    guard checks the complete figure. In a separate year (VZ 2023/2024) derivative losses are
+    ausschließlich Zeile 24, so Zeile 22 is the sonstige sum alone."""
+
+    # 60,00 sonstige (FX) loss + 40,00 derivative loss.
+    _RGLS = [
+        _rgl(uuid.uuid4(), AssetCategory.CASH_BALANCE, Decimal("-60.00")),
+        _rgl(uuid.uuid4(), AssetCategory.OPTION, Decimal("-40.00")),
+    ]
+
+    def test_a_fold_in_year_bridges_derivative_losses_into_the_zeile_22_total(self):
+        text, result = _summary_kap_text(self._RGLS, tax_year=2025)
+        assert result.form_line_values[
+            TaxReportingCategory.ANLAGE_KAP_SONSTIGE_VERLUSTE] == Decimal("100.00")
+        assert "Verluste aus Termingeschäften" in text
+        assert "60,00" in text and "40,00" in text and "100,00" in text
+        # The table now foots to the complete Zeile 22, so the drift guard stays silent.
+        assert "⚠️ Differenz" not in text
+
+    def test_a_separate_year_keeps_derivative_losses_out_of_zeile_22(self):
+        text, result = _summary_kap_text(self._RGLS, tax_year=2023)
+        # Zeile 22 excludes the derivative loss (ausschließlich Zeile 24), so it is the 60,00
+        # sonstige sum, and the §2.3 table still foots without a bridge.
+        assert result.form_line_values[
+            TaxReportingCategory.ANLAGE_KAP_SONSTIGE_VERLUSTE] == Decimal("60.00")
+        assert "⚠️ Differenz" not in text
+
+
+class TestTheSonstigeChapterFootsToTheDeclaredFigures:
+    """The §2.3 summary must add up to the Anlage KAP Zeile 19/22 figures the report
+    declares, with foreign currency (FX, Währungspositionen) shown as its own
+    component and detail. Before this, FX gains/losses reached the Zeile-19/22 totals
+    but appeared in no §2.3 subsection, so the chapter could not be reconciled to the
+    figure it declared — the failure this test pins."""
+
+    def test_fx_is_itemised_and_the_summary_foots(self):
+        rgls = [
+            _rgl(uuid.uuid4(), AssetCategory.CASH_BALANCE, Decimal("80.00")),
+            _rgl(uuid.uuid4(), AssetCategory.CASH_BALANCE, Decimal("-30.00")),
+            _rgl(uuid.uuid4(), AssetCategory.BOND, Decimal("50.00")),
+            _rgl(uuid.uuid4(), AssetCategory.BOND, Decimal("-10.00")),
+            _rgl(uuid.uuid4(), AssetCategory.SONSTIGE_KAPITALFORDERUNG, Decimal("300.00")),
+            _rgl(uuid.uuid4(), AssetCategory.SONSTIGE_KAPITALFORDERUNG, Decimal("-20.00")),
+        ]
+        text, result = _summary_kap_text(rgls)
+
+        # The engine's declared figures: gains 50+80+300, losses 10+30+20.
+        assert result.form_line_values[
+            TaxReportingCategory.ANLAGE_KAP_SONSTIGE_KAPITALERTRAEGE] == Decimal("430.00")
+        assert result.raw_other_losses_abs == Decimal("60.00")
+
+        # FX is now a summary component AND has its own detail section (2.3.5).
+        assert "FX-Gewinne (Währungspositionen)" in text
+        assert "Summe FX-Gewinne (fließt ein in Zeile 19):" in text
+        assert "Summe FX-Verluste (fließt ein in Zeile 22):" in text
+        assert "80,00" in text and "30,00" in text
+
+        # The chapter reconciles: the itemised components do not drift from the declared
+        # figure, so the ⚠️ warning does not fire and the two totals are the engine's.
+        assert "⚠️ Differenz" not in text
+        assert "Summe fließt ein in Anlage KAP Zeile 19" in text
+        assert "Summe fließt ein in Anlage KAP Zeile 22" in text
+        assert "430,00" in text  # gains total = Zeile 19 component
+        assert "60,00" in text   # losses total = Zeile 22
+
+    def test_an_fx_loss_alone_reaches_the_zeile_22_summary(self):
+        rgls = [_rgl(uuid.uuid4(), AssetCategory.CASH_BALANCE, Decimal("-45.00"))]
+        text, result = _summary_kap_text(rgls)
+        assert result.raw_other_losses_abs == Decimal("45.00")
+        assert "FX-Verluste (Währungspositionen)" in text
+        assert "45,00" in text
+        assert "⚠️ Differenz" not in text

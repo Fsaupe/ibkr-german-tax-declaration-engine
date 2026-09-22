@@ -67,9 +67,41 @@ class TestFormYearRules:
                 registry.get_form_rules(year)
 
     def test_future_years_carry_the_latest_structure_forward(self):
-        """Forward-carry stays a silent default: a form structure holds until a
-        later year changes it, and next year's form is not published yet."""
+        """Forward-carry still applies (now announced by a loud warning, not
+        silent): a form structure holds until a later year changes it, and next
+        year's form is not published yet."""
         assert registry.get_form_rules(2027) == registry.get_form_rules(2025)
+
+    def test_resolved_form_year_names_the_governing_year(self):
+        assert registry.resolved_form_year(2024) == 2024   # explicit
+        assert registry.resolved_form_year(2025) == 2025   # explicit
+        assert registry.resolved_form_year(2023) == 2021   # carried forward
+        assert registry.resolved_form_year(2027) == 2025   # carried forward
+
+    def test_form_rules_are_carried_flags_only_unconfigured_years(self):
+        assert registry.form_rules_are_carried(2024) is None
+        assert registry.form_rules_are_carried(2025) is None
+        assert registry.form_rules_are_carried(2023) == 2021
+        assert registry.form_rules_are_carried(2027) == 2025
+
+    def test_forward_carry_emits_one_loud_warning_naming_both_years(self, caplog):
+        """The carried rules drive the DECLARED Z19/Z21/Z22/Z24 figures, so a
+        forward-carry must not pass unnoticed. Deleting the warning turns this
+        red; deduping keeps a multi-call run from repeating it."""
+        registry._warned_carry_years.discard(2027)
+        with caplog.at_level(logging.WARNING, logger="src.tax_law.registry"):
+            registry.get_form_rules(2027)
+            registry.get_form_rules(2027)  # second call is deduped
+        banners = [r.getMessage() for r in caplog.records
+                   if r.levelno == logging.WARNING and "forward-carry" in r.getMessage()]
+        assert len(banners) == 1
+        assert "VZ 2027" in banners[0] and "VZ 2025" in banners[0]
+
+    def test_an_explicit_year_does_not_warn_of_a_carry(self, caplog):
+        registry._warned_carry_years.discard(2025)
+        with caplog.at_level(logging.WARNING, logger="src.tax_law.registry"):
+            registry.get_form_rules(2025)
+        assert not [r for r in caplog.records if "forward-carry" in r.getMessage()]
 
     def test_reporting_shim_reexports(self):
         from src.reporting.form_rules import get_form_rules, FormYearRules

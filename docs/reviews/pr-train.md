@@ -9,7 +9,16 @@ Apply [review-criteria.md](review-criteria.md) to every PR.
 
 ## Resume here
 
-**Current task: publish and merge accepted #91 with maintainer authorization.**
+**Current task: publish and merge accepted #92 with maintainer authorization.**
+Code/test revision `011e4ff` resolves the false 2022/2023 verification warning
+without moving figures or changing existing tests. The Z22/Z24 issue is fixed;
+the Z19 objection remains withdrawn. Clean suite **1,527 passed/1 skipped**;
+10 copied-export schemas, 15 new warning regressions and all 8 independent
+checks pass. Fresh VZ 2023–2025 declarations match accepted main `c523e6d`,
+with matching same-tree controls. [Acceptance record](pr-92-merge-decision.md).
+Existing PM-001–PM-004/PM-006 remain open. Confirm the merge hash after publication.
+
+**Historical #91 acceptance:**
 Code/test candidate 676ec7f passes the clean suite: **1,500 passed, 1 skipped**.
 All 10 copied-export schema checks pass. The explicitly approved VZ 2023–2025
 changes have same-tree console/PDF controls and separate tax/rebate/sign-stage

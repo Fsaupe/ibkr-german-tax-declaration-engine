@@ -163,22 +163,27 @@ _FORM_RULES_BY_YEAR: dict[int, FormYearRules] = {
 }
 
 
-def get_form_rules(tax_year: int) -> FormYearRules:
-    """Form rules for an assessment year.
+# GT-FORM-012 records independent verification of the 2022 and 2023 forms,
+# including their identical Kennzahlen. Reusing the 2021 rule entry for those
+# years is verified reuse, not an assumption about an unpublished form.
+_VERIFIED_FORM_YEAR_SOURCES: dict[int, int] = {2022: 2021, 2023: 2021}
 
-    Exact year first, otherwise the nearest EARLIER configured year: a form
-    structure stays in force until a later year changes it, so carrying the
-    most recent verified structure FORWARD is the only sound default (and the
-    only option for a year whose form is not published yet).
+# Unverified forward-carry is warned once per year, not per call (get_form_rules is called
+# several times a run). Reset in tests that assert the warning.
+_warned_carry_years: set[int] = set()
 
-    Carrying one BACKWARD is not sound, and here it is demonstrably wrong: the
-    earliest configured year is 2021, and the VZ 2020 form has no Zeile 21 and
-    no Zeile 24 at all — both are printed "frei". Projecting Termingeschäft
-    figures onto them would produce entries for lines that do not exist, so a
-    tax year before the earliest configured one raises rather than guesses.
+
+def resolved_form_year(tax_year: int) -> int:
+    """The year whose FormYearRules govern `tax_year`.
+
+    The year itself when it is explicitly configured, otherwise the nearest
+    EARLIER configured year: a form structure stays in force until a later year
+    changes it. A year before the earliest configured one raises — carrying one
+    BACKWARD is unsound (the VZ 2020 form has no Zeile 21 and no Zeile 24 at
+    all, both printed "frei"), so it is refused rather than guessed.
     See reference/tax-law/estg-20-abs6-verlustverrechnung.md."""
     if tax_year in _FORM_RULES_BY_YEAR:
-        return _FORM_RULES_BY_YEAR[tax_year]
+        return tax_year
 
     available_years = sorted(_FORM_RULES_BY_YEAR.keys())
     fallback_year = None
@@ -186,8 +191,7 @@ def get_form_rules(tax_year: int) -> FormYearRules:
         if year <= tax_year:
             fallback_year = year
     if fallback_year is not None:
-        logger.info(f"No form rules defined for tax year {tax_year}, falling back to {fallback_year} rules.")
-        return _FORM_RULES_BY_YEAR[fallback_year]
+        return fallback_year
 
     earliest = available_years[0]
     raise ProcessingError(
@@ -199,3 +203,56 @@ def get_form_rules(tax_year: int) -> FormYearRules:
         f"year's official form (reference/tax-law/"
         f"estg-20-abs6-verlustverrechnung.md)."
     )
+
+
+def form_rules_are_carried(tax_year: int) -> Optional[int]:
+    """The source year when `tax_year`'s rules are carried FORWARD from an
+    earlier year (i.e. `tax_year` has no explicit entry), else None.
+
+    This describes rule storage, not verification: GT-FORM-012 independently
+    verifies years that share an earlier entry. Reports use
+    unverified_form_rules_source() to decide whether to show a warning."""
+    source = resolved_form_year(tax_year)
+    return source if source != tax_year else None
+
+
+def unverified_form_rules_source(tax_year: int) -> Optional[int]:
+    """Source year of an unverified carry, or None for verified form rules.
+
+    An explicit entry or a verified source mapping establishes verification.
+    Require the mapped source to match the actual lookup, so later registry
+    changes cannot silently reuse evidence for a different rule entry.
+    """
+    source = form_rules_are_carried(tax_year)
+    if source is None or _VERIFIED_FORM_YEAR_SOURCES.get(tax_year) == source:
+        return None
+    return source
+
+
+def get_form_rules(tax_year: int) -> FormYearRules:
+    """Form rules for an assessment year (see resolved_form_year for how the
+    year is chosen; a year before the earliest configured one raises).
+
+    An unverified forward-carry is deliberately NOT silent. It drives the declared
+    Z19/Z21/Z22/Z24 figures (src/engine/loss_offsetting.py), so it emits a
+    prominent WARNING (once per year) and the console/PDF reports print an
+    ACHTUNG banner via unverified_form_rules_source(). Verified reuse of an
+    earlier entry needs no warning. For an unverified year the figures compute on
+    the carried year's UNVERIFIED structure, to be checked against that year's
+    official form. See reference/tax-law/estg-20-abs6-verlustverrechnung.md."""
+    source = resolved_form_year(tax_year)
+    if unverified_form_rules_source(tax_year) is not None and tax_year not in _warned_carry_years:
+        _warned_carry_years.add(tax_year)
+        bar = "=" * 74
+        logger.warning(
+            "\n%s\n"
+            "  ACHTUNG: Keine geprueften Anlage-KAP-Formularregeln fuer VZ %d.\n"
+            "  Es werden die Regeln von VZ %d uebernommen (forward-carry).\n"
+            "  Die erklaerten Figuren Z19/Z21/Z22/Z24 und ihre Formularzuordnung\n"
+            "  beruhen damit auf UNGEPRUEFTEN Annahmen und muessen gegen das\n"
+            "  amtliche Formular fuer VZ %d geprueft werden. Fuegen Sie einen\n"
+            "  geprueften Eintrag in src/tax_law/registry.py hinzu.\n"
+            "%s",
+            bar, tax_year, source, tax_year, bar,
+        )
+    return _FORM_RULES_BY_YEAR[source]
