@@ -18,7 +18,7 @@ from src.domain.events import FinancialEvent, CashFlowEvent, WithholdingTaxEvent
 from src.domain.assets import Asset, InvestmentFund, Stock, Bond, Derivative
 from src.domain.enums import AssetCategory, InvestmentFundType, FinancialEventType, RealizationType, TaxReportingCategory
 from src.reporting.reporting_utils import _q, _q_price, _q_qty, format_date_german
-from src.reporting.form_rules import get_form_rules
+from src.reporting.form_rules import form_rules_are_carried, get_form_rules
 import src.config as app_config 
 from src.utils.tax_utils import get_teilfreistellung_rate_for_fund_type
 
@@ -262,6 +262,17 @@ class PdfReportGenerator:
         self.story.append(Paragraph(disclaimer_text, self.styles['Disclaimer']))
 
     def _add_declared_values_summary(self):
+        carried_from = form_rules_are_carried(self.tax_year)
+        if carried_from is not None:
+            self.story.append(Paragraph(
+                f"<b><font color='red'>⚠️ ACHTUNG: Für VZ {self.tax_year} sind keine geprüften "
+                f"Anlage-KAP-Formularregeln hinterlegt. Es werden die Regeln von VZ {carried_from} "
+                f"verwendet (forward-carry). Die Formularzuordnung UND die Beträge der Zeilen "
+                f"19/21/22/24 sind damit ungeprüft und müssen gegen das amtliche Formular für "
+                f"VZ {self.tax_year} geprüft werden.</font></b>",
+                self.styles['BodyText']))
+            self.story.append(Spacer(1, 0.3*cm))
+
         self.story.append(Paragraph("1 Zusammenfassung der erklärten Werte", self.styles['H2']))
 
         form_rules = get_form_rules(self.tax_year)

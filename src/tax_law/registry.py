@@ -163,22 +163,22 @@ _FORM_RULES_BY_YEAR: dict[int, FormYearRules] = {
 }
 
 
-def get_form_rules(tax_year: int) -> FormYearRules:
-    """Form rules for an assessment year.
+# Forward-carry is warned once per year, not per call (get_form_rules is called
+# several times a run). Reset in tests that assert the warning.
+_warned_carry_years: set[int] = set()
 
-    Exact year first, otherwise the nearest EARLIER configured year: a form
-    structure stays in force until a later year changes it, so carrying the
-    most recent verified structure FORWARD is the only sound default (and the
-    only option for a year whose form is not published yet).
 
-    Carrying one BACKWARD is not sound, and here it is demonstrably wrong: the
-    earliest configured year is 2021, and the VZ 2020 form has no Zeile 21 and
-    no Zeile 24 at all — both are printed "frei". Projecting Termingeschäft
-    figures onto them would produce entries for lines that do not exist, so a
-    tax year before the earliest configured one raises rather than guesses.
+def resolved_form_year(tax_year: int) -> int:
+    """The year whose FormYearRules govern `tax_year`.
+
+    The year itself when it is explicitly configured, otherwise the nearest
+    EARLIER configured year: a form structure stays in force until a later year
+    changes it. A year before the earliest configured one raises — carrying one
+    BACKWARD is unsound (the VZ 2020 form has no Zeile 21 and no Zeile 24 at
+    all, both printed "frei"), so it is refused rather than guessed.
     See reference/tax-law/estg-20-abs6-verlustverrechnung.md."""
     if tax_year in _FORM_RULES_BY_YEAR:
-        return _FORM_RULES_BY_YEAR[tax_year]
+        return tax_year
 
     available_years = sorted(_FORM_RULES_BY_YEAR.keys())
     fallback_year = None
@@ -186,8 +186,7 @@ def get_form_rules(tax_year: int) -> FormYearRules:
         if year <= tax_year:
             fallback_year = year
     if fallback_year is not None:
-        logger.info(f"No form rules defined for tax year {tax_year}, falling back to {fallback_year} rules.")
-        return _FORM_RULES_BY_YEAR[fallback_year]
+        return fallback_year
 
     earliest = available_years[0]
     raise ProcessingError(
@@ -199,3 +198,43 @@ def get_form_rules(tax_year: int) -> FormYearRules:
         f"year's official form (reference/tax-law/"
         f"estg-20-abs6-verlustverrechnung.md)."
     )
+
+
+def form_rules_are_carried(tax_year: int) -> Optional[int]:
+    """The source year when `tax_year`'s rules are carried FORWARD from an
+    earlier year (i.e. `tax_year` has no explicit entry), else None.
+
+    The reports use this to print an ACHTUNG banner: the carried rules drive the
+    DECLARED Z19/Z21/Z22/Z24 figures (src/engine/loss_offsetting.py), not only
+    their labels, so an unreviewed year silently declares figures on an earlier
+    year's form structure."""
+    source = resolved_form_year(tax_year)
+    return source if source != tax_year else None
+
+
+def get_form_rules(tax_year: int) -> FormYearRules:
+    """Form rules for an assessment year (see resolved_form_year for how the
+    year is chosen; a year before the earliest configured one raises).
+
+    A forward-carry is deliberately NOT silent. It drives the declared
+    Z19/Z21/Z22/Z24 figures (src/engine/loss_offsetting.py), so it emits a
+    prominent WARNING (once per year) and the console/PDF reports print an
+    ACHTUNG banner via form_rules_are_carried(). The figures still compute — on
+    the carried year's UNVERIFIED structure, to be checked against that year's
+    official form. See reference/tax-law/estg-20-abs6-verlustverrechnung.md."""
+    source = resolved_form_year(tax_year)
+    if source != tax_year and tax_year not in _warned_carry_years:
+        _warned_carry_years.add(tax_year)
+        bar = "=" * 74
+        logger.warning(
+            "\n%s\n"
+            "  ACHTUNG: Keine geprueften Anlage-KAP-Formularregeln fuer VZ %d.\n"
+            "  Es werden die Regeln von VZ %d uebernommen (forward-carry).\n"
+            "  Die erklaerten Figuren Z19/Z21/Z22/Z24 und ihre Formularzuordnung\n"
+            "  beruhen damit auf UNGEPRUEFTEN Annahmen und muessen gegen das\n"
+            "  amtliche Formular fuer VZ %d geprueft werden. Fuegen Sie einen\n"
+            "  geprueften Eintrag in src/tax_law/registry.py hinzu.\n"
+            "%s",
+            bar, tax_year, source, tax_year, bar,
+        )
+    return _FORM_RULES_BY_YEAR[source]

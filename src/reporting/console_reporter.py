@@ -15,7 +15,7 @@ import src.config as config
 from src.utils.type_utils import parse_ibkr_date
 from src.engine.loss_offsetting import LossOffsettingResult
 from src.reporting.reporting_utils import _q, _q_qty, _q_price, get_kap_inv_category_for_reporting
-from src.reporting.form_rules import get_form_rules
+from src.reporting.form_rules import form_rules_are_carried, get_form_rules
 
 
 logger = logging.getLogger(__name__)
@@ -92,6 +92,17 @@ def generate_console_tax_report(
     logger.info(f"Generating console tax declaration summary for tax year {tax_year}...")
     print(f"\n--- Tax Declaration Summary for Year {tax_year} (All amounts in EUR) ---")
     print("--- Figures for direct entry into German tax forms (as per PRD v3.2.2) ---")
+
+    _carried_from = form_rules_are_carried(tax_year)
+    if _carried_from is not None:
+        _bar = "!" * 74
+        print(f"\n{_bar}")
+        print(f"  ACHTUNG: Fuer VZ {tax_year} sind keine geprueften Formularregeln hinterlegt.")
+        print(f"  Es werden die Regeln von VZ {_carried_from} verwendet (forward-carry).")
+        print(f"  Die Formularzuordnung UND die Betraege der Zeilen 19/21/22/24 sind damit")
+        print(f"  UNGEPRUEFT und muessen gegen das amtliche Formular fuer VZ {tax_year} geprueft")
+        print(f"  werden (Eintrag in src/tax_law/registry.py ergaenzen).")
+        print(_bar)
 
     # Multi-account limitations, printed BEFORE the figures so a reader who stops at the
     # number they came for has already passed the warning about it. The engine records the
