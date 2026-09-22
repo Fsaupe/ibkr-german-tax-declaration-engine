@@ -82,7 +82,9 @@ checks are preserved. No supported real-data run newly fails.
   current/historical fund directions, separate cash settlement, warnings and PDF.
 - Existing ownership/partial-delivery tests and all eight approved corrected
   fixture cases pass. Reference integrity: **33 passed**.
-- Full clean-checkout result is recorded in the completion checkpoint below.
+- Clean archive of **39eca72**, with template configuration and no private
+  exports/caches: **1,599 passed, 1 skipped** in 15.22 seconds. The skip requires
+  private exports. Copied-export schema checks: **10 passed**.
 - VZ **2023/2024/2025** all complete; independent repeat runs have identical
   normalized console, log and PDF text. Original input/configuration/cache hashes
   remain unchanged.
@@ -101,3 +103,21 @@ checks are preserved. No supported real-data run newly fails.
 
 Local implementation and verification are ready for review. #85 / PM-006 remains
 open pending acceptance and merge. No unrelated deferred item is completed.
+
+Verified application commits: **4d17b0b** plus the PDF warning connection in
+**39eca72**. The final warning regression first failed because the PDF's existing
+sections did not render arbitrary data gaps; it now checks the actual generated
+PDF, including the new warning. Final real-data captures match the application
+at 4d17b0b exactly. The four-line 39eca72 addition only prints the new warning
+when present (zero occurrences in these three real-data runs) and registers its
+code in the data-gap documentation. No numerical calculation changed afterward.
+
+The PDF skill prompted visual review of section headings, first table rows and
+subtotals. Six representative final pages were rendered; headings, repeated
+headers, line wrapping and figures are readable. The synthetic warning is
+verified through actual PDF text. The active production/spec/fixture search
+finds zero remaining writer-assignment netting or short-expiry recognition
+patterns; the old legal-validation report is explicitly marked withdrawn.
+No original account identifier appears in staged additions; three matching
+round monetary literals belong to the explicitly synthetic fixtures, not
+copied portfolio amounts. `git diff --check` passes.
