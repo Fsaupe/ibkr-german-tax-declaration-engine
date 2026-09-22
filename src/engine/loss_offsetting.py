@@ -14,6 +14,9 @@ from src.identification.asset_resolver import AssetResolver
 from src.utils.tax_utils import get_teilfreistellung_rate_for_fund_type
 from src.reporting.form_rules import get_form_rules
 from src.processing.data_gaps import DataGapCollector, GapSeverity
+from src.tax_law.treaty_withholding import (
+    assess_withholding, WithholdingAssessment, WithholdingStatus,
+)
 import src.config as global_config
 
 logger = logging.getLogger(__name__)
@@ -119,6 +122,18 @@ class LossOffsettingEngine:
             }
         return self._income_gross_cache
 
+    def _income_event_by_event_id(self) -> Dict[uuid.UUID, CashFlowEvent]:
+        """The income CashFlowEvent a withholding row is linked to, by event id.
+
+        The treaty-rate guard needs the linked income's kind (dividend vs interest)
+        and its gross in the row's own currency, which the id→EUR map above does not
+        carry."""
+        return {
+            e.event_id: e
+            for e in self.current_year_financial_events
+            if isinstance(e, CashFlowEvent)
+        }
+
     def _record_german_kest_gap(self, count: int, total_eur: Decimal) -> None:
         """Report German KESt that was excluded from Zeile 41 and cannot be declared for you.
 
@@ -156,6 +171,75 @@ class LossOffsettingEngine:
             logger.warning(
                 "Data gap [ANLAGE_KAP_GERMAN_KEST_NOT_DECLARABLE] "
                 "Anlage KAP Zeilen 7/37/38 (%d): %s", self.tax_year, detail
+            )
+
+    def _record_treaty_withholding_gaps(self, treaty_flags: Dict[tuple, List[tuple]]) -> None:
+        """Surface every foreign withholding row the treaty-rate guard could not credit
+        in full: one gap per (status, source state), listing the rows.
+
+        legal_basis: [GT-CREDIT-026] (Ermäßigungsanspruch), [GT-CREDIT-027] (US 15 %).
+        Severity is WARNING throughout — cap-and-report (issue #78 decision): the figures
+        stay complete and correct, and the report tells the taxpayer what to reclaim
+        abroad or verify. An over-treaty-rate row has had Zeile 41 *reduced* to the
+        creditable amount, so the declaration is not income-understating; a
+        rate-not-verified or unlinked row carries what was withheld, exactly as before
+        this guard, and the gap withdraws only the claim that the amount is *verified* as
+        creditable.
+        """
+        if self.data_gap_collector is None:
+            for (status, state), rows in treaty_flags.items():
+                logger.warning("Data gap [FOREIGN_WHT_%s] %s (%d rows)", status.value, state or "unknown", len(rows))
+            return
+
+        def _rowlist(rows):
+            return "; ".join(
+                f"{ev.event_date} tx {ev.ibkr_transaction_id or '—'}: "
+                f"withheld EUR {a.withheld_eur.quantize(self.TWO_PLACES, context=self.ctx)}"
+                + (f", anrechenbar EUR {a.creditable_eur.quantize(self.TWO_PLACES, context=self.ctx)}"
+                   f", nicht anrechenbar EUR {a.excess_eur.quantize(self.TWO_PLACES, context=self.ctx)}"
+                   if a.status is WithholdingStatus.ABOVE_TREATY_RATE else "")
+                for ev, a in rows
+            )
+
+        for (status, state), rows in sorted(treaty_flags.items(), key=lambda kv: (kv[0][0].value, kv[0][1])):
+            state_label = state or "unbekannter Quellenstaat"
+            if status is WithholdingStatus.ABOVE_TREATY_RATE:
+                withheld = sum((a.withheld_eur for _, a in rows), Decimal("0"))
+                creditable = sum((a.creditable_eur for _, a in rows), Decimal("0"))
+                excess = sum((a.excess_eur for _, a in rows), Decimal("0"))
+                rate = rows[0][1].treaty_rate
+                detail = (
+                    f"{len(rows)} Quellensteuerzeile(n) aus {state_label} wurden ÜBER dem "
+                    f"DBA-Satz ({rate:.0%}) einbehalten. Nur die Steuer bis zum DBA-Satz ist "
+                    f"anrechenbar (§ 32d Abs. 5 Satz 1, Ermäßigungsanspruch): von einbehaltenen "
+                    f"EUR {withheld.quantize(self.TWO_PLACES, context=self.ctx)} sind EUR "
+                    f"{creditable.quantize(self.TWO_PLACES, context=self.ctx)} auf Zeile 41 "
+                    f"angerechnet; EUR {excess.quantize(self.TWO_PLACES, context=self.ctx)} sind "
+                    f"in Deutschland NICHT anrechenbar und im Quellenstaat zu erstatten (für die "
+                    f"USA über das IRS-Erstattungsverfahren). Nachweis der einbehaltenen Steuer und "
+                    f"des DBA-Satzes ist erforderlich (§ 90 Abs. 2 AO). Zeilen: {_rowlist(rows)}."
+                )
+            elif status is WithholdingStatus.RATE_NOT_VERIFIED:
+                detail = (
+                    f"{len(rows)} Quellensteuerzeile(n) aus {state_label}: für diesen "
+                    f"Quellenstaat bzw. diese Ertragsart ist im Referenzbestand kein DBA-Satz "
+                    f"hinterlegt. Der Betrag auf Zeile 41 ist die EINBEHALTENE Steuer, kein "
+                    f"geprüfter anrechenbarer Betrag; der anrechenbare Höchstbetrag ist gegen das "
+                    f"einschlägige DBA zu prüfen (der Betrag wurde nicht verändert). "
+                    f"Zeilen: {_rowlist(rows)}."
+                )
+            else:  # UNLINKED
+                detail = (
+                    f"{len(rows)} Quellensteuerzeile(n) konnten keinem Ertrag zugeordnet werden, "
+                    f"sodass der einbehaltene Satz nicht gegen einen DBA-Satz geprüft werden "
+                    f"konnte. Der einbehaltene Betrag ist unverändert auf Zeile 41 enthalten. "
+                    f"Zeilen: {_rowlist(rows)}."
+                )
+            self.data_gap_collector.record(
+                code=f"FOREIGN_WHT_{status.value}",
+                subject=f"Anlage KAP Zeile 41 / {state_label} ({self.tax_year})",
+                detail=detail,
+                severity=GapSeverity.WARNING,
             )
 
     def calculate_reporting_figures(self) -> LossOffsettingResult:
@@ -294,6 +378,11 @@ class LossOffsettingEngine:
         foreign_tax_total = self.ctx.create_decimal(Decimal('0'))
         german_kest_total = self.ctx.create_decimal(Decimal('0'))
         german_kest_count = 0
+        income_by_id = self._income_event_by_event_id()
+        # Rows the treaty-rate guard could not credit in full, grouped for one gap per
+        # (status, source state). No status is fatal: cap-and-report keeps a complete,
+        # correct set of figures and surfaces the excess (issue #78 decision).
+        treaty_flags: Dict[tuple, List[tuple]] = defaultdict(list)
         for event in self.current_year_financial_events:
             if isinstance(event, WithholdingTaxEvent):
                 tax_amount = event.gross_amount_eur if event.gross_amount_eur is not None else self.ctx.create_decimal(Decimal('0'))
@@ -301,8 +390,17 @@ class LossOffsettingEngine:
                     german_kest_total = self.ctx.add(german_kest_total, tax_amount)
                     german_kest_count += 1
                     continue
-                foreign_tax_total = self.ctx.add(foreign_tax_total, tax_amount)
+                income_event = income_by_id.get(event.taxed_income_event_id)
+                assessment = assess_withholding(event, income_event)
+                # Only the anrechenbare amount reaches Zeile 41: the withheld tax reduced
+                # by the source state's Ermäßigungsanspruch ([GT-CREDIT-026]). For a row at
+                # or below the treaty rate this equals what was withheld, so no figure
+                # moves; measured 0 US rows above the rate VZ 2023–2025 (issue #78).
+                foreign_tax_total = self.ctx.add(foreign_tax_total, assessment.creditable_eur)
+                if assessment.status is not WithholdingStatus.OK:
+                    treaty_flags[(assessment.status, assessment.source_state or "")].append((event, assessment))
         self._record_german_kest_gap(german_kest_count, german_kest_total)
+        self._record_treaty_withholding_gaps(treaty_flags)
 
         # Store raw component values for reporters (always available regardless of form year)
         result.raw_derivative_gains_gross = derivative_gains_gross.quantize(self.TWO_PLACES, context=self.ctx)

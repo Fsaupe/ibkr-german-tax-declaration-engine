@@ -124,10 +124,27 @@ class TestCountryCodePrecedence:
     """The issuer country decides when the broker supplies one."""
 
     def test_foreign_code_wins_over_a_german_looking_rate(self, resolver, asset):
-        """A US row that happens to sit at 26.375% is foreign. The country code is
-        authoritative; the composite is only a fallback for when it is absent."""
+        """A US row that happens to sit at 26.375% is foreign, not German KESt. The
+        country code is authoritative; the composite is only a fallback for when it is
+        absent.
+
+        Updated for the issue #78 treaty-rate guard. A US dividend can only ever be
+        withheld at 15 % (treaty) or 30 % (statutory), never at the 26.375 % German
+        composite — the fixture is synthetic, built to put a German-looking rate on a
+        US-coded row. The row is still foreign (not excluded as KESt), which is now
+        proven the honest way: it takes the foreign *treaty-cap* route, not the KESt
+        route. So Zeile 41 carries the anrechenbare 15 % (EUR 180.60, [GT-CREDIT-027]),
+        an ABOVE_TREATY_RATE gap is recorded, and there is NO German-KESt gap. A KESt
+        exclusion would instead give Zeile 41 = 0 with a German-KESt gap.
+        """
+        collector = DataGapCollector()
         div = _dividend(asset, "1204.00")
-        assert _zeile_41([div, _wht(asset, "317.56", country="US", linked_to=div)], resolver) == Decimal("317.56")
+        zeile_41 = _zeile_41([div, _wht(asset, "317.56", country="US", linked_to=div)],
+                             resolver, collector)
+        assert zeile_41 == Decimal("180.60"), "foreign row, capped to the US treaty rate"
+        codes = {g.code for g in collector.gaps}
+        assert "FOREIGN_WHT_ABOVE_TREATY_RATE" in codes, "the over-withholding is surfaced"
+        assert "ANLAGE_KAP_GERMAN_KEST_NOT_DECLARABLE" not in codes, "it is foreign, not KESt"
 
     def test_de_wins_over_a_foreign_looking_rate(self, resolver, asset):
         div = _dividend(asset, "100.00")
