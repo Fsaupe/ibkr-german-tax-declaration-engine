@@ -2,7 +2,14 @@
 
 Start here after context clearing. Last updated: 2026-09-22.
 
-**Current handoff: #91 accepted for the authorized merge.** The corrected
+**Current handoff: #92 accepted for the authorized merge.** Code/test revision
+`011e4ff` resolves the false verified-year warning; the Z22/Z24 reconciliation
+is complete. Clean suite: **1,527 passed/1 skipped**; 10 export-schema checks
+and all 8 independent review checks pass. VZ 2023–2025 declared figures are
+unchanged. [Acceptance and verification](pr-92-merge-decision.md).
+#91 is merged as `c523e6d`; existing PM-001–PM-004/PM-006 remain open.
+
+**Historical #91 acceptance:** The corrected
 code/test candidate 676ec7f passes **1,500 tests, 1 skipped** in a clean checkout;
 all 10 copied-export schema checks pass. The maintainer approved the explained
 test edits and measured 2023–2025 declaration changes after the purchased-put
