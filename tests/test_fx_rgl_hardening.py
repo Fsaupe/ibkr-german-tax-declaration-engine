@@ -204,7 +204,7 @@ class TestIssueD_SignConventionGuard:
         sell_row = [
             "U_TEST", "USD", "STK", "COMMON", "ABC", "ABC Inc", "US000000ABC1",
             "", "", "", "20230615", "-100", "50.00", "1.00", "USD",
-            "SELL", "T_SELL_1", "", "", "CONABC", "", "1", "C",
+            "SELL", "T_SELL_1", "", "", "CONABC", "", "1", "C", "0",
         ]
         with tempfile.TemporaryDirectory() as tmp:
             path = os.path.join(tmp, "trades.csv")

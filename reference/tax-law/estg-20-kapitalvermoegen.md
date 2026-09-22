@@ -8,6 +8,8 @@
 - **Also cited here:** [gesetze-im-internet.de -- 2 EStG](https://www.gesetze-im-internet.de/estg/__2.html)
   and [25 EStG](https://www.gesetze-im-internet.de/estg/__25.html), for the taxable subject and the
   unit of assessment ([GT-ESTG20-061]). Both retrieved 2026-08-11.
+- **Also cited here:** [gesetze-im-internet.de -- 255 HGB](https://www.gesetze-im-internet.de/hgb/__255.html),
+  Abs. 1 Satz 2, for what the Anschaffungskosten comprise ([GT-ESTG20-068]). Retrieved 2026-09-21.
 
 ## Scope
 
@@ -176,6 +178,48 @@ earlier should be reviewed by hand.** Registered in `research/open-legal-questio
 
 ## Abs. 2 -- Capital Gains (Veraeusserungsgewinne)
 
+### [GT-ESTG20-070] Physical exercise by the holder of a purchased put
+
+BMF 14.05.2025 Rn. 28 Saetze 1–2 (Tier 2):
+
+> "Die gezahlten Optionspraemien sind Anschaffungskosten des Kaeufers fuer das
+> Wirtschaftsgut 'Optionsrecht'. Beim Erwerb der Option anfallende Bankspesen,
+> Provisionen und andere Transaktionskosten gehoeren zu den Anschaffungskosten."
+
+Rn. 29 Saetze 1–2, including the continuation across printed pages 12–13:
+
+> "Uebt der Inhaber die Verkaufsoption aus und liefert er den Basiswert, liegt ein
+> Veraeusserungsgeschaeft nach § 20 Absatz 2 EStG hinsichtlich des Basiswerts vor,
+> wenn dieser ein Wirtschaftsgut im Sinne des § 20 Absatz 2 EStG (z. B. Aktien oder
+> Anleihe) ist. Die Anschaffungs- und Anschaffungsnebenkosten des Optionsrechts
+> sind gemaess § 20 Absatz 4 Satz 1 EStG zu beruecksichtigen."
+
+For delivered shares, § 20 Abs. 2 Satz 1 Nr. 1 and Abs. 4 Satz 1
+([GT-ESTG20-005], [GT-ESTG20-011]) therefore apply: the paid put acquisition
+costs, including purchase expenses, reduce the stock-disposal result.
+They are not an additional independent derivative loss on exercise.
+A reduction of disposal proceeds is an algebraic representation of this
+deduction; the net amount has no statutory zero floor. Currency conversion
+retains each acquisition/disposal leg's own date ([GT-ESTG20-022]); exercise
+does not revalue the put's historical EUR acquisition cost.
+
+The condition is **exercise by the holder with physical delivery**.
+Rn. 30 instead treats cash settlement under § 20 Abs. 2 Satz 1 Nr. 3 Buchst. a
+and Abs. 4 Satz 5; Rn. 31 concerns sale/closing of the put, and Rn. 32 expiry.
+Conversely, Rn. 26 (call writer) and Rn. 33 Saetze 1–2 (put writer) leave
+**received** premiums separate under § 20 Abs. 1 Nr. 11. That rule does not
+govern the holder's **paid** put acquisition cost.
+
+Source: [BMF 14.05.2025, Einzelfragen zur Abgeltungsteuer](https://www.bundesfinanzministerium.de/Content/DE/Downloads/BMF_Schreiben/Steuerarten/Abgeltungsteuer/2025-05-14-einzelfragen-zur-abgeltungsteuer.pdf?__blob=publicationFile&v=2),
+GZ IV C 1 - S 2252/00075/016/070; retrieved 2026-09-21, operative pages 12–13
+read and visually verified 2026-09-22. Tier 2 interpreting § 20 Abs. 2/4.
+Applicable to all open cases under Rn. 324 ([GT-ESTG20-060]), including VZ 2023–2025;
+general regime floor VZ 2009. Rn. 325's withholding-only transition does not
+restrict this assessment rule and does not list Rn. 28/29.
+No new form destination arises: a share-disposal result retains share treatment
+and the stock-loss restrictions. Contractual role and settlement facts determine
+the rule; holder and writer treatment are not alternative filing elections.
+
 ### [GT-ESTG20-005] Satz 1 Nr. 1 -- Sale of shares in corporations (Aktien)
 Gains from sale of shares in any corporation (Koerperschaft, Personenvereinigung, Vermoegensmasse).
 
@@ -302,6 +346,14 @@ Bestandsprovisionen, Verwaltungsentgelte oder sonstige Aufwendungen durch den Sc
 Kapitalertraege nach Absatz 1 oder 2 oder durch einen Dritten erstattet werden"* -- a rebate of
 trailer fees or management charges is itself taxable capital income. Note *"oder durch einen
 Dritten"*: the payer need not be the debtor of the capital income.
+
+> **Provenance of Satz 2, added 2026-09-21 (Validation Protocol items 3 and 6).** The sentence was
+> added by JStG 2024 (BGBl. 2024 I Nr. 387), Article 3 Nr. 7 Buchst. b,
+> effective 06.12.2024 under Article 56 Abs. 1;
+> first application is VZ 2024 under the then-current § 52 Abs. 1 Satz 1, see
+> [GT-ESTG20-069]. Read 2026-09-21 on gesetze-im-internet.de and buzer.de. What it
+> was meant to reach, and what that leaves open for a credit on a single trade, is at
+> [GT-ESTG20-069].
 
 ### [GT-ESTG20-048] Tier 2 -- how the administration applies Abs. 3 to a fund holding
 
@@ -457,7 +509,7 @@ separately because a figure turns on each:
 
 | Satz | Content | Where stated |
 |---|---|---|
-| 1, 1. Hs. | the gain | here, [GT-ESTG20-011] |
+| 1, 1. Hs. | the gain | here, [GT-ESTG20-011]; what the Anschaffungskosten comprise, [GT-ESTG20-068] |
 | 1, 2. Hs. | **currency conversion, leg by leg** | [GT-ESTG20-022] |
 | 2 | verdeckte Einlage: gemeiner Wert replaces the proceeds; gain assessed in the calendar year of the Einlage | -- |
 | 3 | asset moved into Privatvermoegen by Entnahme/Betriebsaufgabe: the § 6 Abs. 1 Nr. 4 or § 16 Abs. 3 value replaces the Anschaffungskosten | -- |
@@ -468,6 +520,206 @@ separately because a figure turns on each:
 | 8, 9 | Zinsschein separated from the Stammrecht, and the allocation of that value | -- |
 
 Saetze 2, 3, 4 and 6 do not reach a directly held private portfolio bought for consideration.
+
+### [GT-ESTG20-068] Anschaffungskosten include the Nebenkosten of the purchase
+
+[GT-ESTG20-011] subtracts the *Anschaffungskosten*, and § 20 does not say what they comprise. The
+EStG has no definition of its own and uses the general one of **§ 255 Abs. 1 HGB** (so already
+[GT-ESTG20-065], which rests on Satz 1). The sentence this claim turns on is **Satz 2**:
+
+> *"Anschaffungskosten sind die Aufwendungen, die geleistet werden, um einen Vermoegensgegenstand
+> zu erwerben und ihn in einen betriebsbereiten Zustand zu versetzen, soweit sie dem
+> Vermoegensgegenstand einzeln zugeordnet werden koennen. **Zu den Anschaffungskosten gehoeren auch
+> die Nebenkosten** sowie die nachtraeglichen Anschaffungskosten. Anschaffungspreisminderungen, die
+> dem Vermoegensgegenstand einzeln zugeordnet werden koennen, sind abzusetzen."*
+>
+> Tier 1. Retrieved 2026-09-21 from
+> [gesetze-im-internet.de/hgb/__255.html](https://www.gesetze-im-internet.de/hgb/__255.html).
+> Saetze 2 and 3 read the same day in identical wording on buzer.de/255_HGB.htm; dejure.org
+> returned no text to the retrieval and was not compared.
+
+A charge that is levied on the purchase of a security and is individually attributable to that
+purchase is such a Nebenkosten: the broker's commission, and a transaction tax on the purchase --
+a stamp duty, a Finanztransaktionssteuer. It is part of the Anschaffungskosten of the units
+acquired, so it reduces the later Abs. 2 gain through [GT-ESTG20-011], and it is converted into
+Euro at the time of the acquisition like the rest of them ([GT-ESTG20-022]).
+
+**The administration says so for § 20 directly (Tier 2), BMF 14.05.2025:**
+
+- **Rz. 93 Satz 1 and 2:** *"Im Rahmen der Abgeltungsteuer sind Depot- und
+  Vermoegensverwaltungsgebuehren nicht mehr als Werbungskosten abziehbar. Hingegen wirken sich
+  Anschaffungsnebenkosten und Veraeusserungskosten (Aufwendungen, die in unmittelbarem
+  Zusammenhang mit dem Veraeusserungsgeschaeft stehen) steuermindernd aus."* **Rz. 94:** *"Dies
+  gilt auch fuer ein Veranlagungsverfahren nach § 32d EStG."* The two Randziffern stand under the
+  heading on the all-in-fee, and the rest of Rz. 93 and Rz. 95-96 concern only how a flat fee's
+  transaction-cost share is recognised; Satz 2 is the general rule that discussion starts from.
+- **Rz. 21 Satz 2** (purchase of a call; **Rz. 28 Satz 2** says the same of a put, closing
+  *"... gehoeren zu den Anschaffungskosten"*): *"Beim
+  Erwerb der Option anfallende Bankspesen, Provisionen und andere Transaktionskosten sind Teil der
+  Anschaffungskosten."* The enumeration is open -- *"andere Transaktionskosten"* -- and names no
+  kind of charge that would be excluded.
+- **Rn. 184a** states the Anschaffungskosten of Investmentanteile as the *"Kaufpreis einschliesslich
+  Anschaffungsnebenkosten"* ([GT-ESTG20-041]).
+
+> PDF read 2026-09-21 (137 pages, PDF metadata `Author: BMF`); URL and retrieval record in
+> `../bmf-guidance/abgeltungsteuer-einzelfragen.md`. Rz. 93 is on PDF pages 42-43.
+
+Tier 3, illustration only: the Anlage KAP Anleitung for 2024 and 2025 both carry a worked example
+in which *"Transaktionskosten"* the bank did not take into account *"sind von dem in der
+Steuerbescheinigung ausgewiesenen Betrag abzuziehen"*.
+
+**The line against Abs. 9.** [GT-ESTG20-024] excludes the actual Werbungskosten. A Nebenkosten of
+the purchase is not one: it is part of the Anschaffungskosten, which Abs. 4 Satz 1 subtracts in
+terms. Rz. 93 draws exactly this line -- Depot- and Vermoegensverwaltungsgebuehren on the one
+side, Anschaffungsnebenkosten and Veraeusserungskosten on the other.
+
+**The mirror case on a disposal** needs no import from the HGB. A transaction tax charged on a
+*sale* is an Aufwendung *"im unmittelbaren sachlichen Zusammenhang mit dem
+Veraeusserungsgeschaeft"* and reduces the Einnahmen under Abs. 4 Satz 1 itself ([GT-ESTG20-011]);
+Rz. 93 Satz 2 names both sides in one sentence. For a Termingeschaeft the corresponding rule is
+Abs. 4 Satz 5 ([GT-ESTG20-023]).
+
+**What this claim does not decide.** Whether the foreign currency spent on a Nebenkosten is itself
+a disposal of that currency, measured on its own, is the question registered as Q9 in
+`../research/open-legal-questions.md` ([GT-FX-007], [GT-FX-001]). This claim fixes only that the
+amount belongs to the Anschaffungskosten of the security.
+
+> **What § 255 otherwise contains (Validation Protocol item 2).** Abs. 1 Satz 1 is the definition
+> and carries the limit *"einzeln zugeordnet werden koennen"* -- a charge not attributable to one
+> acquisition is outside it. Satz 2 also names the *nachtraegliche Anschaffungskosten*, and Satz 3
+> subtracts *Anschaffungspreisminderungen*. The first is not relied on in this library; the
+> second is its own claim, [GT-ESTG20-069]. Abs. 2 and 2a define
+> Herstellungskosten, Abs. 3 the treatment of Fremdkapitalzinsen within them, Abs. 4 the
+> beizulegender Zeitwert. None of those reaches a security bought for consideration.
+
+**Amendment history and applicable years (items 3 and 6).** § 255 was last amended by Art. 1
+BilRUG v. 17.07.2015 (BGBl. I S. 1245) with effect from 23.07.2015, which reworded Abs. 1 Satz 3;
+before that by Art. 1 BilMoG v. 25.05.2009 (BGBl. I S. 1102). buzer.de lists no other version
+since 2006 (read 2026-09-21). Satz 2 is therefore unchanged across every year the Abs. 2 / Abs. 4
+gain regime has applied, and the claim carries no regime floor of its own: it inherits that of
+[GT-ESTG20-011]. BMF 14.05.2025 applies to all open cases (Rz. 324, see [GT-ESTG20-060]).
+
+### [GT-ESTG20-069] A reduction of the acquisition cost attributable to the purchase is subtracted -- also one granted by a third party
+
+§ 255 Abs. 1 **Satz 3** HGB, quoted in full at [GT-ESTG20-068]: *"Anschaffungspreisminderungen,
+die dem Vermoegensgegenstand einzeln zugeordnet werden koennen, sind abzusetzen."* Tier 1.
+
+**How far the sentence reaches (Tier 4, interpreting it).** BFH v. 16.03.2004 -- IX R 46/03, BStBl II
+2004, 1046, under II.1:
+
+> *"Nach § 255 Abs. 1 Satz 3 des Handelsgesetzbuches (HGB) sind Anschaffungspreisminderungen
+> abzusetzen. Diese Vorschrift gilt nicht nur fuer Kaufpreisnachlaesse, sondern nach ihrem Zweck
+> ganz allgemein fuer Ermaessigungen der Anschaffungskosten und damit fuer Rueckfluesse von im
+> Zusammenhang mit dem Erwerb geleisteten Aufwendungen ... So verhaelt es sich z.B. dann, wenn
+> Aufwendungen fuer die Anschaffung eines Wirtschaftsguts von Dritten erstattet oder verguetet
+> werden, sofern hierin nicht ein Entgelt fuer eine Leistung des Empfaengers liegt ...
+> Der Minderungsvorgang muss mit dem
+> Anschaffungsgeschaeft so verbunden sein, dass der Zufluss von Guetern in Geld oder Geldeswert
+> als Ermaessigung (Rueckfuehrung) von Anschaffungskosten bewertet werden kann. Ausreichend
+> hierfuer ist ein wirtschaftlicher Zusammenhang, der gegeben ist, wenn der massgebende Anlass
+> fuer den Minderungsvorgang in der Anschaffung liegt."*
+
+and under II.2.a, of a payment that came from the intermediary and not from the seller: *"Es ist
+unerheblich, dass nicht der Veraeusserer, sondern E als Vermittlerin des Grundstuecksgeschaefts
+diesen Preisnachlass gewaehrte."* The court then refuses the alternative the tax office had argued,
+a separately taxable receipt: *"stand der Provisionszahlung keine eigene Leistung des Klaegers
+gegenueber, die zu nach § 22 Nr. 3 EStG steuerbaren Einkuenften fuehrte."* The decision builds on
+BFH v. 26.02.2002 -- IX R 20/98, BFHE 198, 425, BStBl II 2002, 796, which it cites for both the
+rule and the *Anlass* test.
+
+> Pre-2010 decisions are not in the court's own online collection. Read 2026-09-21 in two
+> independent copies -- datenbank.nwb.de/Dokument/136187 and
+> bfh.simons-moll.de/bfh_2004/xx041046.html -- and the passages above compared between them:
+> identical. IX R 20/98 itself was not read; it is cited here only as the decision IX R 46/03
+> names. The case concerned a dwelling, not a security; what is taken from it is the reading of
+> § 255 Abs. 1 Satz 3 HGB, which is not specific to a kind of asset.
+
+**The administration applies the same rule to securities (Tier 2).** BMF 14.05.2025 Rz. 129b,
+third paragraph (PDF page 60, read 2026-09-21; the Randziffer is indexed in
+`../bmf-guidance/abgeltungsteuer-einzelfragen.md`): where a bank pays a Geldpraemie *"unter der
+Bedingung ..., dass Wertpapiere beim uebernehmenden/eroeffnenden Kreditinstitut erworben werden, so
+mindert die fuer die Uebertragung des Kontoguthabens gezahlte Geldpraemie die Anschaffungskosten
+dieser Wertpapiere. Die Geldpraemie ist mit den Anschaffungskosten der erworbenen Wertpapiere in
+der Reihenfolge deren Erwerbs zu verrechnen."* A third party's cash, caused by the acquisition of
+securities, reduces their Anschaffungskosten and is not taxed on its own -- the first paragraph
+of the same Randziffer taxes the premium under § 22 Nr. 3 where it is NOT tied to a purchase.
+**Its limit:** the case is a premium for moving a balance or opening a Depot, not a credit
+arising from how one order was executed. It is the nearest case the administration has decided,
+and it decided it this way.
+
+**So for a purchase:** a credit whose *massgebender Anlass* is the acquisition of particular units,
+and which can be attributed to them individually, reduces their Anschaffungskosten, provided it
+does not remunerate a separate service by the recipient. Payer identity alone does not decide
+the classification. It is the counterpart of [GT-ESTG20-068]: a Nebenkosten raises the cost, a
+reduction attributable to the same purchase lowers it.
+
+**Distinguish the agreed execution price, an expense refund and a separate service.** A signed
+net price agreed for executing a particular acquisition or disposal belongs to that transaction.
+The acquisition uses § 255 Abs. 1 Saetze 1–3 HGB; the disposal uses the actual directly related
+expenses in § 20 Abs. 4 Satz 1, with BMF 14.05.2025 Rn. 93 Satz 2 and Rn. 94. A reduction of
+those expenses increases the net disposal result; it need not be additional consideration paid
+by the purchaser to have that effect. A net execution credit belongs to the same result where
+the sole economic cause is that execution and no separate service is remunerated. This is an
+application of the general attribution test, not a broker-specific judicial holding.
+
+A later reimbursement or remuneration for another service requires its own characterisation.
+§ 20 Abs. 3 Saetze 1–2 ([GT-ESTG20-010]) includes benefits alongside income under **both** Abs. 1
+and Abs. 2, including reimbursed *"sonstige Aufwendungen"*. It does not by itself place every
+benefit in one income category or loss pool. In particular, BMF Rn. 84 applies Abs. 3 together
+with Abs. 1 Nr. 3 and retains the fund partial exemption. It is not authority for automatically
+putting a share-disposal benefit in general capital income. Q21 preserves this distinction.
+
+**Amendment and interpretive limits:**
+
+- It was **added by the JStG 2024** (BGBl. 2024 I Nr. 387) on the Bundesrat's proposal. Every
+  version before 06.12.2024 lacks the sentence. **Article 3 Nr. 7 Buchst. b** inserts it
+  (promulgated text, printed page 4); **Article 56 Abs. 1** makes it effective the day after
+  promulgation on 05.12.2024, hence **06.12.2024**. Article 56 Abs. 7's 01.01.2025 date
+  concerns Article 4, not this insertion. **§ 52 Abs. 1 Satz 1 in the 06.12.2024 version**
+  provides first application for **VZ 2024**; Abs. 28 supplies no special rule for this sentence.
+  Sources retrieved 2026-09-21, rechecked 2026-09-22: [promulgated law](https://www.recht.bund.de/bgbl/1/2024/387/regelungstext.pdf?__blob=publicationFile&v=1),
+  [§ 20 comparison](https://www.buzer.de/gesetz/4499/al208561-0.htm),
+  [§ 52 comparison](https://www.buzer.de/gesetz/4499/al208581-0.htm). Tier 1. The
+  reasoning (BT-Drs. 20/13157, Nr. 10 -- legislative material, not a tier of this library, cited
+  for the purpose stated and not as authority) names two cases, both **running charges on a fund
+  holding**: Bestandsprovisionen passed on by the custodian, and Verwaltungsgebuehren refunded by
+  the fund manager, each called a *"Rueckfluss frueherer Aufwendungen"*. It does not explain
+  *"sonstige Aufwendungen"*, and it closes: *"Dieser weit zu verstehende Rahmen wird durch den
+  neuen Absatz 3 Satz 2 nicht erweitert, sondern lediglich klarstellend konkretisiert."*
+- BFH v. 24.10.2023 -- VIII R 8/20, **Rn. 26** (read 2026-09-21 on bundesfinanzhof.de): Abs. 1 and
+  Abs. 3 rest on *"ein weiter Veranlassungszusammenhang und Einkuenftebegriff ..., nach dem zu
+  den Einkuenften aus Kapitalvermoegen alle Vermoegensmehrungen gehoeren, die bei
+  wirtschaftlicher Betrachtung ein Entgelt fuer die Kapitalueberlassung sind. § 20 Abs. 3 EStG
+  ... hat nur klarstellenden Charakter."* **Rn. 32:** the refund of *"als Werbungskosten
+  abziehbaren Aufwendungen"* can be an Einnahme of the Einkunftsart in which they were deducted,
+  and requires *"die Identitaet der an den Aufwendungen und am Rueckfluss beteiligten Personen"*.
+  That is the rule for Werbungskosten; the decision concerns running fund income under the
+  former InvStG. Rn. 26 does not restrict all benefits accessory to an Abs. 2 disposal to
+  remuneration for capital use. It does not decide a net execution price or acquisition cost.
+- **No broker-specific ruling is necessary to apply the general tests.** The administration's
+  neighbouring cases concern different facts: Rz. 129b third paragraph subtracts a premium
+  **tied to the acquisition** from the Anschaffungskosten; Rz. 84 taxes a refunded
+  Bestandsprovision, a **running** charge tied to no acquisition, under Abs. 3. Rz. 93 treats
+  Anschaffungsnebenkosten and Veraeusserungskosten as items of the trade and does not mention a
+  credit.
+
+**Limit of the § 17 analogy.** BFH 13.10.2015, IX R 43/14 Rn. 12 defines consideration from a
+disposal in a share-exchange valuation case. It does not exclude consideration because a third
+party paid it and does not decide brokerage rebates. It supplies no reason to disregard a
+reduction of actual disposal expenses under § 20 Abs. 4 Satz 1. The full decisions underlying
+this audit were retrieved 2026-09-21 and rechecked 2026-09-22:
+[IX R 46/03](https://bfh.simons-moll.de/bfh_2004/xx041046.html), II.1 and II.2.a–b;
+[VIII R 8/20](https://www.bundesfinanzhof.de/de/entscheidung/entscheidungen-online/detail/STRE202410005/), Rn. 26 and 32–34;
+[IX R 43/14](https://www.bundesfinanzhof.de/de/entscheidung/entscheidungen-online/detail/STRE201610004/), Rn. 12. Tier 4, interpreting the statutory provisions above.
+
+Applicable tax years: § 255 Abs. 1 Satz 3 in its present wording since 23.07.2015 (BilRUG, see
+[GT-ESTG20-068]), when BilRUG re-issued the sentence. IX R 46/03 predates that and quotes the
+sentence as *"sind Anschaffungspreisminderungen abzusetzen"*; the earlier statutory wording was
+not read in an archived version, so whether BilRUG added the words *"die dem Vermoegensgegenstand
+einzeln zugeordnet werden koennen"* or only moved them is not established here. The attribution
+requirement applies throughout the acquisition window from 2021 onward. § 20 Abs. 3 Satz 2 is
+effective 06.12.2024 and first applies for VZ 2024, as established above. Its description as a
+clarification informs interpretation of Satz 1 for earlier years; it does not backdate the text.
 
 ### [GT-ESTG20-022] Satz 1 zweiter Halbsatz -- currency conversion, each leg at its own date
 

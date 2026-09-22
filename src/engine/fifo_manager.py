@@ -83,10 +83,12 @@ class ShortFifoLot:
     def __post_init__(self):
         if not isinstance(self.quantity_shorted, Decimal) or not self.quantity_shorted.is_finite() or self.quantity_shorted <= Decimal(0):
             raise ValueError(f"ShortFifoLot quantity_shorted must be a positive finite Decimal: {self.quantity_shorted}")
-        if not isinstance(self.unit_sale_proceeds_eur, Decimal) or not self.unit_sale_proceeds_eur.is_finite() or self.unit_sale_proceeds_eur < Decimal(0): # Renamed
-            raise ValueError(f"ShortFifoLot unit_sale_proceeds_eur must be a non-negative finite Decimal: {self.unit_sale_proceeds_eur}") # Renamed
-        if not isinstance(self.total_sale_proceeds_eur, Decimal) or not self.total_sale_proceeds_eur.is_finite() or self.total_sale_proceeds_eur < Decimal(0):
-            raise ValueError(f"ShortFifoLot total_sale_proceeds_eur must be a non-negative finite Decimal: {self.total_sale_proceeds_eur}")
+        # Net disposal proceeds may be negative after directly attributable costs
+        # [GT-ESTG20-011]. Quantity remains a positive magnitude; proceeds do not.
+        if not isinstance(self.unit_sale_proceeds_eur, Decimal) or not self.unit_sale_proceeds_eur.is_finite():
+            raise ValueError(f"ShortFifoLot unit_sale_proceeds_eur must be a finite Decimal: {self.unit_sale_proceeds_eur}")
+        if not isinstance(self.total_sale_proceeds_eur, Decimal) or not self.total_sale_proceeds_eur.is_finite():
+            raise ValueError(f"ShortFifoLot total_sale_proceeds_eur must be a finite Decimal: {self.total_sale_proceeds_eur}")
         if not self.source_transaction_id:
             raise ValueError(f"ShortFifoLot requires a non-empty source_transaction_id.")
 
@@ -219,6 +221,10 @@ def split_position_flip_event(event: TradeEvent, available_long_qty: Decimal, av
         sub_commission_fc = event.commission_foreign_currency * ratio if event.commission_foreign_currency is not None else None
         sub_commission_eur = event.commission_eur * ratio if event.commission_eur is not None else None
         sub_net = event.net_proceeds_or_cost_basis_eur * ratio if event.net_proceeds_or_cost_basis_eur is not None else None
+        # The tax is already inside sub_net; it is carried as well because the currency
+        # each leg draws or receives is read off the sub-event, not off the net.
+        sub_tax_fc = event.transaction_tax_foreign * ratio
+        sub_tax_eur = event.transaction_tax_eur * ratio if event.transaction_tax_eur is not None else None
 
         # Allocate each linked delivery once across the close/open split. An option
         # assignment can cross zero in the underlying account just like another trade.
@@ -240,6 +246,8 @@ def split_position_flip_event(event: TradeEvent, available_long_qty: Decimal, av
             commission_foreign_currency=sub_commission_fc,
             commission_currency=event.commission_currency,
             commission_eur=sub_commission_eur,
+            transaction_tax_foreign=sub_tax_fc,
+            transaction_tax_eur=sub_tax_eur,
             net_proceeds_or_cost_basis_eur=sub_net,
             option_delivery_links=links,
             account_id=event.account_id,
@@ -957,7 +965,11 @@ class FifoLedger:
         if not trade_event.ibkr_transaction_id:
             raise ValueError(f"Missing ibkr_transaction_id for trade {trade_event.event_id} needed for Short FIFO lot creation.")
 
-        total_sale_proceeds_eur = self.ctx.create_decimal(trade_event.net_proceeds_or_cost_basis_eur).copy_abs()
+        # Signed, not its magnitude. The net is what the sale brought in after its costs
+        # ([GT-ESTG20-011]); where the costs exceed the price it is negative, and the
+        # eventual cover must retain that loss. Its absolute value was taken here until
+        # September 2026, which booked such a sale as having brought in what it had cost.
+        total_sale_proceeds_eur = self.ctx.create_decimal(trade_event.net_proceeds_or_cost_basis_eur)
         lot_qty_shorted_contracts_or_units = trade_event.quantity.copy_abs().quantize(global_config.PRECISION_QUANTITY, context=self.ctx)
 
         if lot_qty_shorted_contracts_or_units == Decimal(0):
@@ -1007,7 +1019,11 @@ class FifoLedger:
         if sale_event.net_proceeds_or_cost_basis_eur is None: return []
 
         quantity_to_realize = sale_event.quantity.copy_abs().quantize(global_config.PRECISION_QUANTITY, context=self.ctx)
-        total_sale_proceeds_for_event = self.ctx.create_decimal(sale_event.net_proceeds_or_cost_basis_eur).copy_abs()
+        # Signed, not its magnitude: a sale whose costs exceed its price brings in less than
+        # nothing, and § 20 Abs. 4 Satz 1 sets no floor under that ([GT-ESTG20-011]). Taking
+        # the absolute value here turned -3 into +3 and understated the loss by twice the
+        # excess, without an error.
+        total_sale_proceeds_for_event = self.ctx.create_decimal(sale_event.net_proceeds_or_cost_basis_eur)
 
         if quantity_to_realize == Decimal(0): return []
         sale_proceeds_eur_per_unit_for_event = self.ctx.divide(total_sale_proceeds_for_event, quantity_to_realize)

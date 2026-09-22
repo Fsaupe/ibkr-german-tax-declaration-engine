@@ -71,7 +71,7 @@ def _cmdty_trade_row(date, quantity, price, direction, tx_id,
         "", "", "",        # Strike, Expiry, Put/Call
         date,
         str(quantity), str(price), str(commission), currency,
-        direction, tx_id, "", "", CONID, "", "1", open_close,
+        direction, tx_id, "", "", CONID, "", "1", open_close, "0",
     ]
 
 
@@ -322,7 +322,7 @@ class TestSonstigeKapitalforderungReporting(FifoTestCaseBase):
             "", "", "",
             "2022-06-01",
             "1000", "98.00", "0", "EUR",
-            "BUY", "TX_SK_BOND_BUY", "", "", f"CON_{bond_symbol}", "", "1", "O",
+            "BUY", "TX_SK_BOND_BUY", "", "", f"CON_{bond_symbol}", "", "1", "O", "0",
         ]
         bond_sell = [
             ACCOUNT, "EUR", "BOND", "Govt",
@@ -330,7 +330,7 @@ class TestSonstigeKapitalforderungReporting(FifoTestCaseBase):
             "", "", "",
             "2023-05-02",
             "-1000", "99.00", "0", "EUR",
-            "SELL", "TX_SK_BOND_SELL", "", "", f"CON_{bond_symbol}", "", "1", "C",
+            "SELL", "TX_SK_BOND_SELL", "", "", f"CON_{bond_symbol}", "", "1", "C", "0",
         ]
         bond_soy = [
             ACCOUNT, "EUR", "BOND", "Govt",

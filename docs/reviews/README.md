@@ -1,17 +1,26 @@
 # Review and maintenance handoff
 
-Start here after context clearing. Last updated: 2026-09-17.
+Start here after context clearing. Last updated: 2026-09-22.
+
+**Current handoff: #91 accepted for the authorized merge.** The corrected
+code/test candidate 676ec7f passes **1,500 tests, 1 skipped** in a clean checkout;
+all 10 copied-export schema checks pass. The maintainer approved the explained
+test edits and measured 2023–2025 declaration changes after the purchased-put
+reconciliation. [Acceptance and verification](pr-91-merge-decision.md).
+Accepted base is main adb9132 (#90). #92 and PM-001–PM-004/PM-006 remain open.
+Refresh GitHub for the resulting published/merged revision.
 
 | Document | Purpose |
 |---|---|
 | [Review criteria](review-criteria.md) | Standing architectural, legal and verification requirements for every PR |
 | [PR train](pr-train.md) | Active review, branch-update, correction and merge work for #86-#92 |
 | [Post-merge TODOs](post-merge-todos.md) | Accepted architectural follow-up, tracked independently of PR merges |
+| [PR #91 acceptance](pr-91-merge-decision.md) | Corrected transaction taxes, commission credits and signed proceeds; verified and approved |
 | [PR #86 review](pr-86-review.md) | Findings, reproductions, later-commit checks and final resolution |
 | [PR #88 review](pr-88-review.md) | Ordering, option delivery ownership, transfer corrections and final evidence |
 | [PR #87 review](pr-87-review.md) | Rework-before-merge findings, later-commit checks and verified local candidate |
 
-Current handoff: **#88 and PM-005 are corrected and verified locally** on
+Historical handoff (superseded): **#88 and PM-005 are corrected and verified locally** on
 `review/pr88-transfers`, implementation `b8b5b11`, based on accepted main
 `89e7c24`. The clean suite passes 1,327 tests with one export-dependent skip;
 the export schema tests also pass with copied private data. VZ 2023–2025 complete

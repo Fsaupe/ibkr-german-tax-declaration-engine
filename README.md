@@ -93,8 +93,11 @@ Select these fields (order matters for readability, but the parser matches by he
 | 21 | UnderlyingConid | Contract ID of the underlying |
 | 22 | Multiplier | Contract multiplier (e.g. 100 for options) |
 | 23 | **Open/CloseIndicator** | **O** (open) or **C** (close) -- **CRITICAL** |
+| 24 | **Taxes** | Transaction tax charged on the trade (e.g. UK Stamp Duty, Hong Kong stamp duty) -- **REQUIRED** |
 
 **CRITICAL:** The `Open/CloseIndicator` field is essential for accurate trade classification. Without it, the engine cannot distinguish opening from closing trades. IBKR also uses composite values like `C;O` for position flips (a single trade that closes one position and opens the opposite direction), which the engine handles automatically.
+
+**REQUIRED:** The `Taxes` field carries a transaction tax the broker charged on a trade. On a purchase it is part of what the shares cost, on a sale it reduces what you received -- either way it lowers the taxable gain. The engine refuses a Trades export without this column instead of assuming no tax was paid -- if your Flex Query predates it, add the field and export the affected years again.
 
 ### Query 2: Cash Transactions
 

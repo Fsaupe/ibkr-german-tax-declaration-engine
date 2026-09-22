@@ -8,6 +8,7 @@ from src.domain.events import (
     CorpActionMergerCash, OptionCashSettlementEvent, FinancialEventType,
     StockAwardEvent
 )
+from src.domain.exceptions import ProcessingError
 from src.utils.currency_converter import CurrencyConverter
 from src.utils.type_utils import parse_ibkr_date
 
@@ -98,6 +99,19 @@ def enrich_financial_events(
                      eur_commission_conversions_success += 1
 
 
+            # 2a'. Transaction tax. Always in the trade's own currency (the export has no
+            # currency column for it) and converted on the trade date like the rest of the
+            # acquisition or disposal ([GT-ESTG20-022]). Left None when it cannot be
+            # converted, which 2c turns into a stopped run.
+            if event.transaction_tax_eur is None:
+                if event.transaction_tax_foreign == Decimal(0) or (event.local_currency or "").upper() == "EUR":
+                    event.transaction_tax_eur = ctx.create_decimal(event.transaction_tax_foreign)
+                elif event.local_currency:
+                    eur_tax = currency_converter.convert_to_eur(
+                        event.transaction_tax_foreign, event.local_currency, event_date_obj)
+                    if eur_tax is not None:
+                        event.transaction_tax_eur = ctx.create_decimal(eur_tax)
+
             # 2b. Calculate gross_amount_eur for trade if not already set by general logic above
             if event.gross_amount_eur is None and event.gross_amount_foreign_currency is None and \
                event.quantity is not None and event.price_foreign_currency is not None and event.local_currency is not None:
@@ -119,13 +133,23 @@ def enrich_financial_events(
 
             # 2c. Net proceeds or cost basis in EUR (HIGH PRECISION)
             if event.net_proceeds_or_cost_basis_eur is None: # Only calculate if not already set
-                if event.gross_amount_eur is not None and event.commission_eur is not None:
+                if event.transaction_tax_eur is None:
+                    # No figure without the tax: the net stays None and validate_enrichment
+                    # stops the run naming this trade.
+                    logger.warning(f"Event {event_idx+1} (Trade ID: {event.event_id}): Cannot calculate net_proceeds_or_cost_basis_eur because the transaction tax ({event.transaction_tax_foreign} {event.local_currency}) could not be converted to EUR.")
+                elif event.gross_amount_eur is not None and event.commission_eur is not None:
                     if event.event_type in [FinancialEventType.TRADE_BUY_LONG, FinancialEventType.TRADE_BUY_SHORT_COVER]:
-                        # Cost basis = gross amount + commission
-                        event.net_proceeds_or_cost_basis_eur = ctx.add(event.gross_amount_eur, event.commission_eur.copy_abs()) # Ensure commission added is positive
+                        # Cost basis = gross amount plus what the commission cost. The commission
+                        # is signed as exported: a charge is negative and raises the cost
+                        # ([GT-ESTG20-068]); a credit is positive and lowers it
+                        # ([GT-ESTG20-069], the attributable net execution price).
+                        # Its absolute value was taken here until September 2026,
+                        # which turned a credit into a charge.
+                        event.net_proceeds_or_cost_basis_eur = ctx.subtract(event.gross_amount_eur, event.commission_eur)
                     elif event.event_type in [FinancialEventType.TRADE_SELL_LONG, FinancialEventType.TRADE_SELL_SHORT_OPEN]:
-                        # Proceeds = gross amount - commission
-                        event.net_proceeds_or_cost_basis_eur = ctx.subtract(event.gross_amount_eur, event.commission_eur.copy_abs()) # Ensure commission subtracted is positive
+                        # Proceeds = gross amount less what the commission cost: a charge
+                        # (negative) lowers them, a credit (positive) raises them.
+                        event.net_proceeds_or_cost_basis_eur = ctx.add(event.gross_amount_eur, event.commission_eur)
                 elif event.gross_amount_eur is not None and event.commission_eur is None and event.commission_foreign_currency == Decimal('0.0'):
                     # If commission is zero, net = gross
                     event.net_proceeds_or_cost_basis_eur = ctx.create_decimal(event.gross_amount_eur) # ensure it's under context
@@ -133,6 +157,19 @@ def enrich_financial_events(
                      logger.warning(f"Event {event_idx+1} (Trade ID: {event.event_id}): Cannot calculate net_proceeds_or_cost_basis_eur because gross_amount_eur is None.")
                 elif event.commission_eur is None :
                      logger.warning(f"Event {event_idx+1} (Trade ID: {event.event_id}): Cannot calculate net_proceeds_or_cost_basis_eur because commission_eur is None (and original commission was not 0.0).")
+
+                # The transaction tax: on a buy a Nebenkosten of the acquisition, which raises
+                # the cost basis; on a sale a Veraeusserungskosten, which lowers the proceeds
+                # [GT-ESTG20-068].
+                if event.net_proceeds_or_cost_basis_eur is not None and event.transaction_tax_eur:
+                    if event.event_type in [FinancialEventType.TRADE_BUY_LONG, FinancialEventType.TRADE_BUY_SHORT_COVER]:
+                        event.net_proceeds_or_cost_basis_eur = ctx.add(event.net_proceeds_or_cost_basis_eur, event.transaction_tax_eur)
+                    elif event.event_type in [FinancialEventType.TRADE_SELL_LONG, FinancialEventType.TRADE_SELL_SHORT_OPEN]:
+                        event.net_proceeds_or_cost_basis_eur = ctx.subtract(event.net_proceeds_or_cost_basis_eur, event.transaction_tax_eur)
+                    else:
+                        raise ProcessingError(
+                            f"Trade {event.ibkr_transaction_id}: a transaction tax on event type "
+                            f"{event.event_type.name}, which is neither a buy nor a sale.")
 
         # 3. Enrich CorpActionMergerCash specific fields
         elif isinstance(event, CorpActionMergerCash):

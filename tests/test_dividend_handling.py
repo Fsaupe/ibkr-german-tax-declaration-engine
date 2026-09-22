@@ -118,15 +118,15 @@ class TestDividendHandling(FifoTestCaseBase):
         trades_data = [
             # First purchase: 100 shares at €55 on 2023-05-17
             [ACCOUNT_ID, currency, "STK", "COMMON", leg_symbol, "LEG IMMOBILIEN SE", leg_isin, 
-             "", "", "", "20230517", "100", "55", "0", currency, "BUY", "1873530058", "A", "", "121764205", "", "1", "O"],
+             "", "", "", "20230517", "100", "55", "0", currency, "BUY", "1873530058", "A", "", "121764205", "", "1", "O", "0"],
             
             # Second purchase: 50 shares at €80 on 2023-06-21
             [ACCOUNT_ID, currency, "STK", "COMMON", leg_symbol, "LEG IMMOBILIEN SE", leg_isin,
-             "", "", "", "20230621", "50", "80", "0", currency, "BUY", "2830028658", "P", "", "121764205", "", "1", "O"],
+             "", "", "", "20230621", "50", "80", "0", currency, "BUY", "2830028658", "P", "", "121764205", "", "1", "O", "0"],
             
             # Sale: 150 shares at €85 on 2024-07-15 (after dividend to see FIFO adjustment impact)
             [ACCOUNT_ID, currency, "STK", "COMMON", leg_symbol, "LEG IMMOBILIEN SE", leg_isin,
-             "", "", "", "20240715", "-150", "85", "0", currency, "SELL", "2830028659", "", "", "121764205", "", "1", "C"]
+             "", "", "", "20240715", "-150", "85", "0", currency, "SELL", "2830028659", "", "", "121764205", "", "1", "C", "0"]
         ]
 
         # Corporate actions data - dividend rights issuance and expiry
@@ -265,15 +265,15 @@ class TestDividendHandling(FifoTestCaseBase):
         trades_data = [
             # First purchase: 100 shares at €1 on 2023-05-17
             [ACCOUNT_ID, currency, "STK", "COMMON", leg_symbol, "LEG IMMOBILIEN SE", leg_isin, 
-             "", "", "", "20230517", "100", "1", "0", currency, "BUY", "1873530058", "A", "", "121764205", "", "1", "O"],
+             "", "", "", "20230517", "100", "1", "0", currency, "BUY", "1873530058", "A", "", "121764205", "", "1", "O", "0"],
             
             # Second purchase: 50 shares at €55 on 2023-06-21
             [ACCOUNT_ID, currency, "STK", "COMMON", leg_symbol, "LEG IMMOBILIEN SE", leg_isin,
-             "", "", "", "20230621", "50", "55", "0", currency, "BUY", "2830028658", "P", "", "121764205", "", "1", "O"],
+             "", "", "", "20230621", "50", "55", "0", currency, "BUY", "2830028658", "P", "", "121764205", "", "1", "O", "0"],
             
             # Sale: 150 shares at €85 on 2024-01-21 (from test case data)
             [ACCOUNT_ID, currency, "STK", "COMMON", leg_symbol, "LEG IMMOBILIEN SE", leg_isin,
-             "", "", "", "20241121", "-150", "85", "0", currency, "SELL", "2830028658", "", "", "121764205", "", "1", "C"]
+             "", "", "", "20241121", "-150", "85", "0", currency, "SELL", "2830028658", "", "", "121764205", "", "1", "C", "0"]
         ]
 
         # Corporate actions data - dividend rights issuance and expiry
@@ -500,13 +500,13 @@ class TestDividendHandling(FifoTestCaseBase):
         # Framework headers: "ClientAccountID", "CurrencyPrimary", "AssetClass", "SubCategory", "Symbol", "Description", "ISIN", "Strike", "Expiry", "Put/Call", "TradeDate", "Quantity", "TradePrice", "IBCommission", "IBCommissionCurrency", "Buy/Sell", "TransactionID", "Notes/Codes", "UnderlyingSymbol", "Conid", "UnderlyingConid", "Multiplier", "Open/CloseIndicator"
         trades_data = [
             # First purchase: 100 shares at €1 on 2023-05-17
-            [ACCOUNT_ID, currency, "STK", "COMMON", leg_symbol, "LEG IMMOBILIEN SE", leg_isin, "", "", "", "20230517", "100", "1", "0", currency, "BUY", "1873530058", "A", "", "121764205", "", "1", "O"],
+            [ACCOUNT_ID, currency, "STK", "COMMON", leg_symbol, "LEG IMMOBILIEN SE", leg_isin, "", "", "", "20230517", "100", "1", "0", currency, "BUY", "1873530058", "A", "", "121764205", "", "1", "O", "0"],
             
             # Second purchase: 50 shares at €1 on 2023-06-21  
-            [ACCOUNT_ID, currency, "STK", "COMMON", leg_symbol, "LEG IMMOBILIEN SE", leg_isin, "", "", "", "20230621", "50", "1", "0", currency, "BUY", "2830028658", "P", "", "121764205", "", "1", "O"],
+            [ACCOUNT_ID, currency, "STK", "COMMON", leg_symbol, "LEG IMMOBILIEN SE", leg_isin, "", "", "", "20230621", "50", "1", "0", currency, "BUY", "2830028658", "P", "", "121764205", "", "1", "O", "0"],
             
             # Sale: 150 shares at €85 on 2024-11-21
-            [ACCOUNT_ID, currency, "STK", "COMMON", leg_symbol, "LEG IMMOBILIEN SE", leg_isin, "", "", "", "20241121", "-150", "85", "0", currency, "SELL", "2830028658", "", "", "121764205", "", "1", "C"]
+            [ACCOUNT_ID, currency, "STK", "COMMON", leg_symbol, "LEG IMMOBILIEN SE", leg_isin, "", "", "", "20241121", "-150", "85", "0", currency, "SELL", "2830028658", "", "", "121764205", "", "1", "C", "0"]
         ]
 
         # Corporate actions data - using test framework column order  
@@ -635,15 +635,15 @@ class TestDividendHandling(FifoTestCaseBase):
         trades_data = [
             # First purchase: 100 shares at €55 on 2023-05-17
             [ACCOUNT_ID, currency, "STK", "COMMON", leg_symbol, "LEG IMMOBILIEN SE", leg_isin,
-             "", "", "", "20230517", "100", "55", "0", currency, "BUY", "1873530058", "A", "", "121764205", "", "1", "O"],
+             "", "", "", "20230517", "100", "55", "0", currency, "BUY", "1873530058", "A", "", "121764205", "", "1", "O", "0"],
 
             # Second purchase: 50 shares at €80 on 2023-06-21
             [ACCOUNT_ID, currency, "STK", "COMMON", leg_symbol, "LEG IMMOBILIEN SE", leg_isin,
-             "", "", "", "20230621", "50", "80", "0", currency, "BUY", "2830028658", "P", "", "121764205", "", "1", "O"],
+             "", "", "", "20230621", "50", "80", "0", currency, "BUY", "2830028658", "P", "", "121764205", "", "1", "O", "0"],
 
             # Sale: 150 shares at €85 on 2024-07-15 (after dividend to see FIFO adjustment impact)
             [ACCOUNT_ID, currency, "STK", "COMMON", leg_symbol, "LEG IMMOBILIEN SE", leg_isin,
-             "", "", "", "20240715", "-150", "85", "0", currency, "SELL", "2830028659", "", "", "121764205", "", "1", "C"]
+             "", "", "", "20240715", "-150", "85", "0", currency, "SELL", "2830028659", "", "", "121764205", "", "1", "C", "0"]
         ]
 
         # Corporate actions data - dividend rights issuance and expiry
@@ -778,13 +778,13 @@ class TestDividendHandling(FifoTestCaseBase):
         # Framework headers: "ClientAccountID", "CurrencyPrimary", "AssetClass", "SubCategory", "Symbol", "Description", "ISIN", "Strike", "Expiry", "Put/Call", "TradeDate", "Quantity", "TradePrice", "IBCommission", "IBCommissionCurrency", "Buy/Sell", "TransactionID", "Notes/Codes", "UnderlyingSymbol", "Conid", "UnderlyingConid", "Multiplier", "Open/CloseIndicator"
         trades_data = [
             # First purchase: 100 shares at €1 on 2023-05-17
-            [ACCOUNT_ID, currency, "STK", "COMMON", abc_symbol, "ABC CORPORATION", abc_isin, "", "", "", "20230517", "100", "1", "0", currency, "BUY", "1873530058", "A", "", "121764205", "", "1", "O"],
+            [ACCOUNT_ID, currency, "STK", "COMMON", abc_symbol, "ABC CORPORATION", abc_isin, "", "", "", "20230517", "100", "1", "0", currency, "BUY", "1873530058", "A", "", "121764205", "", "1", "O", "0"],
             
             # Second purchase: 50 shares at €1 on 2023-06-21  
-            [ACCOUNT_ID, currency, "STK", "COMMON", abc_symbol, "ABC CORPORATION", abc_isin, "", "", "", "20230621", "50", "1", "0", currency, "BUY", "2830028658", "P", "", "121764205", "", "1", "O"],
+            [ACCOUNT_ID, currency, "STK", "COMMON", abc_symbol, "ABC CORPORATION", abc_isin, "", "", "", "20230621", "50", "1", "0", currency, "BUY", "2830028658", "P", "", "121764205", "", "1", "O", "0"],
             
             # Sale: 150 shares at €85 on 2024-11-21
-            [ACCOUNT_ID, currency, "STK", "COMMON", abc_symbol, "ABC CORPORATION", abc_isin, "", "", "", "20241121", "-150", "85", "0", currency, "SELL", "2830028658", "", "", "121764205", "", "1", "C"]
+            [ACCOUNT_ID, currency, "STK", "COMMON", abc_symbol, "ABC CORPORATION", abc_isin, "", "", "", "20241121", "-150", "85", "0", currency, "SELL", "2830028658", "", "", "121764205", "", "1", "C", "0"]
         ]
 
         # Corporate actions data - using test framework column order  

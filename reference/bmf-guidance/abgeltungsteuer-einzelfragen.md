@@ -2,6 +2,11 @@
 
 ## Source
 
+Physical delivery by a purchased put's holder: Rn. 28–29, including the page
+12–13 continuation, reproduced at [GT-ESTG20-070]. The paid acquisition cost
+enters the underlying disposal result; writer-premium rules must not be
+generalised to this case.
+
 - **Current version (14.05.2025):** [BMF-Schreiben Einzelfragen Abgeltungsteuer (PDF)](https://www.bundesfinanzministerium.de/Content/DE/Downloads/BMF_Schreiben/Steuerarten/Abgeltungsteuer/2025-05-14-einzelfragen-zur-abgeltungsteuer.pdf?__blob=publicationFile&v=2)
 - **EStH 2024 Anhang 19 II:** [esth.bundesfinanzministerium.de -- Anhang 19 II](https://ao.bundesfinanzministerium.de/esth/2024/C-Anhaenge/Anhang-19/II/anhang-19-II.html)
 - **EStH 2025 Anhang 19 II:** [esth.bundesfinanzministerium.de -- Anhang 19 II](https://esth.bundesfinanzministerium.de/esth/2025/B-Anhaenge/Anhang-19/II/inhalt.html)
@@ -81,6 +86,14 @@ Rz. 87 (14.05.2025, PDF pages 39-40, read 2026-09-20) puts the Anschaffungskoste
 Faellen, in denen der geldwerte Vorteil ... nicht der Besteuerung unterworfen wurde"*. It is written
 for § 19 EStG and refers on to the BMF-Schreiben vom 1. Juni 2024 (BStBl I S. 946).
 
+#### Anschaffungsnebenkosten and Veraeusserungskosten reduce the gain (Rz. 93-94; Rz. 21, 28)
+
+Rz. 93 Satz 2 (14.05.2025, PDF pages 42-43, read 2026-09-21) sets Anschaffungsnebenkosten and
+Veraeusserungskosten against the no longer deductible Depot- and Vermoegensverwaltungsgebuehren;
+Rz. 94 extends it to the Veranlagung. Rz. 21 and 28 put *"Bankspesen, Provisionen und andere
+Transaktionskosten"* of an option purchase into its Anschaffungskosten. Verbatim text and the
+statutory ground at [GT-ESTG20-068] in `../tax-law/estg-20-kapitalvermoegen.md`.
+
 #### A premium for moving or retaining capital (Rz. 129b)
 
 Supporting authority for the subsumption at GT-ESTG20-063; the normative claim is defined there.
@@ -97,7 +110,8 @@ and read 2026-09-20 (PDF pages 59-60, URL and query string in the Source block a
   Depot first opened, and the premium is paid *"unter der Bedingung ..., dass Wertpapiere beim
   uebernehmenden/eroeffnenden Kreditinstitut erworben werden"*, the premium instead **mindert ...
   die Anschaffungskosten** of those securities, offset in the order of their acquisition. It is not
-  income under Nr. 3.
+  income under Nr. 3. Quoted verbatim, and relied on for what reduces a cost basis, at
+  [GT-ESTG20-069].
 
 ¶1 addresses a **Geldpraemie for a Depotuebertrag** and ¶2 a **cash premium conditioned on a
 securities purchase**. Neither is verbatim a share award for deposits of cash or assets; ¶1 is cited

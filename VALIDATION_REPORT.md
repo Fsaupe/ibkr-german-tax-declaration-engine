@@ -935,3 +935,167 @@ Suite in the developer checkout: **1436 passed, 1 failed** — the failure is
 skipped on a clean clone. Red-first for the change: **30** of the award tests written for the
 award-day reading failed against the vesting-day engine before they were rewritten to the new
 requirement; the mutation table is in `tests/test_stock_award_scenarios.py`.
+
+## 2026-09-21 — the Trades `Taxes` column (GT-ESTG20-068), real-data measurement
+
+**Instrument.** `scripts/parity_check.sh`. Baseline: `main` at `adb9132` reading the superseded
+23-column Trades exports — `main` refuses the current 24-column ones at header validation.
+After: this change reading the current exports. The two sets of Trades files were compared row by
+row and are identical but for the `Taxes` column, so every difference below is this change. A
+same-tree control capture of VZ 2025 compared IDENTICAL on console, log and PDF first.
+
+**What the column holds.** 236 trade rows over the four files; `Taxes` blank on 0, non-zero on 2,
+both negative, both an opening stock purchase, one in each of two foreign currencies, one in 2024
+and one in 2025. None of the 383 cash-transaction rows repeats either charge.
+
+- **VZ 2023: IDENTICAL** — console, log, PDF. No taxed trade lies in or before it. The negative
+  control: reading the column moves nothing where it holds only zeros.
+- **VZ 2024: 4 console lines differ.** One is a data gap that **disappears**: the
+  `CURRENCY_EOY_MISMATCH` for the currency of that year's taxed purchase. The baseline's FIFO
+  balance exceeded the broker's closing balance by exactly the row's `Taxes` value (compared for
+  equality to the cent, not printed); now they agree. The other three are Anlage KAP Zeile 19,
+  Zeile 22 and *Saldo Sonstige Kapitalerträge*, each moving by a fraction of the tax: the tax enlarged
+  the foreign currency the purchase consumed, and that currency's realised result with it.
+- **VZ 2025: 4 console lines differ**, the same four, for the second currency and the second
+  taxed purchase; the 2024 purchase is now historical and rebuilt by the replay.
+- **No capital-gain line moves in any year.** Both taxed lots are still held, so the higher cost
+  basis has not yet met a disposal; that path is carried by `tests/test_transaction_taxes.py`.
+
+The equality of each vanished gap with its `Taxes` value is what settles two things the export
+does not say: the tax is denominated in `CurrencyPrimary`, and a negative value is a charge.
+
+Suite with the real exports present: **one failure**, and it is
+`test_the_column_tuples_match_the_real_exports`, now on `Cash_Balance` alone (4 of 36 files, the
+segment columns that parser deliberately allows); before this change it also named the four Trades
+files. Probes: 21 mutations, one at a time with bytecode caching off, 21 caught — listed in the map row
+for GT-ESTG20-068. Five of them put the tax's foreign amount where its EUR value belongs; those
+were invisible while the fixtures dated taxed trades on a day whose rate is 1. Three drop or swap
+the short-selling types where the direction of a trade is decided; those were invisible until a
+short sale and its cover were taxed in a scenario.
+
+## 2026-09-21 — a commission credit keeps its sign (GT-ESTG20-069, Q21 reading A), real-data measurement
+
+Historical contributor measurement on a different export set. The 2026-09-22 review
+below supersedes the election rationale and does not transfer these results to the maintainer.
+
+**Instrument.** `scripts/parity_check.sh`, the commit before against the change, same exports, same
+cache snapshot, all three years.
+
+**What the column holds.** The Trades commission is positive on a few rows, all stock trades in the
+trade's own currency: opening trades, a purchase and a short sale among them. Until now its absolute
+value was folded, so a credit was booked as a charge.
+
+- **VZ 2023: IDENTICAL** — console and PDF. No credited trade lies in or before it.
+- **VZ 2024: IDENTICAL** — console, log and PDF — although a credited short sale was opened and
+  covered in that year. Twice its credit is below half a cent (checked as an inequality, not
+  printed), so the correction does not reach a two-decimal figure.
+- **VZ 2025: 4 console lines differ, each by twice the credit or its rounding.** Anlage KAP Zeile 19, Zeile 20, one
+  instrument's line and *Saldo Aktien*. The instrument is the one bought with a credit and **sold
+  later in the same year**; its gain rises by twice the credit — once for no longer adding it to
+  the cost, once for subtracting it. An earlier note in this work had assumed that lot was still
+  held; the capture says otherwise.
+- No currency line and no data gap moves: the currency side already followed the sign.
+
+Probes: 5 mutations of the two lines, 5 caught (map row for GT-ESTG20-069).
+
+## 2026-09-21 — the net proceeds of a sale keep their sign (GT-ESTG20-011), real-data measurement
+
+**The defect.** Where a sale consumes its lots, and where a short sale opens one, the engine took the
+absolute value of the net proceeds. A sale whose costs exceed its price therefore came out as having
+brought in what it had cost, and the loss was understated by twice the excess, with no error and no
+data gap. It is older than the transaction tax; the tax on a sale is a second cost routed into the
+same place.
+
+**Incidence.** No sale in the exports has costs above its price, so the defect has not reached a
+declared figure here. The shape is ordinary all the same: a near-worthless position sold at a
+minimum commission.
+
+**Parity**, `scripts/parity_check.sh`, the capture before against the change, same exports and cache
+snapshot: VZ 2023, VZ 2024 and VZ 2025 each IDENTICAL on console, log and PDF.
+
+**Behaviour at that revision, superseded below.** A long sale carries the negative net into its loss. A short sale with negative
+proceeds stops the run naming the trade: a short lot has no place for proceeds below zero, and a
+figure is not invented for it. Probes: the magnitude restored at either site turns that site's test
+red and no other.
+
+## 2026-09-22 — PR #91 review corrections on maintainer exports
+
+**Historical checkpoint, superseded by the acceptance record below.**
+
+Categories, in order: ks-maint for L1–L3 (reference re-audit), then fix-func
+for signed sale cash and short proceeds. Reviewed remote head eb52abe, accepted
+base adb9132; source correction 3541de7 follows store correction 849ccbe.
+
+The reference restores IX R 46/03's separate-service qualification, corrects the
+scope of IX R 43/14 and VIII R 8/20, and establishes JStG 2024 Article 3 Nr. 7 b,
+Article 56 Abs. 1 and historical § 52 Abs. 1 first application. All nine protocol
+items were checked: statute/admin foundation, exact sentences and qualifications,
+amendment and application, no changed form mapping, individual source provenance,
+applicable years, fact-specific remaining Q21 boundary, dependent citations, and
+purity. GT-ESTG20-010/069 and GT-ESTG23-008 were re-decided; no new claim ID or
+application deviation is created by the audit. The contributor's election
+attribution is withdrawn. Reference-purity checks: 31 passed.
+
+Zero net trade cash avoids division while retaining separate commission handling.
+Negative net cash consumes currency or opens a currency short; replay uses the
+same direction and rate. Short securities lots retain signed proceeds through
+partial covers and history. Existing option-premium tax treatment is unchanged.
+
+New invented-data regressions: **20 passed**; at original eb52abe, **14 failed,
+6 passed**, for division, missing outflow/lots, omitted commission and short-lot
+refusal. This is both red-first evidence and calibration. Direct historical lot
+inspection precedes snapshot reconciliation; current currency shorts are covered
+at a different rate. Export schemas: **10 passed** on copied refreshed data.
+
+Actual VZ **2023, 2024 and 2025 all complete** on the corrected candidate. The
+original PR head aborts VZ 2023 on an option-exercise stock delivery after the
+existing premium adjustment makes its proceeds negative. Accepted main completes.
+This is a reproduced compatibility regression, not an input gap.
+
+Fresh baseline and candidate same-tree console/PDF controls match for all years.
+Baseline uses the preserved original Trades; candidate uses refreshed Taxes
+exports. Other inputs/configuration/cache are identical; NAV auto-fetch is disabled
+equally. Intermediate captures at ccb81f0 and 093d0f4 separate tax,
+commission-credit and signed-proceeds effects. **Declared figures differ in every
+year; no approval is claimed.** Exact amounts and ordered report diffs are private.
+The signed-proceeds comparison also exposes the existing option-treatment
+deviation (GT-ESTG20-004 / PM-006); it does not certify that underlying treatment.
+
+Clean suite at 3541de7: **1,497 passed, 1 skipped, 1 failed**. The sole failure
+is the pre-existing test demanding the now-removed negative-short-proceeds
+refusal. Two further currency-short cases pass separately. The maintainer was
+asked for the explicitly required permission to change that test and the rebate
+test's stale legal docstring; neither existing test was changed without a reply.
+Consequently this candidate is not accepted and the full suite is not green.
+
+No publication or merge. Deferred work remains open. Actual input files and
+personal caches/configuration were only copied; public changes contain invented
+fixture amounts. Numeric diff matches were checked against export monetary fields;
+matches are fixture constants, citation/date/hunk numbers and unchanged context,
+with no account identifier. See the current local review handoff for next steps.
+
+## 2026-09-22 — approved PR #91 test updates and declaration corrections
+
+The maintainer approved the two explained pre-existing-test changes, the measured
+VZ 2023–2025 declaration differences, publication and merge after the option-delivery
+reconciliation established the affected purchased-put treatment. This approval
+follows the specific results and explanation; it is not inferred from the earlier
+general instruction to fix findings.
+
+The rebate test's explanation now retains the separate-service qualification and
+does not assert a taxpayer election; every numerical assertion is unchanged.
+The old mandatory short-sale rejection test now checks the open lot's exact signed
+proceeds, quantity and per-share proceeds, with unchanged invented trade inputs.
+Calibration at eb52abe: one failed, two passed in that module. The final focused
+set (sale costs, rebates, new currency boundaries and copied-export schemas):
+39 passed. No application code changed after the measured candidate b52bede.
+
+Reference correction 22cb66b records GT-ESTG20-070: the purchased-put holder's paid
+cost enters the delivered asset's disposal result under BMF Rn. 28–29. Independent
+raw-input reconstruction matches both exercises and all 13 affected stock-cover
+portions. Only those portions change in the sign-stage result comparison. The
+specific 2023 sign correction is supported; writer assignments and other existing
+PM-006 paths remain separate follow-up. No deferred work is closed by this approval.
+
+The complete acceptance and final clean-checkout result are recorded in
+docs/reviews/pr-91-merge-decision.md.

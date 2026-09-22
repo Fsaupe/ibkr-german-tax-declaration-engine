@@ -831,7 +831,7 @@ class TestAFundHeldInTwoAccounts(FifoTestCaseBase):
     def _buy(self, account, date, quantity, price, tx):
         return [account, "EUR", "STK", "", "TFND", "TFND ETF INDEX",
                 self.ISIN, "", "", "", date, quantity, price, "0", "EUR",
-                "BUY", tx, "", "", self.CONID, "", "1", "O"]
+                "BUY", tx, "", "", self.CONID, "", "1", "O", "0"]
 
     def _run(self):
         return self._run_pipeline(

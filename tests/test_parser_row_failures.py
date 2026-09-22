@@ -61,7 +61,7 @@ def _trade(tx_id="T1", **over):
            "ISIN": "DE000000TEST", "TradeDate": "20250301", "Quantity": "10",
            "TradePrice": "12", "IBCommission": "0", "IBCommissionCurrency": "EUR",
            "Buy/Sell": "BUY", "TransactionID": tx_id, "Conid": "C1", "Multiplier": "1",
-           "Open/CloseIndicator": "O"}
+           "Open/CloseIndicator": "O", "Taxes": "0"}
     row.update(over)
     return row
 

@@ -12,7 +12,11 @@ tagged on the headings here. See the Purity Rule in docs/knowledge-store.md.
 
 ## Tax Law (EStG)
 
-- [EStG 20 -- Kapitalvermoegen](tax-law/estg-20-kapitalvermoegen.md) -- Central statute for all capital income (dividends, gains, options, corporate actions); also hosts whose holding is declared and which lot a disposal consumes
+Physical exercise of a purchased put: the holder's acquisition costs enter the
+delivered asset's disposal result (BMF Rn. 28–29), distinguished from writer
+premiums, [GT-ESTG20-070] in the EStG 20 reference.
+
+- [EStG 20 -- Kapitalvermoegen](tax-law/estg-20-kapitalvermoegen.md) -- Central statute for all capital income (dividends, gains, options, corporate actions); also hosts whose holding is declared, which lot a disposal consumes, and what the Anschaffungskosten comprise -- the Nebenkosten of the purchase, a commission or a transaction tax, via § 255 Abs. 1 Satz 2 HGB and BMF 14.05.2025 Rz. 93-94 [GT-ESTG20-068]; execution-price credits and attributable purchase reductions, retaining the separate-service qualification -- § 255 Abs. 1 Satz 3 HGB, BFH IX R 46/03; Q21 distinguishes independent reimbursements [GT-ESTG20-069]
 - [EStG 20 Abs. 6 -- Verlustverrechnung](tax-law/estg-20-abs6-verlustverrechnung.md) -- Loss offsetting rules, stock ring-fencing, abolished derivative cap
 - [EStG 22 Nr. 3 -- Einkuenfte aus Leistungen](tax-law/estg-22-nr3-leistungen.md) -- The residual income type the order of enquiry at [GT-ESTG20-049] ends in [GT-ESTG20-062]. **Established for one programme, Interactive Brokers' "Refer-A-Friend" share award, whose terms are quoted:** the award is a Leistung, not Kapitalertrag [GT-ESTG20-063]; the settled Zufluss rule, where it ends, and the two readings of its application -- booking day or lapse of the restriction (Q17) [GT-ESTG20-064]; the value at Zufluss is the Anschaffungskosten, taxed or not [GT-ESTG20-065]; no rule of law orders a same-day return against a disposal [GT-ESTG20-066]; a return after Zufluss is a negative Einnahme of the year of return at the original value [GT-ESTG20-067]
 - [EStG 23 -- Private Veraeusserung](tax-law/estg-23-private-veraeusserung.md) -- Private sales (Gold and commodity ETCs), 1-year speculation period

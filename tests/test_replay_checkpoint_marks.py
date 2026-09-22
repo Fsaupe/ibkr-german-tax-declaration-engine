@@ -39,7 +39,7 @@ _ISIN = "DE0000000031"
 def _trade(date_str, qty, price, tx_id, buy_sell, open_close):
     return [_ACCOUNT, "EUR", "STK", "", "CHKP", "CHKP Stock", _ISIN,
             "", "", "", date_str, qty, price, "-1.00", "EUR",
-            buy_sell, tx_id, "", "", "CON_CHKP", "", "1", open_close]
+            buy_sell, tx_id, "", "", "CON_CHKP", "", "1", open_close, "0"]
 
 
 def _position(qty, position_value, mark_price, cost_basis):

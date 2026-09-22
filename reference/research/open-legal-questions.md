@@ -22,6 +22,7 @@ An unresolved question recorded is ground truth. An unresolved question silently
 | Q11 | [GT-ESTG20-038] | How is unallocated spot precious metal held at a broker taxed -- Termingeschaeft, privates Veraeusserungsgeschaeft, or sonstige Kapitalforderung? | this file |
 | Q15 | [GT-FX-010] | Rz. 131 makes an Umbuchung between two foreign-currency accounts a Veraeusserung. What is the Veraeusserungspreis, when nothing is paid? | `../bmf-guidance/fremdwaehrung-konten.md` |
 | Q17 | [GT-ESTG20-064], [GT-ESTG20-065], [GT-ESTG20-067] | Receipt of IBKR Refer-A-Friend shares: booking or lapse of the transfer restriction? BMF 01.06.2024 Rn. 25–26 and BFH VI R 37/09 Rn. 12, 15, 17, 20 distinguish a holding restriction from legal impossibility of disposal. Reading B: actual shares booked, ordinary dividend/voting rights and price risk support receipt at award; a possible reclaim does not itself defer receipt (VI R 67/05). Reading A: if the quoted *void* clause makes transfer legally ineffective, receipt occurs at release, with release-date basis and no receipt/negative receipt for an earlier reclaim. Booking/dividends alone do not conclusively resolve the restriction’s proprietary effect. No programme-specific German determination was located; both applications and their limits remain documented | `../tax-law/estg-22-nr3-leistungen.md` |
+| Q21 | [GT-ESTG20-069], [GT-ESTG20-010] | Execution-price credits distinguished from separate refunds or remuneration; ordinary execution pricing resolved by general attribution tests, other relationships require their own facts | here, below; `../tax-law/estg-20-kapitalvermoegen.md` |
 
 **Retired on the same terms, and for the same reason -- a source that settles the point was found,
 or the point was never one.** Numbers are never reused. Each line says what answered it; the
@@ -201,6 +202,45 @@ produces gain and loss lines that Reading B does not.
 > correction -- that Rz. 131 does not carry separate measurement -- in two places.
 
 ---
+
+## Q21 -- execution-price credits and separate reimbursements
+
+**Re-audited 2026-09-22.** The earlier entry treated every positive net execution commission
+as an election between two tax treatments. That framing was too broad. The general tests in
+[GT-ESTG20-069] distinguish the following facts.
+
+**Reading A -- the price of executing the trade.** A net execution price attributable to the
+specific purchase reduces acquisition cost under § 255 Abs. 1 Saetze 1–3 HGB. BFH IX R 46/03,
+II.1 and II.2.a–b, includes third-party reductions but expressly excludes remuneration for a
+separate service by the recipient. BMF 14.05.2025 Rn. 129b, third paragraph, supports acquisition
+attribution for its neighbouring bank-premium case. On disposal, the actual directly related
+execution expense enters § 20 Abs. 4 Satz 1 (BMF Rn. 93 Satz 2 and Rn. 94). A credit in that
+price increases the net disposal result. These rules apply to an execution-price arrangement
+without requiring a judgment naming the broker.
+
+**Reading B -- a separately characterised payment.** Where the facts instead establish a
+reimbursement distinct from the agreed execution price, § 20 Abs. 3 Saetze 1–2 can apply.
+Satz 1 is accessory to income under both Abs. 1 and Abs. 2; BMF Rn. 84's refunded fund
+Bestandsprovision illustrates one application, not an automatic general-capital-income
+destination for every benefit. Remuneration for a separate service must likewise be examined
+under the provision applicable to that service. Neither recipient activity nor payment purpose
+may be inferred from the sign of a net execution price alone.
+
+**Correction of the former rationale.** IX R 43/14 Rn. 12 does not exclude disposal
+consideration because a third party paid it. VIII R 8/20 Rn. 26 concerns running fund income
+and is not a universal capital-letting restriction on benefits accessory to Abs. 2 disposals.
+There is no established basis here for claiming that B always over-declares or always goes
+into the general loss pool.
+
+**Declaration consequences and remaining boundary.** Under A, acquisition credits affect the
+asset's basis and subsequent gain; disposal credits affect that disposal's net result.
+The amount, year and destination under B require the actual reimbursed expense, underlying
+income and legal relationship. The cited sources do not establish a universal alternative
+line or year. A later independent refund or a separate-service arrangement therefore remains
+a fact-specific question. It is not an unresolved election for an ordinary contemporaneous
+execution-price credit with no separate service. § 20 Abs. 3 Satz 2 was inserted by JStG 2024
+Article 3 Nr. 7 Buchst. b, effective 06.12.2024, first applying for VZ 2024 under the
+then-current § 52 Abs. 1 Satz 1; see the sources and precise passages at [GT-ESTG20-069].
 
 ## Pending legal developments
 

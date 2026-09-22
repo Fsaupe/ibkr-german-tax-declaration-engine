@@ -127,7 +127,7 @@ class TestTheWiringUsesThatRule:
             "Conid": "CON_DATE", "TradeDate": "2024-12-30", "TradeTime": "09:05:00",
             "SettleDateTarget": "2025-01-02", "ReportDate": "2025-01-02",
             "Quantity": "10", "TradePrice": "40.00", "Buy/Sell": "BUY",
-            "TransactionID": "TX_DATE_1", "Open/CloseIndicator": "O",
+            "TransactionID": "TX_DATE_1", "Open/CloseIndicator": "O", "Taxes": "0",
         })
 
         # Fixture integrity, and the guarantee itself. The row above offers three

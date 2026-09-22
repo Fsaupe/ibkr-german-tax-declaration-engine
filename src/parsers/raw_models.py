@@ -28,10 +28,37 @@ figure: `Positions` exports `SubCategory` and `Corporate_Actions` exports `Amoun
 neither of which has a field below, so `extra = 'ignore'` discards them.
 """
 from typing import Optional, Any
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from pydantic import BaseModel, Field, validator
 
 from src.utils.type_utils import safe_decimal
+
+def _decimal_cell(v: Any, *, blank: Optional[Decimal]) -> Optional[Decimal]:
+    """A decimal cell: `blank` when empty, the number when it is one, refused otherwise.
+
+    A cell that is present and is not a number used to be read as `Decimal("0.0")` -- a
+    zero quantity, price or tax nobody exported. No such cell has occurred in any export;
+    that is the assumption, and this is where it is written: the ValueError becomes a
+    pydantic ValidationError, which `csv_reader` collects and reports with every other
+    bad row of the file.
+    """
+    if v is None or str(v).strip() == "":
+        return blank
+    # `safe_decimal` guesses at a comma: "1,234" becomes 1.234 and "1,234.5" becomes 1234.5.
+    # No export has ever contained one, and a guess that can be a thousand times off is
+    # not a reading of the cell.
+    if "," in str(v):
+        raise ValueError(f"contains a comma, which no export uses: {v!r}")
+    try:
+        parsed = safe_decimal(v, raise_error=True)
+    except InvalidOperation:
+        raise ValueError(f"not a number: {v!r}")
+    # "NaN" and "Infinity" are valid Decimal literals and are no more a quantity or a price
+    # than "abc" is; a NaN would travel into every figure computed from it.
+    if not parsed.is_finite():
+        raise ValueError(f"not a finite number: {v!r}")
+    return parsed
+
 
 class RawBaseRecord(BaseModel):
     """Shared base. Deliberately carries no validators -- see below.
@@ -80,6 +107,10 @@ class RawTradeRecord(RawBaseRecord):
     trade_price: Decimal = Field(alias="TradePrice")
     ib_commission: Optional[Decimal] = Field(None, alias="IBCommission")
     ib_commission_currency: Optional[str] = Field(None, alias="IBCommissionCurrency")
+    # Transaction tax the broker charged on the trade, in CurrencyPrimary; a charge is
+    # negative. Required, not Optional: a blank has never occurred, and reading one as
+    # "no tax" would understate a cost basis in silence. See input_data_spec.md.
+    taxes: Decimal = Field(alias="Taxes")
     open_close_indicator: Optional[str] = Field(None, alias="Open/CloseIndicator") # O, C, A, Ex, Ep etc.
     notes_codes: Optional[str] = Field(None, alias="Notes/Codes") # Contains O, C, A, Ex, Ep, P, D etc.
     transaction_id: Optional[str] = Field(None, alias="TransactionID") # Used for linking
@@ -89,9 +120,9 @@ class RawTradeRecord(RawBaseRecord):
     # derived from Quantity x TradePrice x Multiplier. See create_events_from_trades.
 
     # Validators for specific fields
-    @validator('multiplier', 'strike', 'quantity', 'trade_price', 'ib_commission', pre=True)
+    @validator('multiplier', 'strike', 'quantity', 'trade_price', 'ib_commission', 'taxes', pre=True)
     def parse_decimal_fields(cls, v: Any) -> Optional[Decimal]:
-        return safe_decimal(v, default=None if v is None or str(v).strip() == "" else Decimal("0.0"))
+        return _decimal_cell(v, blank=None)
 
     @validator('trade_date', 'expiry', pre=True)
     def validate_date_strings(cls, v: Any) -> Optional[str]:
@@ -129,7 +160,7 @@ class RawCashTransactionRecord(RawBaseRecord):
 
     @validator('amount', pre=True)
     def parse_decimal_fields(cls, v: Any) -> Optional[Decimal]:
-        return safe_decimal(v, default=None if v is None or str(v).strip() == "" else Decimal("0.0"))
+        return _decimal_cell(v, blank=None)
 
     @validator('settle_date', pre=True)
     def validate_date_strings(cls, v: Any) -> Optional[str]:
@@ -171,7 +202,7 @@ class RawPositionRecord(RawBaseRecord): # For Start and End of Year positions
     @validator('multiplier', 'position', 'mark_price', 'position_value',
                'cost_basis_money', pre=True)
     def parse_decimal_fields(cls, v: Any) -> Optional[Decimal]:
-        return safe_decimal(v, default=None if v is None or str(v).strip() == "" else Decimal("0.0"))
+        return _decimal_cell(v, blank=None)
 
     class Config:
         extra = 'ignore'
@@ -206,7 +237,7 @@ class RawCorporateActionRecord(RawBaseRecord): # From corpact*.csv
 
     @validator('quantity', 'proceeds', 'value', pre=True)
     def parse_decimal_fields(cls, v: Any) -> Optional[Decimal]:
-        return safe_decimal(v, default=None if v is None or str(v).strip() == "" else Decimal("0.0"))
+        return _decimal_cell(v, blank=None)
 
     @validator('report_date', pre=True)
     def validate_date_strings(cls, v: Any) -> Optional[str]:
@@ -246,7 +277,7 @@ class RawOptionsEAERecord(RawBaseRecord):
     @validator('fx_rate_to_base', 'multiplier', 'strike', 'quantity', 'trade_price',
                'proceeds', 'comm_tax', 'basis', 'realized_pnl', pre=True)
     def parse_decimal_fields(cls, v: Any) -> Optional[Decimal]:
-        return safe_decimal(v, default=None if v is None or str(v).strip() == "" else Decimal("0.0"))
+        return _decimal_cell(v, blank=None)
 
     @validator('date', 'expiry', pre=True)
     def validate_date_strings(cls, v: Any) -> Optional[str]:
@@ -269,7 +300,7 @@ class RawCashBalanceRecord(RawBaseRecord):
 
     @validator('starting_cash', 'ending_cash', pre=True)
     def parse_decimal_fields(cls, v: Any) -> Optional[Decimal]:
-        return safe_decimal(v, default=Decimal("0.0"))
+        return _decimal_cell(v, blank=Decimal("0.0"))
 
     @validator('from_date', 'to_date', pre=True)
     def validate_date_strings(cls, v: Any) -> Optional[str]:
@@ -434,8 +465,9 @@ class RawGrantRecord(RawBaseRecord):
     def parse_decimal_fields(cls, v: Any) -> Any:
         """Blank becomes absent; anything else is handed to pydantic to parse or reject.
 
-        Deliberately NOT the `safe_decimal(v, default=Decimal("0.0"))` pattern of the
-        older models. Defaulting an unparseable figure to zero would put an invented
+        The older models read an unparseable figure as `Decimal("0.0")` until September
+        2026; they now refuse it through `_decimal_cell`, for the reason this validator
+        never did it. Defaulting an unparseable figure to zero would put an invented
         acquisition cost on a lot, which is the substitution CLAUDE.md's fallback rule
         forbids. `quantity`, `price` and `value` are required, so a blank one still raises;
         `multiplier` is optional. A zero that IS in the file is parsed as zero here and

@@ -172,7 +172,7 @@ def _fx_sell_row(currency: str, eur_amount: Decimal, ecb_rate: Decimal,
         _ACCOUNT, "EUR", "CASH", "", f"EUR.{currency}", f"FX EUR.{currency}", "",
         None, None, None,
         trade_date, eur_amount, ecb_rate, Decimal("0"), "EUR",
-        "BUY", tx_id, None, None, None, None, Decimal("1"), "O",
+        "BUY", tx_id, None, None, None, None, Decimal("1"), "O", "0",
     ]
 
 

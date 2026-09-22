@@ -55,10 +55,10 @@ class TestHistoricalMergerReplayGuard(FifoTestCaseBase):
         trades_data = [
             [account, "EUR", "STK", "", "GZUR", "GZUR Stock", "DE0000000015",
              "", "", "", "2022-03-01", "130", "167.56", "-2.00", "EUR",
-             "BUY", "TX_BUY_GZUR", "", "", "CON_GZUR", "", "1", "O"],
+             "BUY", "TX_BUY_GZUR", "", "", "CON_GZUR", "", "1", "O", "0"],
             [account, "EUR", "STK", "", "SGBS", "SGBS Stock", "JE0000000014",
              "", "", "", "2023-08-22", "-130", "168.00", "-2.00", "EUR",
-             "SELL", "TX_SELL_SGBS", "", "", "CON_SGBS", "", "1", "C"],
+             "SELL", "TX_SELL_SGBS", "", "", "CON_SGBS", "", "1", "C", "0"],
         ]
 
         corp_actions_data = [

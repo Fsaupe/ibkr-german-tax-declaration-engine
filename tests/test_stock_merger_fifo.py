@@ -505,11 +505,11 @@ class TestMergerIntegration(FifoTestCaseBase):
             # BUY 130 GZUR @ 167.56 EUR
             [account, "EUR", "STK", "", "GZUR", "GZUR Stock", "DE0000000015",
              "", "", "", "2023-03-01", "130", "167.56", "-2.00", "EUR",
-             "BUY", "TX_BUY_GZUR", "", "", "CON_GZUR", "", "1", "O"],
+             "BUY", "TX_BUY_GZUR", "", "", "CON_GZUR", "", "1", "O", "0"],
             # SELL 130 SGBS @ 168.00 EUR (after merger)
             [account, "EUR", "STK", "", "SGBS", "SGBS Stock", "JE0000000014",
              "", "", "", "2023-08-22", "-130", "168.00", "-2.00", "EUR",
-             "SELL", "TX_SELL_SGBS", "", "", "CON_SGBS", "", "1", "C"],
+             "SELL", "TX_SELL_SGBS", "", "", "CON_SGBS", "", "1", "C", "0"],
         ]
 
         # Corporate action: GZUR merged into SGBS on 2023-08-22
@@ -574,11 +574,11 @@ class TestMergerIntegration(FifoTestCaseBase):
             # Historical BUY 130 GZUR @ 167.56 EUR in 2022
             [account, "EUR", "STK", "", "GZUR", "GZUR Stock", "DE0000000015",
              "", "", "", "2022-03-01", "130", "167.56", "-2.00", "EUR",
-             "BUY", "TX_BUY_GZUR", "", "", "CON_GZUR", "", "1", "O"],
+             "BUY", "TX_BUY_GZUR", "", "", "CON_GZUR", "", "1", "O", "0"],
             # Current-year SELL 130 SGBS @ 168.00 EUR
             [account, "EUR", "STK", "", "SGBS", "SGBS Stock", "JE0000000014",
              "", "", "", "2023-08-22", "-130", "168.00", "-2.00", "EUR",
-             "SELL", "TX_SELL_SGBS", "", "", "CON_SGBS", "", "1", "C"],
+             "SELL", "TX_SELL_SGBS", "", "", "CON_SGBS", "", "1", "C", "0"],
         ]
 
         # Historical corporate action (2022) - dispose row only
@@ -647,11 +647,11 @@ class TestMergerIntegration(FifoTestCaseBase):
             # BUY 50 AAA @ 100.00 in 2021
             [account, "EUR", "STK", "", "AAA", "AAA Stock", "",
              "", "", "", "2021-06-01", "50", "100.00", "-1.00", "EUR",
-             "BUY", "TX_BUY_A", "", "", "CON_A", "", "1", "O"],
+             "BUY", "TX_BUY_A", "", "", "CON_A", "", "1", "O", "0"],
             # SELL 100 CCC @ 55.00 in 2023
             [account, "EUR", "STK", "", "CCC", "CCC Stock", "",
              "", "", "", "2023-09-15", "-100", "55.00", "-1.00", "EUR",
-             "SELL", "TX_SELL_C", "", "", "CON_C", "", "1", "C"],
+             "SELL", "TX_SELL_C", "", "", "CON_C", "", "1", "C", "0"],
         ]
 
         corp_actions_data = [
@@ -722,11 +722,11 @@ class TestMergerIntegration(FifoTestCaseBase):
             # BUY 130 GZUR
             [account, "EUR", "STK", "", "GZUR", "GZUR Stock", "DE0000000015",
              "", "", "", "2023-03-01", "130", "167.56", "-2.00", "EUR",
-             "BUY", "TX_BUY_GZUR", "", "", "CON_GZUR", "", "1", "O"],
+             "BUY", "TX_BUY_GZUR", "", "", "CON_GZUR", "", "1", "O", "0"],
             # SELL 130 SGBS
             [account, "EUR", "STK", "", "SGBS", "SGBS Stock", "JE0000000014",
              "", "", "", "2023-08-22", "-130", "168.00", "-2.00", "EUR",
-             "SELL", "TX_SELL_SGBS", "", "", "CON_SGBS", "", "1", "C"],
+             "SELL", "TX_SELL_SGBS", "", "", "CON_SGBS", "", "1", "C", "0"],
         ]
 
         # BOTH dispose and receive rows present (like real IBKR data)
@@ -786,7 +786,7 @@ class TestMergerIntegration(FifoTestCaseBase):
             # BUY 100 XAAA
             [account, "EUR", "STK", "", "XAAA", "XAAA Stock", "",
              "", "", "", "2023-02-01", "100", "50.00", "-1.00", "EUR",
-             "BUY", "TX_BUY_A", "", "", "CON_A", "", "1", "O"],
+             "BUY", "TX_BUY_A", "", "", "CON_A", "", "1", "O", "0"],
         ]
 
         corp_actions_data = [
@@ -854,19 +854,19 @@ class TestMergerIntegration(FifoTestCaseBase):
             # 2022-03-01 BUY 40 ACME @ 50.00, commission 1.00 -> basis 2001.00
             [account, "EUR", "STK", "", "ACME", "ACME Stock", "DE0000000021",
              "", "", "", "2022-03-01", "40", "50.00", "-1.00", "EUR",
-             "BUY", "TX_BUY_ACME", "", "", "CON_ACME", "", "1", "O"],
+             "BUY", "TX_BUY_ACME", "", "", "CON_ACME", "", "1", "O", "0"],
             # 2022-06-15 SELL 40 BETA -- same day as the merger that delivers them
             [account, "EUR", "STK", "", "BETA", "BETA Stock", "DE0000000022",
              "", "", "", "2022-06-15", "-40", "52.00", "-1.00", "EUR",
-             "SELL", "TX_SELL_BETA_2022", "", "", "CON_BETA", "", "1", "C"],
+             "SELL", "TX_SELL_BETA_2022", "", "", "CON_BETA", "", "1", "C", "0"],
             # 2023-04-10 BUY 25 BETA @ 60.00, commission 1.00 -> basis 1501.00
             [account, "EUR", "STK", "", "BETA", "BETA Stock", "DE0000000022",
              "", "", "", "2023-04-10", "25", "60.00", "-1.00", "EUR",
-             "BUY", "TX_BUY_BETA_2023", "", "", "CON_BETA", "", "1", "O"],
+             "BUY", "TX_BUY_BETA_2023", "", "", "CON_BETA", "", "1", "O", "0"],
             # 2024-05-20 SELL 25 BETA @ 64.00, commission 1.00 -> proceeds 1599.00
             [account, "EUR", "STK", "", "BETA", "BETA Stock", "DE0000000022",
              "", "", "", "2024-05-20", "-25", "64.00", "-1.00", "EUR",
-             "SELL", "TX_SELL_BETA_2024", "", "", "CON_BETA", "", "1", "C"],
+             "SELL", "TX_SELL_BETA_2024", "", "", "CON_BETA", "", "1", "C", "0"],
         ]
 
         corp_actions_data = [

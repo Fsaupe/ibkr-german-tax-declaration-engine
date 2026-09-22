@@ -152,7 +152,8 @@ class TradeProcessor(EventProcessor):
           - This creates a new currency lot (no immediate FX gain/loss)
           - Exception: If short currency lots exist, receiving currency covers them (realizes FX gain/loss)
 
-        The EUR value used MUST match gross_amount_eur from enrichment for consistency.
+        The EUR value used MUST match gross_amount_eur from enrichment for consistency,
+        plus (buy) or minus (sale) the trade's transaction tax -- the cash the trade moved.
 
         Cross-currency trades (Phase 5b):
           When the asset's denomination currency differs from the settlement currency
@@ -229,18 +230,35 @@ class TradeProcessor(EventProcessor):
                     f"Processing FX impact on {settlement_currency} (settlement currency)."
                 )
 
-        # Calculate EUR per unit of foreign currency
-        eur_per_unit = eur_amount / foreign_amount
+        # The transaction tax moves with the trade's own cash: a buy pays gross + tax, a
+        # sale receives gross - tax. It is part of the one currency movement of the trade,
+        # not a second one -- a Nebenkosten belongs to the acquisition ([GT-ESTG20-068]).
+        # How that movement is taxed is the engine's standing position on the currency leg
+        # of a securities trade ([GT-FX-007]); the tax adds nothing to it.
+        if event.transaction_tax_foreign:
+            if event.transaction_tax_eur is None:
+                raise ProcessingError(
+                    f"Trade {event.ibkr_transaction_id}: transaction tax of "
+                    f"{event.transaction_tax_foreign} {trade_currency} has no EUR value.")
+            if event.event_type in [FinancialEventType.TRADE_BUY_LONG, FinancialEventType.TRADE_BUY_SHORT_COVER]:
+                foreign_amount += event.transaction_tax_foreign
+                eur_amount += event.transaction_tax_eur
+            elif event.event_type in [FinancialEventType.TRADE_SELL_LONG, FinancialEventType.TRADE_SELL_SHORT_OPEN]:
+                foreign_amount -= event.transaction_tax_foreign
+                eur_amount -= event.transaction_tax_eur
 
-        # Determine direction based on trade type
-        if event.event_type in [FinancialEventType.TRADE_BUY_LONG, FinancialEventType.TRADE_BUY_SHORT_COVER]:
-            # BUYING security → CONSUMING foreign currency
+        # A sale whose tax exceeds its price also consumes currency. Zero net cash
+        # needs no unit rate, but its separately charged commission still moves cash.
+        # Preserve the standing currency-leg treatment [GT-FX-007].
+        is_purchase = event.event_type in [FinancialEventType.TRADE_BUY_LONG, FinancialEventType.TRADE_BUY_SHORT_COVER]
+        if foreign_amount and (is_purchase or foreign_amount < Decimal("0")):
+            eur_per_unit = eur_amount / foreign_amount
             results = self._consume_currency_for_purchase(
                 event, currency_ledger, currency_asset,
-                foreign_amount, eur_per_unit, currency_processor
+                foreign_amount.copy_abs(), eur_per_unit, currency_processor
             )
-        elif event.event_type in [FinancialEventType.TRADE_SELL_LONG, FinancialEventType.TRADE_SELL_SHORT_OPEN]:
-            # SELLING security → RECEIVING foreign currency (may cover shorts)
+        elif foreign_amount > Decimal("0") and event.event_type in [FinancialEventType.TRADE_SELL_LONG, FinancialEventType.TRADE_SELL_SHORT_OPEN]:
+            eur_per_unit = eur_amount / foreign_amount
             results = self._acquire_currency_from_sale(
                 event, currency_ledger, currency_asset,
                 foreign_amount, eur_per_unit, currency_processor
@@ -262,10 +280,10 @@ class TradeProcessor(EventProcessor):
         processor: 'CurrencyConversionProcessor'
     ) -> List[RealizedGainLoss]:
         """
-        Consume currency from FIFO ledger when buying a security.
+        Consume currency for a purchase or a sale with negative net cash.
 
         This is equivalent to selling currency (from_currency=USD, to_currency=EUR)
-        but triggered implicitly by a stock purchase.
+        but triggered implicitly by a security trade.
         """
         results: List[RealizedGainLoss] = []
         quantity_to_consume = foreign_amount
@@ -292,7 +310,7 @@ class TradeProcessor(EventProcessor):
                 total_fx_gl = sum(rgl.gross_gain_loss_eur for rgl in long_results)
                 logger.info(
                     f"Trade {event.event_id}: Implicit FX from consuming {qty_to_consume_from_longs:.2f} {currency_asset.currency} "
-                    f"for security purchase. FX gain/loss: {total_fx_gl:.2f} EUR"
+                    f"for security trade. FX gain/loss: {total_fx_gl:.2f} EUR"
                 )
 
             quantity_to_consume -= qty_to_consume_from_longs
@@ -301,7 +319,7 @@ class TradeProcessor(EventProcessor):
         if quantity_to_consume > Decimal("1e-10"):
             logger.info(
                 f"Trade {event.event_id}: Opening implicit SHORT {currency_asset.currency} position: "
-                f"{quantity_to_consume:.2f} (security purchase exceeds currency balance)"
+                f"{quantity_to_consume:.2f} (security payment exceeds currency balance)"
             )
             processor.open_short_position_for_security_trade(
                 currency_ledger,

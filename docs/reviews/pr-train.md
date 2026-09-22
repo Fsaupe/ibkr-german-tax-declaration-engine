@@ -1,6 +1,6 @@
 # PR review and merge train
 
-Last updated: **2026-09-17**. Repository:
+Last updated: **2026-09-22**. Repository:
 [`uebber/ibkr-german-tax-declaration-engine`](https://github.com/uebber/ibkr-german-tax-declaration-engine).
 
 This document tracks work needed to review and merge the train. Accepted follow-up
@@ -8,6 +8,20 @@ work belongs in [post-merge-todos.md](post-merge-todos.md); merging does not clo
 Apply [review-criteria.md](review-criteria.md) to every PR.
 
 ## Resume here
+
+**Current task: publish and merge accepted #91 with maintainer authorization.**
+Code/test candidate 676ec7f passes the clean suite: **1,500 passed, 1 skipped**.
+All 10 copied-export schema checks pass. The explicitly approved VZ 2023–2025
+changes have same-tree console/PDF controls and separate tax/rebate/sign-stage
+measurements. The affected purchased-put treatment is reconciled to BMF Rn. 28–29.
+[Acceptance record](pr-91-merge-decision.md).
+
+Accepted predecessors are #88 (ab8ce7e), #89 (7d27755) and #90 (adb9132).
+The reviewed remote #91 head was eb52abe; refresh it before publishing the local
+corrections. #92 and PM-001–PM-004/PM-006 remain open. The dated #88 notes below
+preserve history and do not supersede this current status.
+
+### Historical resume notes
 
 **#88 verified candidate, 2026-09-18:** the maintainer authorized correction and
 merge of #88 together with PM-005. The isolated branch is `review/pr88-transfers`:
@@ -65,7 +79,7 @@ each change, then test the complete candidate tree.
 | [#88](https://github.com/uebber/ibkr-german-tax-declaration-engine/pull/88) | Internal transfers | `4da165a` (remote); `b8b5b11` (verified local code) | 1 original + history merge + corrections | Verified; publishing/merge pending |
 | [#89](https://github.com/uebber/ibkr-german-tax-declaration-engine/pull/89) | Per-account currency | `513ab0f` | 2 | Pending review and branch update |
 | [#90](https://github.com/uebber/ibkr-german-tax-declaration-engine/pull/90) | Stock grants | `6d89379` | 6 | Pending review and branch update |
-| [#91](https://github.com/uebber/ibkr-german-tax-declaration-engine/pull/91) | Purchase transaction taxes | `39db47a` | 4 | Pending review and branch update |
+| [#91](https://github.com/uebber/ibkr-german-tax-declaration-engine/pull/91) | Transaction taxes, commission credits and signed proceeds | `eb52abe` remote; `676ec7f` verified local code/tests | Original stack superseded; corrective commits appended | Accepted for authorized publication/merge; [evidence](pr-91-merge-decision.md) |
 | [#92](https://github.com/uebber/ibkr-german-tax-declaration-engine/pull/92) | Capital-income reporting breakdown | `940870e` | 2 | Pending review and branch update; targeted checks only |
 
 Verified merged `main` at handoff: `89e7c2431d19027f0e092ac50c23428833367897`.
@@ -85,7 +99,7 @@ Original base: `5a64079c277451da1b082a1d7f753821cc68466f`.
 | TR-003 | Review #88 and correct PM-005 | Verified locally; publishing/merge pending | `b8b5b11`; 1,327 passed/1 skipped; VZ 2023–2025 exact parity. [Review](pr-88-review.md) |
 | TR-004 | Review #89 | Pending | Same evidence; assess currency authority, account independence and shared ledger abstractions |
 | TR-005 | Review #90 | Pending | Same evidence; assess grant lifecycle, acquisition basis and income-reporting completeness |
-| TR-006 | Review #91 | Pending | Same evidence; assess trade-cost consistency and compatibility with the maintainer's exports |
+| TR-006 | Review and correct #91 | Accepted; publication/merge authorized | 676ec7f: 1,500 passed/1 skipped; 10 copied-export schema checks; approved VZ 2023–2025 changes and purchased-put reconciliation. [Acceptance](pr-91-merge-decision.md) |
 | TR-007 | Review #92 | Pending | Same evidence; assess report reconciliation, calculations versus presentation and output parity |
 | TR-008 | Correct the new VZ 2024/2025 refusal introduced with #87 | Done; #93 merged as `89e7c24` | Maintainer confirmed commission-overcharge refund and approved the measured difference. `FeeEvent.is_refund` credits cash once in current and historical processing. Suite: 1,231 passed/1 skipped. All three years complete; 2023/2025 byte parity, all 24 parsed 2024 form lines match working pre-refusal #87. Two changed 2024 lines against pre-#87 main are explicitly approved |
 | TR-009 | Apply the agreed review/merge process | Done in this documentation change | `review-criteria.md`: hard real-data gate, initial quality assessment, economical deferral of important findings, staged-train review and stopping rule. CLAUDE.md's original category-specific gates retained; three clarifications committed as `6a1c8f9`. The earlier broad rewrite and documentation-only suite exemption were not adopted |
