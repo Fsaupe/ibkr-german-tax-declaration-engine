@@ -76,7 +76,8 @@ class PdfReportGenerator:
             (f"Eindeckungen im Jahr {self.tax_year}",
              cover_table(self.short_sale_disclosures, self.assets_by_id), [3.1, 2.4, 2.4, 1.4, 1.9, 1.9, 1.9]),
         ):
-            self.story.append(Paragraph(heading, self.styles['H3']))
+            self.story.append(Paragraph(heading, ParagraphStyle(
+                'ShortSaleTableHeading', parent=self.styles['H3'], keepWithNext=True)))
             if len(data) == 1:
                 self.story.append(Paragraph("Keine.", self.styles['BodyText']))
                 continue

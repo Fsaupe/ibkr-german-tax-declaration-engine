@@ -3,6 +3,7 @@
 Authority and limits: reference/tax-law/estg-20-leerverkaeufe.md,
 GT-ESTG20-071–074. The implementation map records the maintainer's choice.
 """
+from src.domain.enums import AssetCategory
 from src.reporting.reporting_utils import _q, _q_qty, format_date_german
 
 
@@ -65,13 +66,19 @@ def amount(value):
 def quantity(value):
     # Keep fractional units without turning integers into wrapped ten-digit
     # decimal strings in the narrow PDF column.
-    return format(_q_qty(value), "f").rstrip("0").rstrip(".").replace(".", ",")
+    text = format(_q_qty(value), "f")
+    if "." in text:
+        text = text.rstrip("0").rstrip(".")
+    return text.replace(".", ",")
 
 
 def identity(row, assets):
     asset = assets[row.asset_internal_id]
+    category = {AssetCategory.STOCK: "Aktien", AssetCategory.BOND: "Anleihen",
+                AssetCategory.SONSTIGE_KAPITALFORDERUNG: "Kapitalforderungen",
+                AssetCategory.INVESTMENT_FUND: "Investmentfonds"}[asset.asset_category]
     return " / ".join(str(v) for v in (asset.ibkr_symbol, asset.ibkr_isin or asset.ibkr_conid,
-                                       asset.asset_category.name) if v)
+                                       category) if v)
 
 
 def open_table(rows, assets):
