@@ -447,7 +447,7 @@ class PdfReportGenerator:
         ])
 
         breakdown_data.append([
-            "Gewinne aus Termingeschäften",
+            "Stillhalterprämien und Gewinne aus Termingeschäften",
             self._format_decimal(derivative_gains).replace('.', ','),
             "siehe Abschnitt 2.2"
         ])
@@ -1074,12 +1074,15 @@ class PdfReportGenerator:
         else:
             self.story.append(Paragraph("Keine Aktienveräußerungen in diesem Steuerjahr.", self.styles['BodyText']))
 
-        self.story.append(Paragraph("2.2 Gewinne/Verluste aus Termingeschäften (§20 Abs. 2 S. 1 Nr. 3 EStG)", self.styles['H3']))
+        option_heading = Paragraph("2.2 Optionsprämien und Termingeschäfte (§20 Abs. 1 Nr. 11 / Abs. 2 S. 1 Nr. 3 EStG)", self.styles['H3'])
+        option_heading.keepWithNext = True
+        self.story.append(option_heading)
         derivative_rgls = [rgl for rgl in self.realized_gains_losses if rgl.asset_category_at_realization in [AssetCategory.OPTION, AssetCategory.CFD, AssetCategory.FUTURE]]
         if derivative_rgls:
             data = [["Instrument", "Underlying", "Real. Datum", "Real. Typ", "Menge", "G/V Brutto EUR", "Stillhalter?"]]
             total_gains = Decimal(0)
             total_losses_abs = Decimal(0)
+            closing_premiums_abs = Decimal(0)
             for rgl in sorted(derivative_rgls, key=lambda x: (self._get_asset_details(x.asset_internal_id)[0], x.realization_date)):
                 name, _, _ = self._get_asset_details(rgl.asset_internal_id)
                 asset_obj = self.assets_by_id.get(rgl.asset_internal_id)
@@ -1092,26 +1095,35 @@ class PdfReportGenerator:
 
                 data.append([
                     name, underlying_symbol, format_date_german(rgl.realization_date),
-                    rgl.realization_type.name, 
+                    ('Prämienzufluss' if rgl.realization_type.name == 'OPTION_PREMIUM_RECEIPT'
+                     else 'Glattstellung' if rgl.is_stillhalter_income
+                     else rgl.realization_type.name),
                     self._format_decimal(rgl.quantity_realized, "integer_quantity"), # Changed precision_type
                     self._format_decimal(rgl.gross_gain_loss_eur).replace('.',','),
                     "Ja" if rgl.is_stillhalter_income else "Nein" 
                 ])
-                if rgl.gross_gain_loss_eur > 0: total_gains += rgl.gross_gain_loss_eur
-                else: total_losses_abs += rgl.gross_gain_loss_eur.copy_abs()
+                if rgl.gross_gain_loss_eur > 0:
+                    total_gains += rgl.gross_gain_loss_eur
+                elif rgl.is_stillhalter_income:
+                    closing_premiums_abs += rgl.gross_gain_loss_eur.copy_abs()
+                else:
+                    total_losses_abs += rgl.gross_gain_loss_eur.copy_abs()
             
             form_rules = get_form_rules(self.tax_year)
             if form_rules.separate_derivative_lines:
                 gains_label = "Summe Gewinne (Zeile 21):"
                 losses_label = "Summe Verluste (Zeile 24):"
             else:
-                gains_label = "Summe Gewinne Termingeschäfte:"
+                gains_label = "Summe Stillhalterprämien / Termingewinne:"
                 losses_label = "Summe Verluste Termingeschäfte (in Zeile 22 enthalten):"
             data.append([Paragraph(gains_label, self.styles['TableHeader']), "", "", "", "", Paragraph(self._format_decimal(total_gains).replace('.',','), self.styles['TableCellRight']), ""])
             data.append([Paragraph(losses_label, self.styles['TableHeader']), "", "", "", "", Paragraph(self._format_decimal(total_losses_abs).replace('.',','), self.styles['TableCellRight']), ""])
+            if closing_premiums_abs:
+                data.append([Paragraph('Negative Stillhaltereinnahmen (Zeile 22):', self.styles['TableHeader']),
+                             '', '', '', '', Paragraph(self._format_decimal(closing_premiums_abs).replace('.', ','), self.styles['TableCellRight']), ''])
             # Adjusted quantity col width
             table = self._create_styled_table(data, col_widths=[3.5*cm, 2.5*cm, 1.8*cm, 2.5*cm, 1.5*cm, 2.2*cm, 2*cm])
-            self.story.append(KeepTogether(table))
+            self.story.append(table)
         else:
             self.story.append(Paragraph("Keine Realisierungen aus Termingeschäften in diesem Steuerjahr.", self.styles['BodyText']))
 
@@ -1213,6 +1225,11 @@ class PdfReportGenerator:
             ["FX-Verluste (Währungspositionen)", fx_losses_abs, "siehe 2.3.5"],
             ["Stückzinsen (gezahlt)", stueckzinsen_abs, "siehe 2.3.6"],
         ]
+        closing_premiums_abs = sum((r.gross_gain_loss_eur.copy_abs()
+            for r in self.realized_gains_losses if r.is_stillhalter_income
+            and r.gross_gain_loss_eur < 0), Decimal('0'))
+        if closing_premiums_abs:
+            losses_rows.append(['Negative Stillhaltereinnahmen', closing_premiums_abs, 'siehe 2.2'])
         if skf_losses_abs > Decimal(0):
             losses_rows.append(["Verluste aus sonstigen Kapitalforderungen", skf_losses_abs, "siehe 2.3.7"])
         # From VZ 2025 derivative losses are no longer "ausschließlich Zeile 24": they enter
@@ -1220,10 +1237,17 @@ class PdfReportGenerator:
         # complete Zeile 22 is these sonstige losses PLUS the Termingeschäft losses (§2.2), and
         # this table must foot to that -- not to the sonstige subtotal alone. In a separate year
         # (2021-2024) derivative losses stay on Zeile 24 and Zeile 22 is exactly the sonstige sum.
-        derivative_losses_abs = self.loss_offsetting_result.raw_derivative_losses_abs
+        # Reconcile unrounded components. Combining an already rounded
+        # derivative subtotal with precise Nr. 11 negatives can invent a cent
+        # of difference; the form value rounds their combined amount only once.
+        derivative_losses_abs = sum((r.gross_gain_loss_eur.copy_abs()
+            for r in self.realized_gains_losses
+            if r.asset_category_at_realization in (AssetCategory.OPTION, AssetCategory.CFD, AssetCategory.FUTURE)
+            and not r.is_stillhalter_income and r.gross_gain_loss_eur < 0), Decimal('0'))
         z22_total = self.loss_offsetting_result.form_line_values.get(
             TaxReportingCategory.ANLAGE_KAP_SONSTIGE_VERLUSTE, kap_losses_total)
-        losses_component_sum = bond_losses_abs + fx_losses_abs + stueckzinsen_abs + skf_losses_abs
+        losses_component_sum = (bond_losses_abs + fx_losses_abs + stueckzinsen_abs
+                                + skf_losses_abs + closing_premiums_abs)
         z22_form_rules = get_form_rules(self.tax_year)
         if z22_form_rules.z22_includes_derivative_losses:
             losses_rows.append(["Verluste aus Termingeschäften", derivative_losses_abs, "siehe Abschnitt 2.2"])

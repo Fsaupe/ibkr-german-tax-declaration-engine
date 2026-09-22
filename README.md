@@ -1,5 +1,12 @@
 # IBKR German Tax Declaration Engine
 
+Written-option premiums are recognised at opening using the existing trade-date
+and EUR conversion convention. Buyback payments are separate negative income;
+assignment does not fold received premiums into the underlying. Purchased-option
+exercise costs remain part of the delivered stock/fund calculation, including
+historical acquisitions. A non-blocking warning flags writer transactions near
+year-end for a receipt/payment-year check. See the option requirements in `PRD.md`.
+
 **Automate the generation of figures for your German tax declaration (Anlage KAP, KAP-INV, SO) based on Interactive Brokers (IBKR) Flex Query CSV reports.**
 
 ## What is this?

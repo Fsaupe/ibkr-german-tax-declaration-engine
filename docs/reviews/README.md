@@ -2,6 +2,15 @@
 
 Start here after context clearing. Last updated: 2026-09-22.
 
+**#85 implemented locally; measured differences await acceptance.**
+Isolated branch `fix/issue85-option-premiums`, base `a3a3b5c`, worktree
+`/private/tmp/ibkr-issue85-20260922`. Writer premiums are separate from closing,
+assignment and cash settlement; holder costs survive historical/fund delivery.
+The maintainer retained trade dates with a boundary warning and approved eight
+fixture corrections. Dedicated regressions: 26 passed; reference checks: 33
+passed; VZ 2023–2025 runs and repeat controls complete. No merge/publication.
+[Implementation and verification](issue85-option-premiums.md).
+
 **#11 merged as `5bc506a`, pushed, and CLOSED/COMPLETED.** The maintainer chose
 zero contribution until covering, with a conditional complete year-end inventory
 and explicit legal argument/counterargument. Final code `724a27d`, branch

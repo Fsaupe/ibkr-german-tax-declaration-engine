@@ -83,15 +83,16 @@ class RealizationType(Enum):
     LONG_POSITION_SALE = auto()          # Renamed from SALE_OF_LONG_INSTRUMENT
     SHORT_POSITION_COVER = auto()     # Renamed from COVERING_OF_SHORT_INSTRUMENT
     CASH_MERGER_PROCEEDS = auto()             # Renamed from CASH_MERGER_DISPOSAL
+    OPTION_PREMIUM_RECEIPT = auto()          # Writer income on opening, GT-ESTG20-004
     OPTION_EXPIRED_LONG = auto() # Renamed from OPTION_EXPIRATION_WORTHLESS_LONG
     OPTION_EXPIRED_SHORT = auto()# Renamed from OPTION_EXPIRATION_WORTHLESS_SHORT
     OPTION_CASH_SETTLED_LONG = auto()            # Long option exercised with cash settlement (index options)
     OPTION_CASH_SETTLED_SHORT = auto()           # Short option assigned with cash settlement (index options)
     OPTION_TRADE_CLOSE_LONG = auto()          # Selling an option contract that was previously bought (Kept as per PRD body text analysis)
     OPTION_TRADE_CLOSE_SHORT = auto()         # Buying back an option contract that was previously sold short (Kept as per PRD body text analysis)
-    # Note: Option exercises/assignments that result in stock delivery adjust the stock's
-    # cost basis/proceeds and do not typically create a separate RGL for the option itself,
-    # unless the option is traded out before exercise/assignment.
+    # Holder exercise transfers paid option costs into the underlying. Writer
+    # assignment has no premium adjustment or second recognition: its premium
+    # was already OPTION_PREMIUM_RECEIPT (GT-ESTG20-004/070/075).
 
     # Currency/FX realization types (Phase 1-4: Explicit FX trades)
     FX_CONVERSION_SALE = auto()              # Long currency sold via explicit FX conversion

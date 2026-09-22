@@ -184,6 +184,10 @@ class LossOffsettingEngine:
             elif cat in [AssetCategory.OPTION, AssetCategory.CFD, AssetCategory.FUTURE]:
                 if gross_gl_eur > Decimal('0'):
                     derivative_gains_gross = self.ctx.add(derivative_gains_gross, gross_gl_eur)
+                elif rgl.is_stillhalter_income:
+                    # Negative Nr. 11 income is not a Termingeschaeft loss.
+                    # GT-ESTG20-004; in 2023/24 this reaches Z19/Z22, not Z24.
+                    kap_other_losses_abs = self.ctx.add(kap_other_losses_abs, gross_gl_eur.copy_abs())
                 else:
                     derivative_losses_abs = self.ctx.add(derivative_losses_abs, gross_gl_eur.copy_abs())
             elif cat in [AssetCategory.BOND, AssetCategory.SONSTIGE_KAPITALFORDERUNG]:

@@ -68,6 +68,43 @@ from src.engine.event_processors.stock_award_processor import (
 
 logger = logging.getLogger(__name__)
 
+
+def _replay_security_with_option_costs(ledger, asset, event, tax_year, premiums, resolver):
+    """Preserve GT-ESTG20-004/070/075 through the historical delivery chain."""
+    if isinstance(event, (OptionExerciseEvent, OptionAssignmentEvent)):
+        if isinstance(asset, Option) and asset.underlying_asset_internal_id is not None:
+            processor = (OptionExerciseProcessor() if isinstance(event, OptionExerciseEvent)
+                         else OptionAssignmentProcessor())
+            processor.process(event, ledger, {'asset_resolver': resolver, 'option_premiums': premiums})
+            return
+    if isinstance(event, TradeEvent) and event.option_delivery_links:
+        premiums.adjust_delivery(event)
+    ledger.apply_historical_event(asset, event, tax_year)
+
+
+def _warn_option_premiums_near_year_end(events, resolver, tax_year, collector):
+    """Five calendar days is a review window, not an assumed settlement lag."""
+    affected = [event for event in events
+                if isinstance(event, TradeEvent)
+                and (event.event_type in (FinancialEventType.TRADE_SELL_SHORT_OPEN,
+                                         FinancialEventType.TRADE_BUY_SHORT_COVER)
+                     or event.is_position_flip)
+                and isinstance(resolver.get_asset_by_id(event.asset_internal_id), Option)
+                and event.event_date[:4] in (str(tax_year - 1), str(tax_year))
+                and event.event_date[5:] >= '12-27']
+    if not affected:
+        return
+    detail = (f'{len(affected)} Optionsprämien-Transaktion(en) vom 27.–31. Dezember: '
+              'Die Berechnung verwendet wie bisher Handelsdatum und dessen EUR-Kurs. '
+              'Bitte prüfen, ob die Prämiengutschrift/-zahlung tatsächlich im Folgejahr liegt. '
+              'Die Warnung ändert keine Beträge oder Zuordnung.')
+    if collector is not None:
+        collector.record(code='OPTION_PREMIUM_YEAR_BOUNDARY',
+                         subject=f'Optionsprämien, VZ {tax_year}', detail=detail,
+                         severity=GapSeverity.WARNING)
+    else:
+        logger.warning(detail)
+
 # Numerical balance tolerance shared by opening and closing reconciliation.
 # This is not a tax exemption or a threshold for discarding broker observations.
 CURRENCY_RECONCILIATION_TOLERANCE = Decimal("0.01")
@@ -659,6 +696,7 @@ def run_main_calculations(
 
     option_premiums = OptionPremiumBook(ctx)
     financial_events = order_financial_events(financial_events, asset_resolver)
+    _warn_option_premiums_near_year_end(financial_events, asset_resolver, tax_year, data_gap_collector)
 
     tax_year_start_date_str = f"{tax_year}-01-01"
     tax_year_end_date_str = f"{tax_year}-12-31"
@@ -911,7 +949,8 @@ def run_main_calculations(
                     _defer(
                         Phase.LEDGER_EVENTS, hist_key,
                         (lambda l=ledger, a=asset_obj, e=hist_event:
-                            l.apply_historical_event(a, e, tax_year)),
+                            _replay_security_with_option_costs(
+                                l, a, e, tax_year, option_premiums, asset_resolver)),
                         label=f"sec:{asset_obj.get_classification_key()}",
                     )
 
@@ -1236,6 +1275,7 @@ def run_main_calculations(
         logger.info("Interval %d/%d (through %s): %d stream item(s).",
                     index + 1, len(interval_ends), interval_end, len(stream))
         stream.run()
+        option_premiums.require_empty()
 
         # The interval has been replayed AND reconciled, so the ledgers now describe
         # the holding at the close of this calendar year — the count Rz. 18.4
