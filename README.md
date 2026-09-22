@@ -596,6 +596,12 @@ Cash-balance (currency) divergences are **not** fatal — their usual causes are
 of the cash-balance export or transaction types missing from the Cash Transactions query (see
 the note above). They are reported as `CURRENCY_EOY_MISMATCH` in the console and PDF.
 
+Cash-balance imports preserve both opening and closing observations, including zero and
+tiny amounts. An observed opening below the existing 0.01 currency reconciliation tolerance
+clears replayed lots on both sides; it does not create a new acquisition or a current-year
+gain. A missing opening remains unknown. The exact reported amount is retained in the
+snapshot, and subsequent activity is still checked against the reported closing balance.
+
 ## Output
 
 1.  **Console:** Processing logs and, with `--report-tax-declaration`, a summary of figures for direct tax form entry.

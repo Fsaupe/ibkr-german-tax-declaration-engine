@@ -1,5 +1,11 @@
 # FX Gain/Loss: Findings, Fixes Applied, and Remaining Issues
 
+**Historical record.** The March entries below describe the implementation at that time.
+The claim that opening reconciliation always corrected the quantity was too broad: zero
+openings returned early, and rows with two tiny endpoints lost their opening observation.
+The [2026-09-22 correction and verification](reviews/issue67-currency-openings.md) supersede
+those opening/filtering statements. Older input and legal findings remain separate.
+
 ## Date: 2026-03-08 (Session 3 — comprehensive consolidation)
 
 ---

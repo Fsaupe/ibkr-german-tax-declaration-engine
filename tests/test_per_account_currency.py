@@ -605,14 +605,26 @@ class TestAnEarlierMoveReconcilesAtYearEnd(FifoTestCaseBase):
     two ledgers, and both of which the broker reports, so the run completes and every currency
     ledger reconciles.
 
-    SoY balances are given as zero on purpose: a non-zero SoY snapshot makes
-    `_reconcile_currency_soy` rebuild the ledger from the reported figure and mask the move
-    (CLAUDE.md's "anything a start-of-year snapshot can rebuild"). With SoY zero the year-end
-    check compares the historically-built ledger itself — break the receiving side and B
-    reconciles 0 against a reported 400, a CURRENCY_EOY_MISMATCH.
+    The opening snapshots report the holdings established by the earlier move.
+    Observe replay BEFORE reconciliation as well: otherwise a snapshot could rebuild
+    a lost receipt and hide the defect (CLAUDE.md's SOY masking warning). A reported
+    zero is an empty holding, not a switch that disables opening reconciliation.
     """
 
     def _run(self):
+        from src.engine import calculation_engine
+
+        original = calculation_engine._reconcile_currency_soy
+        self.replayed_openings = []
+
+        def observe_opening(ledger, asset, *args, **kwargs):
+            if asset.currency == "USD":
+                self.replayed_openings.append(
+                    sum((lot.quantity for lot in ledger.lots), Decimal(0))
+                    - sum((lot.quantity_shorted for lot in ledger.short_lots), Decimal(0)))
+            return original(ledger, asset, *args, **kwargs)
+
+        self._monkeypatch.setattr(calculation_engine, "_reconcile_currency_soy", observe_opening)
         return self._run_pipeline(
             trades_data=[
                 fx_trade_row(A, "USD", "BUY", "1000", "500", "2.0", "2023-06-01", "H1"),
@@ -620,8 +632,8 @@ class TestAnEarlierMoveReconcilesAtYearEnd(FifoTestCaseBase):
             positions_start_data=[],
             positions_end_data=[],
             cash_balance_data=[
-                cash_balance_row(A, "USD", "0", "600", year=TAX_YEAR),
-                cash_balance_row(B, "USD", "0", "400", year=TAX_YEAR),
+                cash_balance_row(A, "USD", "600", "600", year=TAX_YEAR),
+                cash_balance_row(B, "USD", "400", "400", year=TAX_YEAR),
             ],
             transfers_data=[
                 transfer_row(A, B, "OUT", "20240301", asset_class="CASH", currency="USD",
@@ -637,6 +649,8 @@ class TestAnEarlierMoveReconcilesAtYearEnd(FifoTestCaseBase):
 
     def test_both_accounts_reconcile_with_no_gap(self):
         out = self._run()
+        assert sorted(self.replayed_openings) == [Decimal("400"), Decimal("600")], \
+            "both sides of the historical move must exist before a snapshot can repair them"
         assert not _gaps(out, "CURRENCY_EOY_MISMATCH"), \
             "the move built 600 in A and 400 in B, each matching its reported balance"
         assert not _gaps(out, "CURRENCY_EOY_UNRECONCILED"), \
@@ -762,7 +776,7 @@ class TestASuppliedBalanceIsComparedNotCalledAbsent(FifoTestCaseBase):
     """A cash-balance row below the parser's threshold is still a value the broker
     reported. The end-of-year reconciliation compares the ledger against it instead of
     recording CURRENCY_EOY_UNRECONCILED as though nothing was reported (F4). The opening
-    is still not seeded from a sub-threshold row, so no figure moves."""
+    is retained too; current-year activity must still reconcile against the closing."""
 
     def test_a_reported_zero_is_a_comparison_value_not_an_absent_report(self):
         out = self._run_pipeline(

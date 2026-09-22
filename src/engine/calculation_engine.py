@@ -68,6 +68,10 @@ from src.engine.event_processors.stock_award_processor import (
 
 logger = logging.getLogger(__name__)
 
+# Numerical balance tolerance shared by opening and closing reconciliation.
+# This is not a tax exemption or a threshold for discarding broker observations.
+CURRENCY_RECONCILIATION_TOLERANCE = Decimal("0.01")
+
 
 def _initialize_currency_soy_ledger(ledger: FifoLedger, asset: CashBalance, tax_year: int,
                                      exchange_rate_provider: ECBExchangeRateProvider,
@@ -1720,11 +1724,9 @@ def run_main_calculations(
     #
     # The pairs checked are every currency ledger there is, plus every pair the cash report
     # states a closing for (in eoy_positions). The second half now genuinely matters: a
-    # sub-threshold cash-balance row records its closing but does NOT seed an opening (F4),
-    # so a reported-but-tiny balance in a currency the account never otherwise touched has an
-    # eoy_position and no ledger. Unioning it in is what lets that closing be compared
-    # against zero (it reconciles within tolerance) rather than passing unseen. It also
-    # covers a caller that supplies only a closing figure directly. Mirrors the securities
+    # supplied cash-balance row records both endpoints, including zero and tiny values.
+    # Unioning the closing pairs also covers a caller that supplies only a closing figure
+    # directly: it is compared against zero rather than passing unseen. Mirrors the securities
     # check above, which unions the closing snapshot for the same reason.
     logger.info("Performing currency EOY quantity validation per account...")
     currency_eoy_mismatches = 0
@@ -1767,7 +1769,7 @@ def run_main_calculations(
         if ledger_account != DEFAULT_ACCOUNT:
             subject = f"{subject} (Konto {ledger_account})"
 
-        currency_tolerance = Decimal("0.01")
+        currency_tolerance = CURRENCY_RECONCILIATION_TOLERANCE
 
         if reported_eoy is None:
             # Absent != empty, and this is the genuinely-absent case: no cash-balance row
@@ -3483,20 +3485,38 @@ def _reconcile_currency_soy(
     reported_snapshot: Optional[PositionSnapshot] = None,
 ) -> None:
     """
-    Reconcile currency FIFO ledger against SOY reported balance.
+    Reconcile currency FIFO ledger against the account's reported SOY balance.
 
-    When used as SOY fallback (no historical events), creates initial lots
-    using the provided cost basis from CashBalance asset if available,
-    otherwise falls back to ECB rate at SOY date.
+    Missing observations leave replay untouched. An observed empty balance,
+    within the existing currency tolerance, removes historical lots on both sides
+    without minting an acquisition or realizing a current-year gain. The exact
+    broker observation remains in the snapshot for diagnostics.
 
-    Supports both positive (long) and negative (short) SOY positions.
+    Nonempty discrepancies retain the existing adjustment-lot policy, using the
+    snapshot's cost when available and otherwise the year-boundary ECB rate.
     """
     from .fifo_manager import FifoLot, ShortFifoLot
     from datetime import date as date_type
 
     reported_soy = reported_snapshot.quantity if reported_snapshot else None
     reported_soy_cost = reported_snapshot.cost_basis_amount if reported_snapshot else None
-    if reported_soy is None or reported_soy == Decimal("0"):
+    if reported_soy is None:
+        return
+
+    if abs(reported_soy) < CURRENCY_RECONCILIATION_TOLERANCE:
+        # [GT-FX-008/009] Future disposals must consume this account's surviving
+        # holdings. An observed empty opening cannot retain stale replayed lots,
+        # including offsetting longs and shorts with net zero. No missing rate,
+        # acquisition date or cost is substituted: there is no opening tax lot.
+        # Use the same numerical tolerance as the EOY comparison; preserve the
+        # original sub-tolerance observation on reported_snapshot.
+        if ledger.lots or ledger.short_lots:
+            logger.info(
+                f"Currency {asset.currency}: clearing replayed long/short lots against "
+                f"reported SOY {reported_soy} (empty within currency tolerance "
+                f"{CURRENCY_RECONCILIATION_TOLERANCE}).")
+        ledger.lots.clear()
+        ledger.short_lots.clear()
         return
 
     long_qty = sum(lot.quantity for lot in ledger.lots)
@@ -3505,7 +3525,7 @@ def _reconcile_currency_soy(
 
     diff = reported_soy - fifo_qty
 
-    if abs(diff) <= Decimal("0.01"):
+    if abs(diff) <= CURRENCY_RECONCILIATION_TOLERANCE:
         return
 
     fallback_date = date_type(tax_year - 1, 12, 31)

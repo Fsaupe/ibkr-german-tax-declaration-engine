@@ -386,7 +386,7 @@ tests:
       Gain: 2500 - 2400 = 100 EUR
     inputs:
       currency: USD
-      soy_balance: "0.00"
+      soy_balance: "3000.00"
       fx_trades:
         - type: BUY_FOREIGN
           date: "2022-08-01"
@@ -435,7 +435,7 @@ tests:
       Remaining: 1000 USD from Mar lot
     inputs:
       currency: USD
-      soy_balance: "0.00"
+      soy_balance: "2000.00"
       fx_trades:
         - type: BUY_FOREIGN
           date: "2022-09-15"
@@ -496,7 +496,7 @@ tests:
       Gain: 2500 - 2000 = 500 EUR
     inputs:
       currency: USD
-      soy_balance: "0.00"
+      soy_balance: "3000.00"
       fx_trades:
         - type: BUY_FOREIGN
           date: "2022-04-20"
@@ -629,7 +629,7 @@ tests:
       Gain = 800 - 500 = 300 EUR
     inputs:
       currency: USD
-      soy_balance: "0.00"
+      soy_balance: "-1000.00"
       fx_trades:
         - type: SELL_FOREIGN     # Opens short in prior year
           date: "2022-11-01"
@@ -674,7 +674,7 @@ tests:
       EOY: -1000 USD (short position)
     inputs:
       currency: USD
-      soy_balance: "0.00"
+      soy_balance: "500.00"
       fx_trades:
         - type: BUY_FOREIGN
           date: "2022-10-15"
@@ -724,7 +724,7 @@ tests:
       EOY: 1000 USD (long position)
     inputs:
       currency: USD
-      soy_balance: "0.00"
+      soy_balance: "-1000.00"
       fx_trades:
         - type: SELL_FOREIGN     # Opens short in prior year
           date: "2022-12-01"
@@ -956,12 +956,13 @@ tests:
   # ===========================================================================
 
   - id: CFX_E_001
-    description: "Tiny balance filtering - CAD below threshold ignored"
+    description: "Tiny reported CAD balance produces no currency lot"
     notes: |
       SOY: -0.00002 CAD (rounding residual)
       EOY: -0.00002 CAD
 
-      Below 0.01 threshold - should be filtered out, no FIFO activity
+      Both observations are retained; the opening is empty within the 0.01
+      currency reconciliation tolerance, so there is no FIFO activity.
     inputs:
       currency: CAD
       soy_balance: "-0.00002"
@@ -969,7 +970,6 @@ tests:
       fx_trades: []
     expected:
       rgls: []
-      filtered_as_tiny_balance: true
       errors: 0
 
   - id: CFX_E_002
@@ -1158,7 +1158,7 @@ tests:
       Gain: 5000 - 4000 = 1000 EUR (TAXABLE - no exemption despite 2+ years held!)
     inputs:
       currency: USD
-      soy_balance: "0.00"
+      soy_balance: "5000.00"
       fx_trades:
         - type: BUY_FOREIGN
           date: "2021-03-15"
@@ -2194,7 +2194,7 @@ tests:
       Expected EOY: 5000 + 3000 - 2000 = 6000 USD
     inputs:
       currency: USD
-      soy_balance: "0.00"
+      soy_balance: "5000.00"
       fx_trades:
         - type: BUY_FOREIGN
           date: "2022-06-01"
