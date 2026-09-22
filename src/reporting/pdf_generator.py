@@ -505,7 +505,45 @@ class PdfReportGenerator:
                 "Detaillierte Einzelpositionen finden Sie in den entsprechenden Abschnitten weiter unten."
             )
         self.story.append(Paragraph(z19_explanation, self.styles['BodyText']))
-        
+
+        self.story.append(Spacer(1, 0.3*cm))
+
+        # Anlage KAP Zeile 22 breakdown, mirroring Zeile 19 above. Zeile 22 is the
+        # non-stock losses line; its components are shown as positive magnitudes, and
+        # whether derivative losses belong here is a per-year form rule (Z24 otherwise).
+        kap_zeile_22_value = form_values.get(TaxReportingCategory.ANLAGE_KAP_SONSTIGE_VERLUSTE, Decimal('0.00'))
+        z22_label = ("Verluste ohne Aktien, inkl. Termingeschäfte"
+                     if form_rules.z22_includes_derivative_losses else "Sonstige Verluste")
+        logger.info(f"Adding Anlage KAP Zeile 22 explanation for value: {kap_zeile_22_value}")
+        self.story.append(Paragraph(
+            f"<b>Anlage KAP Zeile 22 ({z22_label}): {self._format_decimal(kap_zeile_22_value).replace('.', ',')} EUR</b>",
+            self.styles['BodyText']
+        ))
+        self.story.append(Paragraph("Dieser Wert setzt sich zusammen aus:", self.styles['BodyText']))
+        z22_breakdown = [["Komponente", "Betrag (EUR)", "Verweis"]]
+        z22_breakdown.append([
+            "Sonstige Verluste (gezahlte Stückzinsen, Anleihen, FX, etc.)",
+            self._format_decimal(other_losses).replace('.', ','),
+            "siehe Abschnitt 2.3"
+        ])
+        if form_rules.z22_includes_derivative_losses:
+            z22_breakdown.append([
+                "Verluste aus Termingeschäften",
+                self._format_decimal(derivative_losses).replace('.', ','),
+                "siehe Abschnitt 2.2"
+            ])
+        z22_breakdown.append([
+            Paragraph("<b>Summe (Anlage KAP Zeile 22)</b>", self.styles['TableHeader']),
+            Paragraph(f"<b>{self._format_decimal(kap_zeile_22_value).replace('.', ',')}</b>", self.styles['TableCellRight']),
+            ""
+        ])
+        self.story.append(self._create_styled_table(z22_breakdown, col_widths=[8*cm, 3*cm, 4*cm]))
+        if not form_rules.z22_includes_derivative_losses:
+            self.story.append(Paragraph(
+                "Verluste aus Termingeschäften werden separat in Zeile 24 ausgewiesen.",
+                self.styles['BodyText']
+            ))
+
         self.story.append(Spacer(1, 0.3*cm))
 
     def _add_data_sources_notes(self):
