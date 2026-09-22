@@ -9,7 +9,9 @@ and explicit legal argument/counterargument. Final code `724a27d`, branch
 1 skipped**; 14 focused checks; VZ 2023–2025 declared figures unchanged.
 All open quantities match raw snapshots; PDF annexes visually checked.
 [Authorization, implementation and verification](issue11-disclosed-position.md).
-Q22 remains legally unresolved; no merge, publication or issue closure.
+The maintainer has authorised merge, publication of the legal explanation and
+closure of #11. Q22 remains legally unresolved; the implementation record
+contains the completion checkpoint.
 
 **Current handoff: #92 accepted for the authorized merge.** Code/test revision
 `011e4ff` resolves the false verified-year warning; the Z22/Z24 reconciliation

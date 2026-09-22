@@ -18,8 +18,35 @@ The existing cover-year numbers are retained. Original-year attribution remains
 the stronger legal reading and Q22's initial amount remains unresolved. The
 reference describes the law; the map records this chosen position. The BGH
 disclosure principle is not a short-sale timing judgment or a guarantee that a
-particular filed return is complete. No merge, publication or issue closure is
-authorized by this record.
+particular filed return is complete. On 2026-09-22 the maintainer explicitly
+authorised commit, merge, publication of the legal argument and closure of #11,
+then reconfirmed proceeding after the § 43a/§ 44 scope explanation. That approval
+covers the conditional disclosure and measured unchanged figures described here.
+
+## Final legal rationale for publication
+
+The 30% rule in § 43a Abs. 2 Satz 7 is a **withholding base**, not a tax rate
+or a percentage of year-end market value. Section 44 Abs. 1 Satz 3 and Satz 4
+Nr. 1 Buchst. a assigns the relevant securities-sale withholding to the paying
+domestic institution. Individuals remain tax debtors under Satz 1; the argument
+is not that taxpayers are personally outside the law.
+
+For the foreign-broker case without German withholding, research did not
+establish a direct obligation to use that substitute in the individual's
+assessment. Section 32d Abs. 3 requires declaration of the income; it does not
+import the substitute formula. Abs. 4 instead permits review where withholding
+occurred. The project therefore does not insert a 30% substitute into Z19 and
+related fields. It gives open quantities zero contribution until covering,
+fully discloses their year-end lots and received net proceeds, and recognises
+the actual result in the covering year.
+
+This is the maintainer's expressly disclosed requested treatment. Its argument
+is the actual-gain formula and the absence of an established direct assessment
+substitute; its counterargument is the § 11/original-sale interpretation and
+BMF Rn. 196. The disclosure principle in BGH 5 StR 221/99 Rn. 22–25, read with
+§§ 90/150/370 AO, permits presentation of a legal disagreement with complete
+facts; it does not establish zero as substantively correct. Q22 remains open.
+The public explanation is preserved in [issue11-closure-comment.md](issue11-closure-comment.md).
 
 ## Implementation
 
@@ -97,7 +124,8 @@ rows and the index/coverage table links the source.
 Private captures and independent verification scripts remain under the worktree's
 ignored `private/`; no account identifiers, positions or monetary amounts from
 those captures are included here. The final change is locally committed and
-verified, **not merged or published**. Issue #11 remains open.
+verified. Merge, publication and closure are now authorised; their confirmed
+outcome is recorded in the completion checkpoint below.
 
 The earlier investigation and research passes are historical;
 this record is authoritative for the selected implementation. Q22's unresolved

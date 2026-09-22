@@ -112,6 +112,21 @@ Consequently, Rn. 196 / § 43a Abs. 2 Satz 7 alone does **not establish** a
 mandatory 30% declaration basis for an uncovered sale through a foreign broker
 without German withholding. It also does not authorize omission of the sale.
 
+**Who performs the withholding:** [§ 44 Abs. 1 Satz 3 and Satz 4 Nr. 1
+Buchst. a Doppelbuchst. aa EStG](https://www.gesetze-im-internet.de/estg/__44.html)
+(Tier 1, retrieved/read 2026-09-22) assigns the relevant securities-sale
+withholding to the paying institution and identifies the domestic credit,
+financial-services or securities institution holding/selling the assets and
+paying/crediting the proceeds. The relevant domestic establishment matters,
+not the institution's brand or the issuer's country. The surrounding provisions
+also regulate other paying agents and other categories of capital income.
+Section 44 Abs. 1 Satz 1 makes the investor the tax debtor: individuals are
+**not personally exempt** from the withholding regime. The distinction here is
+between that regime and assessment of foreign-broker income without German
+withholding under § 32d Abs. 3. No cross-reference in that assessment provision
+makes the § 43a substitute its automatic taxable-income formula. This explains
+the scope of [GT-ESTG20-072]; it supplies no entitlement to an interim zero.
+
 ## [GT-ESTG20-073] Still uncovered at assessment: unresolved quantification
 
 For a sale still uncovered when the declaration is prepared, actual future
