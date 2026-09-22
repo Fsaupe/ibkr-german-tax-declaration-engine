@@ -1,5 +1,12 @@
 ## FIFO Calculation Unit Test Specification (with RGL amounts)
 
+**Cross-year short timing:** the cover-year expectations below describe the
+maintainer's selected disclosed position (GT-ESTG20-071–074), not proof that the
+law assigns a share short to the covering year. The conditional account/lot
+annex and its zero contribution for open quantities are verified separately in
+`tests/test_short_sale_disclosure.py`. Same-year round-trip expectations are
+unaffected. No existing numerical test expectation is changed by this disclosure.
+
 This document outlines the test scenarios for the FIFO (First-In, First-Out) calculation engine. The tests are designed to cover a comprehensive range of valid input data, including common use cases and critical corner cases, as required for robust financial software. All tests will assume CSV file inputs and use the `ScenarioExpectedOutput` structure (and its components like `ExpectedRealizedGainLoss` and `ExpectedAssetEoyState`) for result verification. The `ExpectedRealizedGainLoss` structure must align with the `RealizedGainLoss` class defined in `src.domain.results.py`, including all current fields such as `realization_type`, `asset_category_at_realization`, `quantity_realized`, `total_cost_basis_eur`, `total_realization_value_eur`, etc. Currency conversion will mock 1 base currency unit = 2 EUR.
 
 **Assumptions for Calculations:**

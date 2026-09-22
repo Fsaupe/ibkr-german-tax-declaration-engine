@@ -3,6 +3,7 @@ import logging
 from decimal import Decimal, ROUND_HALF_UP # Added ROUND_HALF_UP
 from typing import List, Dict, Any, Optional, Tuple
 import uuid
+from xml.sax.saxutils import escape
 from datetime import datetime
 
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak, KeepTogether
@@ -35,7 +36,8 @@ class PdfReportGenerator:
                  eoy_mismatch_details: Optional[List[Dict[str, Any]]],
                  report_version: str = "v1.0",
                  eoy_mismatch_count: int = 0,
-                 data_gaps: Optional[List["DataGap"]] = None):
+                 data_gaps: Optional[List["DataGap"]] = None,
+                 short_sale_disclosures=None):
         self.loss_offsetting_result = loss_offsetting_result
         self.all_financial_events = all_financial_events
         self.realized_gains_losses = realized_gains_losses
@@ -50,42 +52,39 @@ class PdfReportGenerator:
         # succeeded. See _add_eoy_reconciliation.
         self.eoy_mismatch_count = eoy_mismatch_count
         self.data_gaps: List["DataGap"] = data_gaps if data_gaps else []
+        self.short_sale_disclosures = short_sale_disclosures or []
 
         self.styles = self._generate_styles()
         self.story: List[Any] = []
         self.prepared_wht_details_for_table: Optional[Dict[str, Dict[str, Decimal]]] = None
 
     def _has_cross_year_short_positions(self) -> bool:
-        """Check if any short positions cross tax year boundaries.
+        """The reconciled account/lot inventory is the single trigger."""
+        return bool(self.short_sale_disclosures)
 
-        Returns True if:
-        - A short position opened in a prior year was covered in the tax year, OR
-        - A short position was opened in the tax year but not fully covered by EOY.
-        """
-        tax_year_str = str(self.tax_year)
-
-        # Track short covers and short opens for the tax year
-        covered_assets: set = set()
-        opened_assets: set = set()
-
-        for rgl in self.realized_gains_losses:
-            if rgl.realization_type == RealizationType.SHORT_POSITION_COVER:
-                acq_year = rgl.acquisition_date[:4] if rgl.acquisition_date else None
-                real_year = rgl.realization_date[:4] if rgl.realization_date else None
-                # Short opened in prior year, covered this year
-                if real_year == tax_year_str and acq_year and acq_year < tax_year_str:
-                    return True
-                if real_year == tax_year_str:
-                    covered_assets.add(rgl.asset_internal_id)
-
-        for event in self.all_financial_events:
-            if (event.event_type == FinancialEventType.TRADE_SELL_SHORT_OPEN
-                    and event.event_date[:4] == tax_year_str):
-                opened_assets.add(event.asset_internal_id)
-
-        # Short opened this year with no cover at all → still open at EOY
-        uncovered = opened_assets - covered_assets
-        return len(uncovered) > 0
+    def _add_short_sale_disclosure(self):
+        if not self._has_cross_year_short_positions():
+            return
+        from src.reporting.short_sales import TITLE, disclosure_paragraphs, open_table, cover_table
+        self.story.append(PageBreak())
+        self.story.append(Paragraph(escape(TITLE), self.styles['H2']))
+        for text in disclosure_paragraphs(self.tax_year):
+            self.story.append(Paragraph(escape(text), self.styles['BodyText']))
+        for heading, data, widths in (
+            (f"Offene Positionen am 31.12.{self.tax_year}",
+             open_table(self.short_sale_disclosures, self.assets_by_id), [4.5, 3.2, 2.2, 2.7, 2.4]),
+            (f"Eindeckungen im Jahr {self.tax_year}",
+             cover_table(self.short_sale_disclosures, self.assets_by_id), [3.1, 2.4, 2.4, 1.4, 1.9, 1.9, 1.9]),
+        ):
+            self.story.append(Paragraph(heading, ParagraphStyle(
+                'ShortSaleTableHeading', parent=self.styles['H3'], keepWithNext=True)))
+            if len(data) == 1:
+                self.story.append(Paragraph("Keine.", self.styles['BodyText']))
+                continue
+            cells = [[Paragraph(escape(cell).replace("\n", "<br/>"),
+                                self.styles['TableHeader' if i == 0 else 'TableCell'])
+                      for cell in row] for i, row in enumerate(data)]
+            self.story.append(self._create_styled_table(cells, col_widths=[w*cm for w in widths]))
 
     def _generate_styles(self):
         styles = getSampleStyleSheet()
@@ -571,18 +570,9 @@ class PdfReportGenerator:
             f"diesem Veranlagungszeitraum erklärt.",
         ]
         if self._has_cross_year_short_positions():
-            notes.append(
-                "Leerverkäufe (Short Sales) werden der Einfachheit halber zum Zeitpunkt der Glattstellung "
-                "(Eindeckung) steuerlich erfasst, nicht zum Zeitpunkt der Eröffnung des Leerverkaufs. "
-                "Nach Auffassung des Steuerpflichtigen ergibt sich hieraus keine Änderung der Steuerlast, "
-                "da lediglich eine zeitliche Verschiebung zwischen den Veranlagungszeiträumen erfolgt, "
-                "die sich über die Gesamtlaufzeit der Position ausgleicht. "
-                "Sollte die Finanzverwaltung eine Zuordnung zum Eröffnungszeitpunkt gemäß "
-                "§\u00a043a Abs.\u00a02 Satz\u00a07 EStG i.\u00a0V.\u00a0m. BMF-Schreiben Rz.\u00a0196 "
-                "für erforderlich halten — einschließlich der Anwendung einer Ersatzbemessungsgrundlage "
-                "bei jahresübergreifenden Positionen und entsprechender Korrekturen für Vorjahre nach "
-                "§\u00a0175 Abs.\u00a01 Satz\u00a01 Nr.\u00a02 AO — wird um entsprechende Mitteilung gebeten."
-            )
+            notes.append("Jahresübergreifende Wertpapier-Leerverkäufe: Die erklärten Zahlen "
+                         "enthalten eine abweichende Rechtsauffassung. Siehe die vollständige "
+                         "Anlage am Ende dieses Berichts; diese ist mit einzureichen.")
         for note in notes:
             self.story.append(Paragraph(f"• {note}", self.styles['BodyText']))
 
@@ -1865,6 +1855,7 @@ class PdfReportGenerator:
         self._add_so_details()                    
         self._add_corporate_actions_summary()
         self._add_capital_repayments_summary()     
+        self._add_short_sale_disclosure()
         
         final_doc_story.extend(self.story)
         

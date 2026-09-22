@@ -9,7 +9,7 @@ import src.config as config
 # Domain objects and Enums (assuming they are accessible)
 from src.domain.assets import Asset, SnapshotsByAccount # For type hinting if needed
 from src.domain.events import FinancialEvent
-from src.domain.results import RealizedGainLoss, VorabpauschaleData
+from src.domain.results import RealizedGainLoss, VorabpauschaleData, ShortSaleDisclosure
 
 # Core components
 from src.parsers.parsing_orchestrator import ParsingOrchestrator
@@ -42,8 +42,10 @@ class ProcessingOutput:
                  declaration_store: Optional["VorabpauschaleDeclarationStore"] = None,
                  soy_positions: Optional["SnapshotsByAccount"] = None,
                  eoy_positions: Optional["SnapshotsByAccount"] = None,
-                 prior_eoy_positions: Optional["SnapshotsByAccount"] = None):
+                 prior_eoy_positions: Optional["SnapshotsByAccount"] = None,
+                 short_sale_disclosures: Optional[List[ShortSaleDisclosure]] = None):
         self.realized_gains_losses = realized_gains_losses
+        self.short_sale_disclosures = short_sale_disclosures or []
         self.vorabpauschale_items = vorabpauschale_items
         self.processed_income_events = processed_income_events
         self.all_financial_events_enriched = all_financial_events_enriched
@@ -245,6 +247,7 @@ def run_core_processing_pipeline(
         # See src/processing/vorabpauschale_declarations.py.
         declaration_store = VorabpauschaleDeclarationStore()
 
+        short_sale_disclosures: List[ShortSaleDisclosure] = []
         realized_gains_losses, vorabpauschale_items, processed_income_events, eoy_mismatch_error_count_calc = run_main_calculations(
             financial_events=financial_events_enriched,
             asset_resolver=orchestrator.asset_resolver, # Use the resolver from the orchestrator
@@ -274,6 +277,7 @@ def run_core_processing_pipeline(
             transfers_missing_years=transfers_missing_years,
             grants_file_supplied=orchestrator.grants_file_supplied,
             grants_missing_years=grants_missing_years,
+            short_sale_disclosures=short_sale_disclosures,
         )
     except Exception as e:
         logger.critical(f"Calculation engine failed with unexpected error: {e}", exc_info=True)
@@ -295,5 +299,6 @@ def run_core_processing_pipeline(
         declaration_store=declaration_store,
         soy_positions=orchestrator.soy_positions,
         eoy_positions=orchestrator.eoy_positions,
+        short_sale_disclosures=short_sale_disclosures,
         prior_eoy_positions=orchestrator.prior_eoy_positions,
     )

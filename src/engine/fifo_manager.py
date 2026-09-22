@@ -1281,6 +1281,9 @@ class FifoLedger:
                     quantity_realized=quantity_covered_from_this_lot, 
                     unit_cost_basis_eur=cost_eur_per_unit_for_cover_event, # Renamed kwarg
                     unit_realization_value_eur=current_short_lot.unit_sale_proceeds_eur, # Renamed kwarg
+                    short_opening_transaction_id=current_short_lot.source_transaction_id,
+                    short_cover_transaction_id=cover_event.ibkr_transaction_id,
+                    short_account_id=account_key(cover_event.account_id),
                     total_cost_basis_eur=cost_basis_for_portion, # Renamed kwarg
                     total_realization_value_eur=realization_value_for_portion,
                     gross_gain_loss_eur=gross_gain_loss, holding_period_days=holding_period_days,

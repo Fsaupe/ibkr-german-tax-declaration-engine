@@ -12,6 +12,11 @@ tagged on the headings here. See the Purity Rule in docs/knowledge-store.md.
 
 ## Tax Law (EStG)
 
+- [Securities short sales and disclosed assessment positions](tax-law/estg-20-leerverkaeufe.md) -- BMF 14.05.2025
+  Rn. 196: original disposal and later covering costs [GT-ESTG20-071]; the
+  withholding-only scope of the substitute basis [GT-ESTG20-072]; unresolved
+  provisional quantification of uncovered foreign-broker sales [GT-ESTG20-073], Q22.
+
 Physical exercise of a purchased put: the holder's acquisition costs enter the
 delivered asset's disposal result (BMF Rn. 28–29), distinguished from writer
 premiums, [GT-ESTG20-070] in the EStG 20 reference.

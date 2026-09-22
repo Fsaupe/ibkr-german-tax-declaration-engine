@@ -24,7 +24,10 @@ have is worse than one with a visible hole.
 | Event | Primary Law | Paragraph | Form Line | Covered In |
 |-------|-------------|-----------|-----------|------------|
 | Stock sale (long) | EStG | 20 Abs. 2 Nr. 1 | KAP Z20 | estg-20-kapitalvermoegen.md |
-| Stock sale (short cover) | EStG | 20 Abs. 2 Nr. 1 | KAP Z20 | estg-20-kapitalvermoegen.md |
+| Stock short sale, with later covering purchase attributed to the original disposal | EStG / BMF | 20 Abs. 2 Satz 1 Nr. 1, Abs. 4 Satz 1; BMF 14.05.2025 Rn. 196 | Existing stock-disposal fields; original sale's assessment, not automatically cover year | tax-law/estg-20-leerverkaeufe.md [GT-ESTG20-071] |
+| Substitute basis on securities short sales | EStG / BMF | 43a Abs. 2 Satz 7; BMF 14.05.2025 Rn. 196 | Withholding procedure, no new foreign-income form mapping | tax-law/estg-20-leerverkaeufe.md [GT-ESTG20-072] |
+| Foreign-broker short sale still uncovered at assessment | AO / EStG | 162 Abs. 1 Saetze 1–2; 32d Abs. 3; fixed provisional amount not established | Unresolved quantification; Q22 | tax-law/estg-20-leerverkaeufe.md [GT-ESTG20-073] |
+| Fully disclosed deviating short-sale assessment position | AO / BGH | 90 Abs. 1 Satz 2; 150 Abs. 2, Abs. 7 Satz 1; 370 Abs. 1 Nr. 1; BGH 5 StR 221/99 Rn. 22–25 | Facts and numerical exclusions disclosed for human assessment; no entitlement to acceptance | tax-law/estg-20-leerverkaeufe.md [GT-ESTG20-074] |
 | Dividend (cash) | EStG | 20 Abs. 1 Nr. 1 | KAP Z19 | estg-20-kapitalvermoegen.md |
 | Interest received | EStG | 20 Abs. 1 Nr. 7 | KAP Z19 | estg-20-kapitalvermoegen.md |
 | Stueckzinsen (paid) | EStG | 20 Abs. 4 | KAP Z19 (neg.) | **no substantive entry** -- listed as a topic in `bmf-guidance/abgeltungsteuer-einzelfragen.md`, stated nowhere |

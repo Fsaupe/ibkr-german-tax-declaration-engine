@@ -4,6 +4,17 @@
 
 ## What is this?
 
+**Cross-year securities shorts:** this project uses the maintainer's explicitly
+selected, disclosed position of recognising the net result when covered. Open
+quantities contribute zero pending cover. When relevant positions exist, both
+console and PDF reports include an account/lot annex, the numerical exclusions,
+and the argument and contrary original-year interpretation. Submit that annex
+with the return and flag the deviating view in the supplementary information.
+This is not a statutory exemption or a guaranteed assessment outcome. The
+inventory is dated at year-end; add any later covers known when filing, and
+account for any different treatment already assessed by the Finanzamt.
+[Legal scope and limits](reference/tax-law/estg-20-leerverkaeufe.md).
+
 German tax residents using Interactive Brokers (IBKR) often face significant challenges in accurately completing their tax declaration forms, especially Anlage KAP, Anlage KAP-INV, and Anlage SO. This tool aims to simplify this process by:
 
 1.  Parsing your IBKR Flex Query CSV reports (with full historical data for FIFO cost basis).

@@ -87,11 +87,15 @@ def generate_console_tax_report(
     tax_year: int,
     eoy_mismatch_count: int,
     loss_offsetting_summary: LossOffsettingResult,
-    data_gaps: Optional[List["DataGap"]] = None
+    data_gaps: Optional[List["DataGap"]] = None,
+    short_sale_disclosures=None,
 ):
     logger.info(f"Generating console tax declaration summary for tax year {tax_year}...")
     print(f"\n--- Tax Declaration Summary for Year {tax_year} (All amounts in EUR) ---")
     print("--- Figures for direct entry into German tax forms (as per PRD v3.2.2) ---")
+    if short_sale_disclosures:
+        from src.reporting.short_sales import NOTICE
+        print(NOTICE)
 
     _carried_from = unverified_form_rules_source(tax_year)
     if _carried_from is not None:
@@ -377,6 +381,9 @@ def generate_console_tax_report(
         for gap in data_gaps:
             print(f"  [{gap.code}] {gap.subject}: {gap.detail}")
 
+    from src.reporting.short_sales import print_short_sale_disclosure
+    print_short_sale_disclosure(short_sale_disclosures or [],
+                                asset_resolver.assets_by_internal_id, tax_year)
     print("--- Ende des Steuererklärungs-Summaries ---")
 
 def generate_stock_trade_report_for_symbol(

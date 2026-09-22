@@ -251,6 +251,19 @@ It must realize gains/losses on worthless option expirations (`FinancialEventTyp
 
 Correctly calculate gains/losses from covering short stock positions (`FinancialEventType.TRADE_BUY_SHORT_COVER`) using FIFO principles, reported in Anlage KAP (with `RealizationType.SHORT_POSITION_COVER`). These G/L contribute to `stock_gains_gross` or `stock_losses_abs` (Sec 2.7).
 
+**Selected cross-year filing position (2026-09-22):** this cover-year timing is
+an expressly disclosed deviation, not certified original-year compliance.
+GT-ESTG20-071–074 records the authorities and limits; the implementation map
+records the maintainer's instruction. The engine passes an immutable account/lot
+inventory to both reporters after reconciliation. Open quantities contribute zero;
+partial covers retain their actual result. The conditional annex lists every
+remaining securities-short lot and relevant current-year covers (prior-year
+openings or portions of a remaining lot), with account, instrument, source/date,
+quantity, allocated net proceeds and cover costs. It states both the selected
+argument and the contrary attribution. Same-year round trips alone do not trigger
+it; option/future/CFD and currency short exposure is excluded. This annual
+inventory does not replace disclosure of later facts known at filing.
+
 For assets classified as `AssetCategory.PRIVATE_SALE_ASSET`, it must check the holding period (calculated from acquisition and realization dates of FIFO lots). Gains/losses are only taxable under §23 EStG if the holding period is <= 1 year (realization type `RealizationType.LONG_POSITION_SALE`).
 
 Trades of instruments identified as FX trading pairs (e.g., 'EUR.USD' where IBKR asset class is "CASH") directly result in `CurrencyConversionEvent` objects, not `TradeEvent`s requiring FIFO.
