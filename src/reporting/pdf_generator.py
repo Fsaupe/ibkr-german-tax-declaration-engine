@@ -485,7 +485,18 @@ class PdfReportGenerator:
             Paragraph(f"<b>{self._format_decimal(kap_zeile_19_value).replace('.', ',')}</b>", self.styles['TableCellRight']),
             ""
         ])
-        
+
+        # Memo, separate-line years only: derivative losses are "ausschließlich Zeile 24" and
+        # excluded from the Zeile 19 net (GT-FORM-002), unlike derivative GAINS which are
+        # "zusätzlich Zeile 21" and therefore inside Zeile 19 above. Shown after the total, not
+        # summed, so the omission is explicit rather than silent.
+        if not form_rules.z19_subtracts_derivative_losses:
+            breakdown_data.append([
+                "nachrichtlich: Verluste aus Termingeschäften (nicht in Zeile 19)",
+                self._format_decimal(derivative_losses).replace('.', ','),
+                "ausschließlich Zeile 24"
+            ])
+
         # Always create the table
         table = self._create_styled_table(breakdown_data, col_widths=[8*cm, 3*cm, 4*cm])
         self.story.append(table)

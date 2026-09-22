@@ -626,6 +626,24 @@ class TestTheZeile22BreakdownTable:
         assert "separat in Zeile 24" not in text
 
 
+class TestTheZeile19DerivativeLossMemo:
+    """In a separate-line year (Z21/Z24 present) derivative losses are "ausschließlich Zeile
+    24" and left out of the Zeile 19 net, while derivative GAINS are "zusätzlich Zeile 21" and
+    inside it ([GT-FORM-002]). The Zeile 19 breakdown makes that omission explicit with a memo
+    row after the total, so the asymmetry a reader sees is stated, not silent."""
+
+    _RGLS = [_rgl(uuid.uuid4(), AssetCategory.BOND, Decimal("-10.00"))]
+
+    def test_a_separate_year_shows_the_excluded_derivative_loss_memo(self):
+        text, _ = _calc_explanations_text(self._RGLS, tax_year=2023)
+        assert "nachrichtlich: Verluste aus Termingeschäften (nicht in Zeile 19)" in text
+        assert "ausschließlich Zeile 24" in text
+
+    def test_a_fold_in_year_omits_the_memo_because_the_loss_is_inside_zeile_19(self):
+        text, _ = _calc_explanations_text(self._RGLS, tax_year=2025)
+        assert "nachrichtlich" not in text
+
+
 class TestTheSonstigeChapterFootsToTheDeclaredFigures:
     """The §2.3 summary must add up to the Anlage KAP Zeile 19/22 figures the report
     declares, with foreign currency (FX, Währungspositionen) shown as its own
