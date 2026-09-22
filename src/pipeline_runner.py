@@ -299,6 +299,6 @@ def run_core_processing_pipeline(
         declaration_store=declaration_store,
         soy_positions=orchestrator.soy_positions,
         eoy_positions=orchestrator.eoy_positions,
-        prior_eoy_positions=orchestrator.prior_eoy_positions,
         short_sale_disclosures=short_sale_disclosures,
+        prior_eoy_positions=orchestrator.prior_eoy_positions,
     )
