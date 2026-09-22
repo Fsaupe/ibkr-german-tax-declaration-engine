@@ -68,11 +68,37 @@ rows and the index/coverage table links the source.
 - Initial disclosure regression module: **8 failed before implementation**,
   all due to the missing pipeline disclosure. A further scope regression was
   **1 failed** before narrowing same-year covers to the relevant opening lot.
-- Final targeted module: pending final verification; covers both actual PDF text
+- Final targeted module: **14 passed**; covers both actual PDF text
   and console output, empty-section suppression, partial quantities, account
   separation, carried positions and excluded product types.
-- Real-data and full clean-suite results are recorded below when complete.
+- Final code revision **724a27d**. Full suite in an isolated clean archive with
+  template configuration, no private data/caches and the installed dependencies:
+  **1,572 passed, 1 skipped** in 12.53 seconds. The skip requires private exports.
+  The first full run exposed an existing source-layout assertion requiring the
+  prior-year registry to be the last keyword argument. Reordering the new
+  keyword fixed it; no existing test or numerical expectation was modified.
+- VZ **2023/2024/2025**: **24/24/22 declared entries unchanged** against accepted
+  main `93b2b0c`. Aside from the new notice and annex, the complete console is
+  identical. Each candidate and baseline has matching independent same-tree
+  console/log/PDF-text controls. The final keyword reorder is output-neutral;
+  all captures use the same arguments. All supported runs complete.
+- Independently compared the emitted open quantities, grouped by account/ISIN,
+  with the raw EoY snapshots: **1/0/3 positions**, represented by **24/0/35 lots**,
+  all match. **Zero** missing opening dates/proceeds in those actual open lots.
+  All quantities have zero contribution until covering. VZ 2024 still shows
+  prior-year covers, despite having no open EoY position.
+- All **11** pages of the final added PDF annexes were rendered and inspected:
+  readable German category labels, repeated headers, complete rows, no clipped
+  text. The PDF skill prompted the heading/layout verification and refinement.
+- Original data/configuration/cache hashes remain unchanged. Source search for
+  the old asset-set detector identifiers and the old unchanged-tax-liability
+  claim: **zero** remaining production sites. `git diff --check` passes.
 
-The earlier `issue11-short-sale-timing.md` and research passes are historical;
+Private captures and independent verification scripts remain under the worktree's
+ignored `private/`; no account identifiers, positions or monetary amounts from
+those captures are included here. The final change is locally committed and
+verified, **not merged or published**. Issue #11 remains open.
+
+The earlier investigation and research passes are historical;
 this record is authoritative for the selected implementation. Q22's unresolved
 legal amount is not closed merely because this alternative is implemented.
