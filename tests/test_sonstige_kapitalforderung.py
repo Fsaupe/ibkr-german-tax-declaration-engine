@@ -651,15 +651,15 @@ class TestTheSonstigeChapterFootsToTheDeclaredFigures:
 
         # FX is now a summary component AND has its own detail section (2.3.5).
         assert "FX-Gewinne (Währungspositionen)" in text
-        assert "Summe FX-Gewinne (→ Zeile 19):" in text
-        assert "Summe FX-Verluste (→ Zeile 22):" in text
+        assert "Summe FX-Gewinne (fließt ein in Zeile 19):" in text
+        assert "Summe FX-Verluste (fließt ein in Zeile 22):" in text
         assert "80,00" in text and "30,00" in text
 
         # The chapter reconciles: the itemised components do not drift from the declared
         # figure, so the ⚠️ warning does not fire and the two totals are the engine's.
         assert "⚠️ Differenz" not in text
-        assert "Summe → Anlage KAP Zeile 19" in text
-        assert "Summe → Anlage KAP Zeile 22" in text
+        assert "Summe fließt ein in Anlage KAP Zeile 19" in text
+        assert "Summe fließt ein in Anlage KAP Zeile 22" in text
         assert "430,00" in text  # gains total = Zeile 19 component
         assert "60,00" in text   # losses total = Zeile 22
 

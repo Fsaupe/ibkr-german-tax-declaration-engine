@@ -1194,7 +1194,7 @@ class PdfReportGenerator:
         if skf_gains > Decimal(0):
             gains_rows.append(["Gewinne aus sonstigen Kapitalforderungen", skf_gains, "siehe 2.3.7"])
         self.story.append(KeepTogether(_component_table(
-            gains_rows, "Summe → Anlage KAP Zeile 19", kap_other_total)))
+            gains_rows, "Summe fließt ein in Anlage KAP Zeile 19", kap_other_total)))
         gains_component_sum = (interest_positive + dividends_positive + stock_div_positive
                                + bond_gains + fx_gains + skf_gains)
         if (gains_component_sum - kap_other_total).copy_abs() > Decimal("0.005"):
@@ -1213,7 +1213,7 @@ class PdfReportGenerator:
         if skf_losses_abs > Decimal(0):
             losses_rows.append(["Verluste aus sonstigen Kapitalforderungen", skf_losses_abs, "siehe 2.3.7"])
         self.story.append(KeepTogether(_component_table(
-            losses_rows, "Summe → Anlage KAP Zeile 22", kap_losses_total)))
+            losses_rows, "Summe fließt ein in Anlage KAP Zeile 22", kap_losses_total)))
         losses_component_sum = bond_losses_abs + fx_losses_abs + stueckzinsen_abs + skf_losses_abs
         if (losses_component_sum - kap_losses_total).copy_abs() > Decimal("0.005"):
             self.story.append(Paragraph(
@@ -1343,8 +1343,8 @@ class PdfReportGenerator:
                     self._format_decimal(rgl.total_cost_basis_eur).replace('.',','),
                     self._format_decimal(gross_gl).replace('.',',')
                 ])
-            data.append([Paragraph("Summe Anleihengewinne (→ Zeile 19):", self.styles['TableHeader']), "", "", "", "", "", "", Paragraph(self._format_decimal(bond_gains).replace('.',','), self.styles['TableCellRight'])])
-            data.append([Paragraph("Summe Anleihenverluste (→ Zeile 22):", self.styles['TableHeader']), "", "", "", "", "", "", Paragraph(self._format_decimal(bond_losses_abs).replace('.',','), self.styles['TableCellRight'])])
+            data.append([Paragraph("Summe Anleihengewinne (fließt ein in Zeile 19):", self.styles['TableHeader']), "", "", "", "", "", "", Paragraph(self._format_decimal(bond_gains).replace('.',','), self.styles['TableCellRight'])])
+            data.append([Paragraph("Summe Anleihenverluste (fließt ein in Zeile 22):", self.styles['TableHeader']), "", "", "", "", "", "", Paragraph(self._format_decimal(bond_losses_abs).replace('.',','), self.styles['TableCellRight'])])
             # Adjusted quantity col width
             table = self._create_styled_table(data, col_widths=[3*cm, 2.5*cm, 1.8*cm, 1.8*cm, 2*cm, 1.8*cm, 2*cm, 2.2*cm])
             self.story.append(KeepTogether(table))
@@ -1368,8 +1368,8 @@ class PdfReportGenerator:
                     self._format_decimal(rgl.total_cost_basis_eur).replace('.', ','),
                     self._format_decimal(gross_gl).replace('.', ','),
                 ])
-            data.append([Paragraph("Summe FX-Gewinne (→ Zeile 19):", self.styles['TableHeader']), "", "", "", "", "", Paragraph(self._format_decimal(fx_gains).replace('.', ','), self.styles['TableCellRight'])])
-            data.append([Paragraph("Summe FX-Verluste (→ Zeile 22):", self.styles['TableHeader']), "", "", "", "", "", Paragraph(self._format_decimal(fx_losses_abs).replace('.', ','), self.styles['TableCellRight'])])
+            data.append([Paragraph("Summe FX-Gewinne (fließt ein in Zeile 19):", self.styles['TableHeader']), "", "", "", "", "", Paragraph(self._format_decimal(fx_gains).replace('.', ','), self.styles['TableCellRight'])])
+            data.append([Paragraph("Summe FX-Verluste (fließt ein in Zeile 22):", self.styles['TableHeader']), "", "", "", "", "", Paragraph(self._format_decimal(fx_losses_abs).replace('.', ','), self.styles['TableCellRight'])])
             table = self._create_styled_table(data, col_widths=[3*cm, 2*cm, 1.8*cm, 2*cm, 2*cm, 2*cm, 2.2*cm])
             self.story.append(KeepTogether(table))
         else:
@@ -1427,8 +1427,8 @@ class PdfReportGenerator:
                     self._format_decimal(rgl.total_cost_basis_eur).replace('.',','),
                     self._format_decimal(gross_gl).replace('.',',')
                 ])
-            data.append([Paragraph("Summe Gewinne sonstige Kapitalforderungen (→ Zeile 19):", self.styles['TableHeader']), "", "", "", "", "", "", Paragraph(self._format_decimal(skf_gains).replace('.',','), self.styles['TableCellRight'])])
-            data.append([Paragraph("Summe Verluste sonstige Kapitalforderungen (→ Zeile 22):", self.styles['TableHeader']), "", "", "", "", "", "", Paragraph(self._format_decimal(skf_losses_abs).replace('.',','), self.styles['TableCellRight'])])
+            data.append([Paragraph("Summe Gewinne sonstige Kapitalforderungen (fließt ein in Zeile 19):", self.styles['TableHeader']), "", "", "", "", "", "", Paragraph(self._format_decimal(skf_gains).replace('.',','), self.styles['TableCellRight'])])
+            data.append([Paragraph("Summe Verluste sonstige Kapitalforderungen (fließt ein in Zeile 22):", self.styles['TableHeader']), "", "", "", "", "", "", Paragraph(self._format_decimal(skf_losses_abs).replace('.',','), self.styles['TableCellRight'])])
             table = self._create_styled_table(data, col_widths=[3*cm, 2.5*cm, 1.8*cm, 1.8*cm, 2*cm, 1.8*cm, 2*cm, 2.2*cm])
             self.story.append(KeepTogether(table))
 
