@@ -21,6 +21,7 @@ from src.domain.enums import AssetCategory, InvestmentFundType, FinancialEventTy
 from src.reporting.reporting_utils import _q, _q_price, _q_qty, format_date_german
 from src.reporting.form_rules import get_form_rules, unverified_form_rules_source
 from src.tax_law.registry import get_section23_form_line, section23_form_warning
+from src.reporting.reporting_utils import anlage_so_leistungen_line_label, anlage_so_leistungen_zeile
 import src.config as app_config 
 from src.utils.tax_utils import get_teilfreistellung_rate_for_fund_type
 
@@ -317,7 +318,8 @@ class PdfReportGenerator:
         if so_warning:
             self.story.append(Paragraph(so_warning, self.styles['BodyText']))
         so_lines_map = {
-             "ANLAGE_SO_NET_GV": f"Anlage SO Zeile {so_line} (G/V §23 EStG)"
+             "ANLAGE_SO_NET_GV": f"Anlage SO Zeile {so_line} (G/V §23 EStG)",
+             TaxReportingCategory.ANLAGE_SO_LEISTUNGEN_EINNAHMEN.name: f"Anlage SO {anlage_so_leistungen_line_label(self.tax_year)}",
         }
         
         declared_values_map = {
@@ -347,6 +349,7 @@ class PdfReportGenerator:
             TaxReportingCategory.ANLAGE_KAP_INV_SONSTIGE_FONDS_VORABPAUSCHALE_BRUTTO: kap_inv_lines_map["ANLAGE_KAP_INV_ZEILE_13_SONSTIGE_FONDS_VORABPAUSCHALE_BRUTTO"],
             TaxReportingCategory.ANLAGE_KAP_INV_VORABPAUSCHALE_ABZUG_Z53: kap_inv_lines_map["ANLAGE_KAP_INV_ZEILE_53_VORABPAUSCHALE_ABZUG"],
             "ANLAGE_SO_NET_GV": so_lines_map["ANLAGE_SO_NET_GV"],
+            TaxReportingCategory.ANLAGE_SO_LEISTUNGEN_EINNAHMEN: so_lines_map[TaxReportingCategory.ANLAGE_SO_LEISTUNGEN_EINNAHMEN.name],
             "TOTAL_ANRECHENBARE_AUSL_STEUERN": kap_lines_map["ANLAGE_KAP_ZEILE_41"]
         })
 
@@ -382,6 +385,7 @@ class PdfReportGenerator:
             TaxReportingCategory.ANLAGE_KAP_INV_AUSLANDS_IMMOBILIENFONDS_GEWINN_GROSS,  # KAP-INV Zeile 23
             TaxReportingCategory.ANLAGE_KAP_INV_SONSTIGE_FONDS_GEWINN_GROSS,  # KAP-INV Zeile 26
             TaxReportingCategory.ANLAGE_KAP_INV_VORABPAUSCHALE_ABZUG_Z53,  # KAP-INV Zeile 53
+            TaxReportingCategory.ANLAGE_SO_LEISTUNGEN_EINNAHMEN,
             "ANLAGE_SO_NET_GV"  # Annual SO taxpayer allocation
         ]
 
@@ -1480,9 +1484,66 @@ class PdfReportGenerator:
             self.story.append(KeepTogether(table))
 
 
+    def _add_so_leistungen_details(self):
+        """Anlage SO, Leistungen block: the §22 Nr. 3 receipts, listed row by row.
+
+        legal_basis: [GT-ESTG20-049] and [GT-ESTG20-050] put the securities-lending fee
+        under §22 Nr. 3 rather than anywhere in §20 EStG; [GT-FORM-024] gives the entry
+        line, which differs by assessment year.
+
+        Listed individually because the form wants an *Art der Einnahmen* beside the
+        amount, so the filer needs to know what the figure is made of.
+        """
+        zeile = anlage_so_leistungen_zeile(self.tax_year)
+        zeile_text = f"Zeile {zeile}" if zeile is not None else "Zeile nicht verifiziert"
+        self.story.append(Paragraph(
+            f"4.1 Einnahmen aus Leistungen (§22 Nr. 3 EStG, {zeile_text})", self.styles['H3']))
+
+        leistung_events = [
+            ev for ev in self.all_financial_events
+            if isinstance(ev, CashFlowEvent)
+            and ev.event_type == FinancialEventType.SECURITIES_LENDING_FEE_RECEIVED
+        ]
+
+        if not leistung_events:
+            self.story.append(Paragraph(
+                "Keine Einnahmen aus Leistungen aus Wertpapierdarlehen in diesem Steuerjahr.",
+                self.styles['BodyText']))
+            return
+
+        data = [["Art der Einnahmen", "Datum", "Betrag (EUR)"]]
+        total = Decimal(0)
+        for event in sorted(leistung_events, key=lambda x: x.event_date):
+            gross_eur = event.gross_amount_eur or Decimal(0)
+            total += gross_eur
+            data.append([
+                event.ibkr_activity_description or "Entgelt aus Wertpapierdarlehen",
+                format_date_german(event.event_date),
+                self._format_decimal(gross_eur).replace('.', ','),
+            ])
+        data.append([
+            Paragraph(f"Summe Einnahmen aus Leistungen ({zeile_text}):", self.styles['TableHeader']),
+            "",
+            Paragraph(self._format_decimal(total).replace('.', ','), self.styles['TableCellRight']),
+        ])
+        table = self._create_styled_table(data, col_widths=[9*cm, 2.5*cm, 3.5*cm])
+        self.story.append(KeepTogether(table))
+        self.story.append(Paragraph(
+            "Entgelt für die Überlassung von Wertpapieren (Wertpapierdarlehen). Sonstige "
+            "Einkünfte nach §22 Nr. 3 EStG — nicht Kapitalvermögen, daher nicht in Anlage KAP "
+            "und nicht in die Verlustverrechnung nach §20 Abs. 6 EStG einbezogen. Die "
+            "Freigrenze des §22 Nr. 3 Satz 2 EStG (256 EUR) bezieht sich auf die gesamten "
+            "Einkünfte aus Leistungen im Kalenderjahr aus allen Quellen und ist hier nicht "
+            "angewendet; die Angabe erfolgt brutto.",
+            self.styles['SmallText']))
+
     def _add_so_details(self):
-        self.story.append(Paragraph("4 Detaillierte Aufstellung: Anlage SO (Sonstige Einkünfte - §23 EStG)", self.styles['H2']))
-        
+        self.story.append(Paragraph("4 Detaillierte Aufstellung: Anlage SO (Sonstige Einkünfte)", self.styles['H2']))
+
+        self._add_so_leistungen_details()
+
+        self.story.append(Paragraph("4.2 Private Veräußerungsgeschäfte (§23 EStG)", self.styles['H3']))
+
         sec23_rgls_taxable = [
             rgl for rgl in self.realized_gains_losses 
             if rgl.asset_category_at_realization == AssetCategory.PRIVATE_SALE_ASSET 
@@ -1536,8 +1597,8 @@ class PdfReportGenerator:
         self._add_so_leistungen_manual_entries()
 
     def _add_so_leistungen_manual_entries(self):
-        """The § 22 Nr. 3 receipt and return of awarded shares, which this report cannot
-        put on a line (issue #76) and must therefore hand to the reader in full.
+        """The § 22 Nr. 3 receipt and return of awarded shares remain manual entries,
+        separate from the automatically aggregated securities-lending fees.
 
         The processor states each with amount, year and destination as a data gap, and the
         console prints every gap. This PDF rendered only the reconciliation gaps, so a run
@@ -1557,7 +1618,8 @@ class PdfReportGenerator:
             "Einkünfte aus Leistungen (§ 22 Nr. 3 EStG) – manuell einzutragen", self.styles['H3']))
         self.story.append(Paragraph(
             f"ACHTUNG: {len(gaps)} Vorgang/Vorgänge mit zugeteilten Aktien gehören in die Anlage SO "
-            "(Einkünfte aus Leistungen). Dieser Bericht enthält dafür keine Zeile; die Beträge sind "
+            "(Einkünfte aus Leistungen). Die automatische Leistungen-Zeile enthält nur "
+            "Wertpapierdarlehen; diese Aktienzuteilungsbeträge sind "
             "in keiner der oben ausgewiesenen Summen enthalten und müssen von Hand in die Erklärung "
             "übernommen werden.", self.styles['BodyText']))
         for gap in gaps:

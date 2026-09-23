@@ -28,6 +28,17 @@ from src.utils.type_utils import parse_ibkr_date, safe_decimal
 logger = logging.getLogger(__name__)
 
 class DomainEventFactory:
+    # IBKR's Stock Yield Enhancement Program. The description is the only field that
+    # distinguishes the lending fee from ordinary credit interest -- `Type` is
+    # "Broker Interest Received" for both, and `AssetClass`, `Symbol`, `Conid` and `ISIN`
+    # are empty on every fee row. Measured 2026-08-09 across
+    # Cash_Transactions-2021.csv..-2025.csv: the acronym occurs in 35 rows, all of them
+    # "<CCY> IBKR MANAGED SECURITIES (SYEP) INTEREST FOR <MON>-<YYYY>", and in no other
+    # row of any kind. Matched on the acronym alone rather than the full phrase so that a
+    # reworded description still routes to § 22 Nr. 3 instead of falling back to interest,
+    # which is the failure that would move a figure silently.
+    _SECURITIES_LENDING_MARKER = "SYEP"
+
     def __init__(self, asset_resolver: AssetResolver):
         self.asset_resolver = asset_resolver
         self.processed_ibkr_trade_ids_for_options: Set[str] = set()
@@ -610,6 +621,38 @@ class DomainEventFactory:
                 else:
                     evt_type = FinancialEventType.DIVIDEND_CASH
                 domain_event_instance = CashFlowEvent(asset_for_event.internal_asset_id, event_date_str, event_type=evt_type, source_country_code=rct.issuer_country_code, **event_params_kw)
+
+            elif self._SECURITIES_LENDING_MARKER in desc_upper:
+                # The fee for lending securities out. It is NOT interest, and the split
+                # cannot be made on `Type`: IBKR books this and ordinary credit interest
+                # alike as "Broker Interest Received". legal_basis: [GT-ESTG20-049],
+                # [GT-ESTG20-050] -- § 20 Abs. 3 is accessory and this is accessory to
+                # nothing, § 20 Abs. 1 Nr. 7 needs a Kapitalforderung where a lender holds
+                # a Sachforderung, so § 22 Nr. 3 takes it. It leaves Anlage KAP entirely
+                # and lands on the Anlage SO *Leistungen* entry line, [GT-FORM-024].
+                #
+                # Placed BEFORE the interest branch because the description contains the
+                # word "INTEREST" and would otherwise be caught by it.
+                if raw_amount < Decimal(0):
+                    # Not observed: all 35 rows carrying this marker in
+                    # Cash_Transactions-2021..2025 are positive (measured 2026-08-09). A
+                    # negative one would be an outflow whose Einkunftsart this code has no
+                    # basis to decide, and `is_income_type` above has already taken the
+                    # absolute value, so letting it through would declare a payment as
+                    # income. Stop instead.
+                    data_errors.append(
+                        f"Cash transaction {rct.transaction_id}, Type: {rct.type}, "
+                        f"Desc: {rct.description}: a securities-lending fee with a negative "
+                        f"amount ({raw_amount} {rct.currency_primary}). Every such row "
+                        f"observed in the export window is positive, so this engine has no "
+                        f"rule for the outflow case and will not guess one."
+                    )
+                    continue
+                domain_event_instance = CashFlowEvent(
+                    asset_for_event.internal_asset_id, event_date_str,
+                    event_type=FinancialEventType.SECURITIES_LENDING_FEE_RECEIVED,
+                    source_country_code=rct.issuer_country_code, **event_params_kw
+                )
 
             elif "INTEREST" in event_type_str_upper or desc_upper.startswith("CREDIT INTEREST") or desc_upper.startswith("DEBIT INTEREST"):
                 source_country_for_interest = rct.issuer_country_code

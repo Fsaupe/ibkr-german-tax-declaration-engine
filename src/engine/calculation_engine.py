@@ -1547,6 +1547,7 @@ def run_main_calculations(
             if event.event_type in [
                 FinancialEventType.DIVIDEND_CASH, FinancialEventType.DISTRIBUTION_FUND,
                 FinancialEventType.INTEREST_RECEIVED, FinancialEventType.INTEREST_PAID_STUECKZINSEN,
+                FinancialEventType.SECURITIES_LENDING_FEE_RECEIVED,
                 FinancialEventType.WITHHOLDING_TAX, FinancialEventType.FEE_TRANSACTION
             ]:
                 logger.debug(f"Event {event.event_id} ({event.event_type.name}) for {asset_object.get_classification_key()} has no security ledger, but processing currency impact.")
@@ -1621,6 +1622,7 @@ def run_main_calculations(
             if event.event_type not in [
                 FinancialEventType.DIVIDEND_CASH, FinancialEventType.CAPITAL_REPAYMENT, FinancialEventType.DISTRIBUTION_FUND,
                 FinancialEventType.INTEREST_RECEIVED, FinancialEventType.INTEREST_PAID_STUECKZINSEN,
+                FinancialEventType.SECURITIES_LENDING_FEE_RECEIVED,
                 FinancialEventType.WITHHOLDING_TAX, FinancialEventType.FEE_TRANSACTION
             ]:
                 logger.warning(f"No processor mapped and no ledger interaction expected for event type: {event.event_type.name} (ID: {event.event_id}).")
@@ -3020,6 +3022,10 @@ def _process_cashflow_currency_impact(
         FinancialEventType.DIVIDEND_CASH,
         FinancialEventType.DISTRIBUTION_FUND,
         FinancialEventType.INTEREST_RECEIVED,
+        # The securities-lending fee is a cash inflow like any other. Its Einkunftsart is
+        # 22 Nr. 3 rather than 20 EStG ([GT-ESTG20-049]), which changes the form line and
+        # nothing about the currency ledger.
+        FinancialEventType.SECURITIES_LENDING_FEE_RECEIVED,
         FinancialEventType.CAPITAL_REPAYMENT,
     ]:
         # INCOME: You receive foreign currency
@@ -3101,6 +3107,7 @@ _CURRENCY_MOVING_CASHFLOW_TYPES = (
     FinancialEventType.DIVIDEND_CASH,
     FinancialEventType.DISTRIBUTION_FUND,
     FinancialEventType.INTEREST_RECEIVED,
+    FinancialEventType.SECURITIES_LENDING_FEE_RECEIVED,
     FinancialEventType.INTEREST_PAID_STUECKZINSEN,
     FinancialEventType.WITHHOLDING_TAX,
     FinancialEventType.FEE_TRANSACTION,
@@ -3391,6 +3398,7 @@ def _apply_historical_currency_event(
                 if (isinstance(event, FeeEvent) and event.is_refund) or event.event_type in [
                     FinancialEventType.DIVIDEND_CASH, FinancialEventType.DISTRIBUTION_FUND,
                     FinancialEventType.INTEREST_RECEIVED, FinancialEventType.CAPITAL_REPAYMENT,
+                    FinancialEventType.SECURITIES_LENDING_FEE_RECEIVED,
                 ]:
                     # Income: receive currency
                     _create_lot_historical(

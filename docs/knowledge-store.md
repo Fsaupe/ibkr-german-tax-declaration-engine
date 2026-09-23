@@ -284,6 +284,8 @@ here rather than resolved.
 - Foreign withholding tax — EStG 32d Abs. 5, 34c
 - Currency gains/losses — EStG 20 Abs. 2 / EStG 23
 - Private sales within speculation period — EStG 23 Abs. 1 Nr. 2
+- Securities-lending fee received by a private lender — EStG 22 Nr. 3 (not EStG 20; the order of
+  enquiry runs out inside it)
 
 ### Loss offsetting rules
 - General capital loss offsetting — EStG 20 Abs. 6

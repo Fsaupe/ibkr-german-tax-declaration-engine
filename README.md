@@ -773,7 +773,9 @@ Nothing recomputes this file either. Back it up with the others.
     foreign withholding tax.
 *   **Anlage KAP-INV:** investment fund distributions, Vorabpauschale and disposal gains, entered
     gross (before Teilfreistellung).
-*   **Anlage SO:** private sales under § 23 EStG disposed of within the one-year period.
+*   **Anlage SO:** private sales under § 23 EStG disposed of within the one-year period, and
+    Einnahmen aus Leistungen under § 22 Nr. 3 EStG — the fee received for lending securities
+    out, which is not capital income and does not belong on Anlage KAP.
 
 **Line numbers are deliberately not listed here.** They are legal facts, they are year-specific,
 and CLAUDE.md permits them in exactly one place: `reference/`. See
