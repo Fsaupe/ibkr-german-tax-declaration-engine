@@ -9,7 +9,7 @@ the two grounds coincide: the US keeps 15 % and refunds the rest
 (reference/tax-law/dba-usa.md [GT-CREDIT-027], [GT-CREDIT-028], Art. 10 Abs. 2 b /
 Abs. 4 Satz 2; a REIT's dividend only under the holding conditions of Abs. 4 Satz 3,
 assumed met -- see `CREDITABLE_DIVIDEND_RATES`). Anything withheld above that is not creditable in Germany; it is claimed
-back from the IRS. Branch B (Art. 21), where the two grounds diverge, is open (Q22) and
+back from the IRS. Branch B (Art. 21), where the US does not apply the treaty's allocation, is open (Q22) and
 not reached: the parser takes branch A ([GT-INVSTG-059]).
 
 This module supplies the treaty rate and the decision for all the rows on one income. It does NOT cap silently

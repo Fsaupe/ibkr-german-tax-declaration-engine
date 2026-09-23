@@ -176,7 +176,8 @@ CREDITABLE_INTEREST_RATES: dict[int, dict[str, Decimal]] = {
 
 # What each creditable rate is the result of, as the BZSt prints it: the source state's
 # national rate (column A a) / B a)) and the DBA ceiling (A b) / B b)). Where the national
-# rate is below the ceiling it is what is creditable, otherwise the ceiling is
+# rate that applies to the income is below the ceiling it is what is creditable, otherwise
+# the ceiling is; of two national rates (JP, US) the lower is for particular income only
 # ([GT-CREDIT-029], [GT-CREDIT-030]). The same in each edition 2023-2026 (store); check
 # the new edition when a year is added above. For the report only: the rates above
 # decide every figure.
