@@ -8,7 +8,9 @@ year ([GT-CREDIT-027]):
 - a US fund (RIC): the 15 % holds *"falls keine Befreiung"*. The exempt part of a RIC
   dividend is whatever part the RIC reports as an interest-related or short-term
   capital gain dividend (26 U.S.C. § 871(k)); tax withheld on it is wholly an
-  Ermaessigungsanspruch ([GT-CREDIT-026]).
+  Ermaessigungsanspruch ([GT-CREDIT-026]), and the 15 % applies to the rest only. Where
+  the taxpayer states that the fund reported an exempt part in the year, the share of
+  each distribution is asked by its date, in percent of the gross.
 - a US share: a REIT's dividend is on the 15 % only if the holder meets Art. 10 Abs. 4
   Satz 3 -- for a natural person, not more than 10 % of the REIT. REIT status is held per
   taxable year (§ 856(c)(1)).
@@ -37,6 +39,7 @@ from src.domain.enums import AssetCategory
 class Question:
     key: str
     text: str
+    kind: str = "yes_no"   # or "percent": a number from 0 to 100
 
 
 US_RIC_EXEMPT_PART = Question(
@@ -66,6 +69,18 @@ CN_EXEMPT = Question(
     "ausländischer Investoren -- BMF-Schreiben vom 31.03.2022)?")
 
 
+def us_ric_exempt_percent(income_date: str) -> Question:
+    """Asked per distribution once US_RIC_EXEMPT_PART is answered yes ([GT-CREDIT-027])."""
+    return Question(f"{US_RIC_EXEMPT_PERCENT_PREFIX}{income_date}",
+                    f"Welcher Anteil (in %) der Ausschüttung vom {income_date} wurde als "
+                    "'interest-related dividend' oder 'short-term capital gain dividend' ausgewiesen "
+                    "(Steuerbescheinigung des Fonds bzw. Form 1042-S)? Leer lassen, wenn unbekannt.",
+                    kind="percent")
+
+
+US_RIC_EXEMPT_PERCENT_PREFIX = "us_ric_exempt_percent:"
+
+
 def cn_exempt_dividend(income_date: str) -> Question:
     """Asked per dividend once CN_EXEMPT is answered yes ([GT-CREDIT-031])."""
     return Question(f"cn_exempt_dividend:{income_date}",
@@ -85,6 +100,8 @@ def questions(state: Optional[str], category: Optional[AssetCategory],
     `income_dates`: the dates of the incomes concerned, for a question asked per dividend."""
     state = (state or "").strip().upper()
     if state == "US" and category is AssetCategory.INVESTMENT_FUND:
+        if answers.get(US_RIC_EXEMPT_PART.key):
+            return [US_RIC_EXEMPT_PART] + [us_ric_exempt_percent(d) for d in sorted(set(income_dates))]
         return [US_RIC_EXEMPT_PART]
     if state == "US" and category is AssetCategory.STOCK:
         return [US_REIT, US_REIT_AT_MOST_10] if answers.get(US_REIT.key) else [US_REIT]
@@ -117,11 +134,19 @@ def verdict(state: Optional[str], category: Optional[AssetCategory],
             return Verdict.NOT_MET, "Investmentvehikel nach Art. 10 Abs. 2 Buchst. b DBA China: kein Satz der Spalte C", None
         if answers[CN_EXEMPT.key] and income_date and answers[cn_exempt_dividend(income_date).key]:
             return Verdict.MET, "", Decimal("0")
-    if answers.get(US_RIC_EXEMPT_PART.key) and US_RIC_EXEMPT_PART in asked:
-        return Verdict.NOT_MET, ("ein Teil der Ausschüttungen ist nach 26 U.S.C. § 871(k) steuerbefreit; "
-                                 "die darauf einbehaltene Steuer ist nicht anrechenbar, der befreite Teil "
-                                 "ist nicht bekannt"), None
     if answers.get(US_REIT.key) and not answers.get(US_REIT_AT_MOST_10.key):
         return Verdict.NOT_MET, ("REIT-Beteiligung über 10 %: DBA-USA Art. 10 Abs. 4 Satz 3 setzt dann "
                                  "keinen Höchstsatz"), None
     return Verdict.MET, "", None
+
+
+def taxable_share(state: Optional[str], category: Optional[AssetCategory],
+                  answers: Optional[Dict[str, object]], income_date: Optional[str]) -> Decimal:
+    """The part of the income the treaty rate applies to: 1, less the exempt part a US
+    fund reported for this distribution ([GT-CREDIT-027]). Call only where `verdict` is
+    MET, so a stated exemption has its share."""
+    answers = answers or {}
+    if (state or "").strip().upper() == "US" and category is AssetCategory.INVESTMENT_FUND \
+            and answers.get(US_RIC_EXEMPT_PART.key):
+        return 1 - answers[us_ric_exempt_percent(income_date).key] / Decimal("100")
+    return Decimal("1")

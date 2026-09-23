@@ -312,7 +312,7 @@ is that country's. The export does not say which country it is. Left at `None` (
 older `config.py`), a year with such a row stops before any figure is produced, naming the rows and
 this setting: neither the amount withheld nor zero is a supported credit.
 
-### Facts the US withholding credit depends on
+### Facts the US and Chinese withholding credit depends on
 
 The US tax on a dividend is creditable at 15 % only if the paying fund reported no part of
 that year's distributions as exempt (`interest-related` or `short-term capital gain dividend`,
@@ -332,12 +332,16 @@ start, after the asset classification, and keeps the answers per payer and year 
 ```
 
 A share is asked `us_reit` (and, if true, `us_reit_holding_at_most_10pct`); a fund is asked
-`us_ric_exempt_part`. A Chinese share is asked `cn_mainland_resident`,
+`us_ric_exempt_part`. If a fund reported an exempt part, each distribution is asked the share
+reported exempt, in percent of the gross, from the fund's tax statement or Form 1042-S:
+`"us_ric_exempt_percent:YYYY-MM-DD": "25"` (the income's date; a string from 0 to 100). The US tax
+is then creditable up to 15 % of the rest; tax on the exempt part is reclaimed in the US. A Chinese share is asked `cn_mainland_resident`,
 `cn_real_estate_investment_vehicle` and `cn_exempt_under_chinese_law` -- whether *any* dividend
 of the year was exempt (10 % creditable for a mainland company; 0 % where China exempts the
 dividend, e.g. a B-share or an A-share held over a year). If yes, each dividend is asked by its
 date, `cn_exempt_dividend:YYYY-MM-DD`, since the exemption can differ between dividends. A `--no-interactive` run with a question unanswered stops before any
-figure, naming the ISINs; so does an answer under which the 15 % does not hold.
+figure, naming the ISINs; so does an answer under which the rate does not hold (a REIT held
+above 10 %, a Chinese payer off the mainland or a real-property vehicle).
 
 ### Recording Query IDs
 

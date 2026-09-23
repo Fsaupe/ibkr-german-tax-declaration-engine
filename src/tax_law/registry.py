@@ -120,10 +120,11 @@ def teilfreistellung_rate(fund_type: Optional[InvestmentFundType]) -> Decimal:
 # carried from a neighbouring year, even where the editions agree; research the
 # edition and add the year. Fractions, not percent.
 #
-# US ([GT-CREDIT-027]): the 15 % holds only for a RIC dividend with no exempt part and a
-# REIT dividend whose holder meets Art. 10 Abs. 4 Satz 3. Neither is in the export; the
-# conditions are checked against the taxpayer's stated answers
-# (src/tax_law/withholding_conditions.py), and without them the rate does not apply.
+# US ([GT-CREDIT-027]): the 15 % holds only on the part of a RIC dividend the RIC did not
+# report as exempt, and for a REIT dividend only where the holder meets Art. 10 Abs. 4
+# Satz 3. Neither is in the export; the conditions and the exempt share are taken from the
+# taxpayer's stated answers (src/tax_law/withholding_conditions.py), and without them the
+# rate does not apply.
 
 CREDITABLE_DIVIDEND_RATES: dict[int, dict[str, Decimal]] = {
     2023: {"US": Decimal("0.15"), "FR": Decimal("0.128"), "JP": Decimal("0.15"),

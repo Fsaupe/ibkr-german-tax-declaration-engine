@@ -85,11 +85,79 @@ def test_a_us_fund_with_no_exempt_part_is_credited_at_15(tmp_path):
     assert form.form_line_values[Z41] == Decimal("135.00")
 
 
-def test_a_us_fund_that_reported_an_exempt_part_stops(tmp_path):
-    """The exempt part is unknown, and tax withheld on it is not creditable: no figure."""
+def test_a_us_fund_that_reported_an_exempt_part_without_its_share_stops(tmp_path):
+    """Tax withheld on the exempt part is not creditable; without the share of each
+    distribution the creditable amount is unknown: no figure."""
     events, resolver = _us_fund(tmp_path, {"us_ric_exempt_part": True})
     message, gaps = _stopped(events, resolver)
-    assert "FOREIGN_WHT_CONDITION_NOT_MET" in _codes(gaps) and "RIC" in message
+    assert "FOREIGN_WHT_FACTS_UNANSWERED" in _codes(gaps) and "RIC" in message
+
+
+# The exempt part as the RIC reports it, per distribution ([GT-CREDIT-027]: "the 15 % of
+# Abs. 2 b applies to the unreported part only"; tax withheld on the reported part is
+# wholly an Ermaessigungsanspruch). 1000 USD at 0.90 EUR, 25 % reported exempt: 15 % of
+# the other 750 USD = 112.50 USD = EUR 101.25 is creditable.
+
+def _exempt(percent):
+    return {"us_ric_exempt_part": True, "us_ric_exempt_percent:2025-06-16": Decimal(percent)}
+
+
+def test_a_us_fund_with_an_exempt_share_is_credited_at_15_percent_of_the_rest(tmp_path):
+    events, resolver = _us_fund(tmp_path, _exempt("25"))
+    form, gaps = _run(events, resolver)
+    assert form.form_line_values[Z41] == Decimal("101.25")
+    assert "FOREIGN_WHT_ABOVE_TREATY_RATE" in _codes(gaps)
+
+
+def test_tax_withheld_only_on_the_taxable_part_is_credited_in_full(tmp_path):
+    events, resolver = _us_fund(tmp_path, _exempt("25"))
+    events[1].gross_amount_foreign_currency = Decimal("112.50")
+    events[1].gross_amount_eur = Decimal("112.50") * Decimal("0.90")
+    form, gaps = _run(events, resolver)
+    assert form.form_line_values[Z41] == Decimal("101.25")
+    assert not [c for c in _codes(gaps) if c.startswith("FOREIGN_WHT_")]
+
+
+def test_a_wholly_exempt_distribution_credits_nothing(tmp_path):
+    events, resolver = _us_fund(tmp_path, _exempt("100"))
+    form, _ = _run(events, resolver)
+    assert form.form_line_values.get(Z41, Decimal("0.00")) == Decimal("0.00")
+
+
+def test_the_share_is_asked_per_distribution_after_the_exempt_answer(tmp_path):
+    events, resolver = _us_fund(tmp_path, None)
+    asked = []
+    answers = {"us_ric_exempt_part": True, "us_ric_exempt_percent:2025-06-16": Decimal("25")}
+
+    def ask(asset, year, question):
+        asked.append(question.key)
+        return answers[question.key]
+
+    store = WithholdingFactsStore(str(tmp_path / "facts.json"))
+    left = resolve_withholding_facts(resolver.assets_by_internal_id.values(), events, 2025, store, True, ask)
+    assert asked == ["us_ric_exempt_part", "us_ric_exempt_percent:2025-06-16"] and left == []
+    saved = WithholdingFactsStore(store.cache_file_path).get(
+        next(iter(resolver.assets_by_internal_id.values())).get_classification_key(), 2025)
+    assert saved.answers["us_ric_exempt_percent:2025-06-16"] == Decimal("25")
+
+
+def test_a_share_left_blank_stays_unanswered(tmp_path):
+    events, resolver = _us_fund(tmp_path, None)
+    answers = {"us_ric_exempt_part": True, "us_ric_exempt_percent:2025-06-16": None}
+    left = resolve_withholding_facts(resolver.assets_by_internal_id.values(), events, 2025,
+                                     WithholdingFactsStore(str(tmp_path / "facts.json")), True,
+                                     lambda asset, year, q: answers[q.key])
+    assert len(left) == 1
+
+
+@pytest.mark.parametrize("value", ["120", "-1", "abc", True])
+def test_an_exempt_share_outside_0_to_100_is_unreadable(tmp_path, value):
+    path = tmp_path / "facts.json"
+    path.write_text(json.dumps({"ISIN:X|2025": {
+        "answers": {"us_ric_exempt_part": True, "us_ric_exempt_percent:2025-06-16": value},
+        "date_set": "2026-09-23", "source": "x"}}), encoding="utf-8")
+    with pytest.raises(ProcessingError):
+        WithholdingFactsStore(str(path))
 
 
 def test_the_answer_of_another_year_is_not_used(tmp_path):

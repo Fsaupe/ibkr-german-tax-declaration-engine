@@ -41,7 +41,7 @@ from typing import Dict, List, Optional
 from src.domain.enums import AssetCategory
 from src.domain.events import CashFlowEvent, WithholdingTaxEvent
 from src.tax_law.registry import creditable_rate, creditable_rates_researched
-from src.tax_law.withholding_conditions import Verdict, verdict
+from src.tax_law.withholding_conditions import Verdict, taxable_share, verdict
 
 _CENT = Decimal("0.01")
 
@@ -128,6 +128,9 @@ def assess_withholdings(whts: List[WithholdingTaxEvent],
         return _each(WithholdingStatus.CONDITION_NOT_MET)
     if stated_rate is not None:
         rate = stated_rate   # e.g. China's 0 % on a dividend its own law exempts ([GT-CREDIT-031])
+    # A US fund's reported exempt part carries no creditable tax; the rate applies to the
+    # rest ([GT-CREDIT-027]). Expressed against the gross, so the rate shown is the one applied.
+    rate = rate * taxable_share(states[0], income_asset_category, facts, income_event.event_date)
 
     income_foreign = _abs(income_event.gross_amount_foreign_currency)
     withheld_foreign = [_abs(w.gross_amount_foreign_currency) for w in whts]

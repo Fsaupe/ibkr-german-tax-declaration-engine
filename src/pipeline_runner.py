@@ -247,8 +247,8 @@ def run_core_processing_pipeline(
         )
 
         # Facts a creditable withholding rate depends on and no export carries (a US
-        # REIT holding, an exempt part of a US fund's distribution), per instrument and
-        # year. Asked here, with the fund type and the fund price, in an interactive run;
+        # REIT holding, the exempt share of a US fund's distribution, a Chinese payer's
+        # residence and exemption), per instrument and year. Asked here, with the fund type and the fund price, in an interactive run;
         # an unanswered one stops the run at Zeile 41. See src/processing/withholding_facts.py.
         resolve_withholding_facts(
             assets=list(orchestrator.asset_resolver.assets_by_internal_id.values()),
