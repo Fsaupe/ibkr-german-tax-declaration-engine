@@ -1728,8 +1728,9 @@ class PdfReportGenerator:
                 "im Quellenstaat kein Ermäßigungsanspruch besteht (§ 32d Abs. 5 Satz 1 EStG). Maßgebend ist die "
                 "BZSt-Übersicht „Anrechenbarkeit der Quellensteuer auf Dividenden und Zinsen“, Stand 1. Januar "
                 f"{self.tax_year}: sie nennt je Quellenstaat den Inlandssatz, den Höchstsatz nach dem DBA und als "
-                "Ergebnis den anrechenbaren Satz. Liegt der Inlandssatz unter dem DBA-Höchstsatz, ist er "
-                "anrechenbar, sonst der DBA-Höchstsatz. Wurde mehr einbehalten, ist die Zeile auf diesen Satz des "
+                "Ergebnis den anrechenbaren Satz. Liegt der für den Ertrag geltende Inlandssatz unter dem "
+                "DBA-Höchstsatz, ist er anrechenbar, sonst der DBA-Höchstsatz; von zwei Inlandssätzen gilt der "
+                "niedrigere nur für bestimmte Erträge. Wurde mehr einbehalten, ist die Zeile auf diesen Satz des "
                 "zugeordneten Bruttoertrags gekürzt; der Rest ist im Quellenstaat zu erstatten und in Deutschland "
                 "nicht anrechenbar. Die Höchstbeträge nach § 32d Abs. 5 Sätze 1 und 3 EStG wendet das Finanzamt an.",
                 self.styles['SmallText'])
@@ -1760,7 +1761,8 @@ class PdfReportGenerator:
         if country == "US":
             # [GT-CREDIT-027]: "15, falls keine Befreiung"; Art. 10 Abs. 4 Sätze 2 und 3.
             return ("Auch für Ausschüttungen von US-Fonds (RIC). 15 %, falls keine Befreiung (bestimmte "
-                    "RIC-Dividenden sind steuerfrei); REIT-Dividenden nur bei Beteiligung bis 10 %.")
+                    "RIC-Dividenden sind steuerfrei, Inlandssatz 0 %; sonst 30 %); REIT-Dividenden nur bei "
+                    "Beteiligung bis 10 %.")
         if country == "FR":
             return "Inlandssatz unter dem DBA-Höchstsatz: der Inlandssatz ist anrechenbar."
         return ""
