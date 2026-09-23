@@ -80,8 +80,9 @@ creditable: the source state's own law already grants the reduction down to it. 
 
 **What the cited unit also contains** (Validation Protocol item 2), none of it relied on here:
 
-- Column D, the creditable **interest** rate for each state, and column B. Which state levied a
-  given interest withholding is a fact the table cannot supply.
+- Column D, the creditable **interest** rate, and column B: for Irland at [GT-CREDIT-030] below;
+  for every other state not relied on. Which state levied a given interest withholding is a fact
+  the table cannot supply.
 - Column E, national special rules. For the states above: Japan, *"15 % auf qualifizierte
   Dividenden aus boersennotierten Gesellschaften"* (the 15 of A a)); Kanada and Korea, interest
   exemptions only.
@@ -94,3 +95,29 @@ creditable: the source state's own law already grants the reduction down to it. 
   after Taiwan belongs to Nordmazedonien and Thailand, the neighbouring rows.)
 - The *fiktive* Quellensteuer of columns A/B c): none for the states above.
 - Every other source state in the table.
+
+---
+
+## [GT-CREDIT-030] Column D -- the creditable interest rate, Irland
+
+Column B gives, for interest, the source state's national rate (a) and the DBA ceiling (b);
+column D the creditable rate (the meaning of the columns is quoted at [GT-CREDIT-029]). Per
+edition, as for dividends: a rate holds for the assessment year of its edition only.
+
+| Source state | Code | B a) national | B b) DBA | D 2023 | D 2024 | D 2025 | D 2026 | Pages 2023 / 2024 / 2025 / 2026 |
+|---|---|---|---|---|---|---|---|---|
+| Irland | IE | 0 / 20 | 0 | 0 | 0 | 0 | 0 | 9 / 9 / 9 / 10 |
+
+Ireland's national law levies up to 20 % on interest (B a)); the DBA leaves it no tax on interest
+paid to a German resident (B b) 0). Whatever Ireland withheld is therefore wholly subject to an
+Ermaessigungsanspruch and **none of it is creditable** ([GT-CREDIT-026]); it is claimed back in
+Ireland. The same values are printed in all four editions, each read separately; for VZ 2023,
+2024 and 2025 the following edition shows no change.
+
+**What the row also contains:** column E for Irland concerns dividends only (*"keine
+Quellensteuer fuer EU-Buerger und fuer Ansaessige in DBA-Staaten"*, from the 2024 edition on with
+*"auf Antrag Vorabbefreiung oder nachtraegliche Erstattung der einbehaltenen Quellensteuer"*);
+column F, *"volles Besteuerungsrecht des Quellenstaats auf Dividenden und Zinsen aus Rechten oder
+Forderungen mit Gewinnbeteiligung, wenn diese bei der Ermittlung der Gewinne des Schuldners der
+Dividenden oder Zinsen abzugsfaehig sind (Protokoll zum DBA, Ziff. 3 zu den Artikeln 10 und 11)"*,
+which does not reach interest on a cash balance.
