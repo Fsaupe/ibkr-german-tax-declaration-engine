@@ -363,7 +363,7 @@ def generate_console_tax_report(
     else:
         print("  Keine kritischen Differenzen bei der End-of-Year Mengenvalidierung festgestellt (basierend auf Log-Analyse).")
 
-    print("  Zeile 41 trägt die anrechenbare ausländische Steuer: die einbehaltene Steuer, begrenzt auf den anrechenbaren Satz der BZSt-Übersicht des Steuerjahres, soweit für Jahr, Quellenstaat und Ertragsart (Dividenden, Zinsen) recherchiert; sonst die einbehaltene Steuer. Über dem anrechenbaren Satz Einbehaltenes und ungeprüfte Quellenstaaten werden unten als Hinweis ausgewiesen. Die §32d-Abs.5-Höchstbeträge wendet das Finanzamt an.")
+    print("  Zeile 41 trägt die anrechenbare ausländische Steuer: die einbehaltene Steuer, begrenzt auf den anrechenbaren Satz der BZSt-Übersicht des Steuerjahres, für Jahr, Quellenstaat und Ertragsart (Dividenden, Zinsen). Über dem anrechenbaren Satz Einbehaltenes wird unten als Hinweis ausgewiesen. Ist für eine Zeile kein Satz recherchiert oder ist sie keinem Ertrag zugeordnet, bricht das Programm ab und nennt die Zeilen. Die §32d-Abs.5-Höchstbeträge wendet das Finanzamt an.")
     print("  Verlustvorträge über Steuerjahre hinweg sind nicht implementiert.")
     print("  Die endgültige Steuerlast (Sparer-Pauschbetrag, Steuersätze, Soli, KiSt) wird nicht berechnet.")
     print("  Alle Angaben ohne Gewähr. Bitte überprüfen Sie alle Zahlen sorgfältig und konsultieren Sie ggf. einen Steuerberater.")

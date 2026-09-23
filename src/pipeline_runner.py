@@ -120,7 +120,11 @@ def run_core_processing_pipeline(
         asset_resolver=asset_resolver,
         asset_classifier=asset_classifier,
         interactive_classification=interactive_classification_mode,
-        broker_entity_country=config.BROKER_ENTITY_COUNTRY,
+        # A config.py written before this setting existed lacks it. That is the same
+        # answer as None -- not given -- and a credit-interest withholding row then
+        # stops the run naming the setting (FOREIGN_WHT_CREDIT_UNSUPPORTED); a year
+        # without such rows needs no answer.
+        broker_entity_country=getattr(config, "BROKER_ENTITY_COUNTRY", None),
     )
 
     logger.info("Starting parsing pipeline...")

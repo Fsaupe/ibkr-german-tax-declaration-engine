@@ -37,3 +37,31 @@ def test_the_configured_broker_country_is_the_interest_withholding_s_state(tmp_p
 
 def test_no_state_is_assumed_when_none_is_configured(tmp_path):
     assert _withholding_states(tmp_path) == [None]
+
+
+def test_a_config_written_before_the_setting_existed_is_read_as_unanswered(monkeypatch):
+    """The maintainer's config.py has no BROKER_ENTITY_COUNTRY, and every run aborted with
+    an AttributeError before any calculation (review of PR #102). A missing setting is the
+    same as None, not given: the parser assumes no state, and only a credit-interest
+    withholding row then stops the run, naming the setting (FOREIGN_WHT_CREDIT_UNSUPPORTED)."""
+    import pytest
+    import src.config as config
+    import src.pipeline_runner as pipeline_runner
+
+    class Reached(Exception):
+        pass
+
+    seen = {}
+
+    def orchestrator(**kwargs):
+        seen.update(kwargs)
+        raise Reached
+
+    monkeypatch.delattr(config, "BROKER_ENTITY_COUNTRY", raising=False)
+    monkeypatch.setattr(pipeline_runner, "ParsingOrchestrator", orchestrator)
+    with pytest.raises(Reached):
+        pipeline_runner.run_core_processing_pipeline(
+            trades_file_path="", cash_transactions_file_path="", positions_start_file_path="",
+            positions_end_file_path="", corporate_actions_file_path="",
+            interactive_classification_mode=False, tax_year_to_process=2025)
+    assert seen["broker_entity_country"] is None

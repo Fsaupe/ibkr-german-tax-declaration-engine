@@ -1549,7 +1549,8 @@ class PdfReportGenerator:
             if wht_event.gross_amount_eur is None:
                 continue
 
-            # A row with no source state is listed, not dropped: its tax is on Zeile 41.
+            # A row with no source state is listed, not dropped (German KESt found by its
+            # rate can carry none; a foreign row without one stops the run before this).
             country = wht_event.source_country_code or "unbekannt"
             tax_amount = wht_event.gross_amount_eur
             # None: not on Zeile 41 (German KESt, see the gap below the table).
@@ -1681,25 +1682,12 @@ class PdfReportGenerator:
     def _format_creditable(self, amount: Optional[Decimal]) -> str:
         return "–" if amount is None else self._format_decimal(amount).replace('.', ',')
 
-    # What a status other than a rate reads as in the "Anr. Satz" column, and why the row
-    # keeps the amount that was withheld (src/tax_law/treaty_withholding.py).
-    _UNRATED_STATUS_TEXT = {
-        "RATE_NOT_VERIFIED": ("ungeprüft", "ungeprüft: für diesen Quellenstaat oder diese Ertragsart ist kein "
-                              "anrechenbarer Satz recherchiert; die einbehaltene Steuer steht unverändert auf "
-                              "Zeile 41 und ist gegen das DBA zu prüfen."),
-        "RATE_YEAR_NOT_RESEARCHED": ("nicht recherchiert", "nicht recherchiert: für dieses Steuerjahr ist die "
-                                     "BZSt-Übersicht nicht eingelesen; Sätze anderer Jahre werden nicht "
-                                     "übernommen, die einbehaltene Steuer steht unverändert auf Zeile 41."),
-        "UNLINKED": ("ungeprüft", "ungeprüft (nicht verknüpft): die Zeile ist keinem Ertrag zugeordnet, der Satz "
-                     "kann nicht geprüft werden; die einbehaltene Steuer steht unverändert auf Zeile 41."),
-    }
-
     def _format_applied_rate(self, transaction) -> str:
+        # Every foreign row that reaches the report has a rate: a row without one stops
+        # the run (src/engine/loss_offsetting.py, FOREIGN_WHT_CREDIT_UNSUPPORTED).
         if transaction['creditable'] is None:
             return "–"
-        if transaction['applied_rate'] is not None:
-            return self._format_rate(transaction['applied_rate'])
-        return self._UNRATED_STATUS_TEXT.get(transaction['status'], ("ungeprüft", ""))[0]
+        return self._format_rate(transaction['applied_rate'])
 
     @staticmethod
     def _format_rate(rate: Decimal) -> str:
@@ -1708,7 +1696,7 @@ class PdfReportGenerator:
     def _add_applied_rates(self, wht_transactions):
         """Where each "Anr. Satz" comes from: the BZSt table of the tax year, per source state
         and income kind ([GT-CREDIT-026], [GT-CREDIT-027], [GT-CREDIT-029], [GT-CREDIT-030]). Only the states and kinds the
-        table above uses, and a legend line only for the statuses and rows present."""
+        table above uses, and the German-KESt line only where such a row is present."""
         shown = [t for t in wht_transactions if t['income'] != Decimal('0.00') or t['tax'] != Decimal('0.00')]
         applied = sorted({(t['country'], t['is_interest'], t['applied_rate'])
                           for t in shown if t['applied_rate'] is not None and t['creditable'] is not None})
@@ -1724,10 +1712,6 @@ class PdfReportGenerator:
                 data.append([country, "Zinsen" if is_interest else "Dividenden", self._format_rate(rate),
                              Paragraph(self._rate_note(country, is_interest), self.styles['TableCell'])])
             self.story.append(KeepTogether([rule, self._create_styled_table(data, col_widths=[1.2*cm, 2.0*cm, 3.0*cm, 10.3*cm])]))
-        for status in sorted({t['status'] for t in shown if t['applied_rate'] is None and t['creditable'] is not None}):
-            text = self._UNRATED_STATUS_TEXT.get(status)
-            if text:
-                self.story.append(Paragraph(text[1], self.styles['SmallText']))
         if any(t['creditable'] is None for t in shown):
             # [GT-FORM-007], [GT-CREDIT-022]
             self.story.append(Paragraph(

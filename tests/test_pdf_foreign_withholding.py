@@ -5,10 +5,10 @@ Since the treaty-rate guard ([GT-CREDIT-026], [GT-CREDIT-029], [GT-CREDIT-030]) 
 less than was withheld on some rows, the section's per-country table summed the
 *withheld* tax under a total that is the *credited* one, and the two disagreed with no
 explanation. Each row now shows the creditable rate it was limited to, and the section
-derives each rate from the BZSt table of the year; rows without a rate, and German KESt,
-are explained in one line each. A row without a source state (interest with
-BROKER_ENTITY_COUNTRY unset) was left out of the table altogether. No declared figure
-changes here.
+derives each rate from the BZSt table of the year; German KESt is explained in one line.
+A row without a source state was left out of the table altogether; since PR #102 F1 a
+foreign row without one stops the run, so the one that reaches the report is German KESt
+found by its rate. No declared figure changes here.
 """
 from decimal import Decimal
 
@@ -23,11 +23,11 @@ Z41 = TaxReportingCategory.ANLAGE_KAP_FOREIGN_TAX_PAID
 
 def _section(tmp_path):
     resolver = _resolver(tmp_path)
-    us, de, xx = (_stock(resolver, isin) for isin in ("US0000000AAA", "DE0000000BBB", "XS0000000CCC"))
+    us, de, xx = (_stock(resolver, isin) for isin in ("US0000000AAA", "DE0000000BBB", "DE0000000CCC"))
     us_div, de_div, xx_div = _income(us, "100"), _income(de, "100", country="DE"), _income(xx, "100", country="")
     events = [us_div, _wht(us, "30", linked_to=us_div),                    # capped: 30 -> 15 USD
               de_div, _wht(de, "26.375", country="DE", linked_to=de_div),  # German KESt, not Zeile 41
-              xx_div, _wht(xx, "5", country="", linked_to=xx_div)]         # no state: kept, reported
+              xx_div, _wht(xx, "26.375", country="", linked_to=xx_div)]    # KESt by its rate, no state
     result, gaps = _run(events, resolver)
     generator = PdfReportGenerator(
         loss_offsetting_result=result, all_financial_events=events, realized_gains_losses=[],
@@ -68,9 +68,11 @@ def test_the_country_table_carries_the_creditable_amount_and_sums_to_zeile_41(tm
 
 
 def test_a_row_without_a_source_state_is_listed_not_dropped(tmp_path):
+    """Changed for PR #102 F1 (approved): the row is German KESt found by its rate; a
+    foreign row without a state now stops the run and never reaches the report."""
     _, tables, _, _ = _section(tmp_path)
-    _, rows, _ = _country_rows(tables)
-    assert "unbekannt" in rows
+    header, rows, _ = _country_rows(tables)
+    assert rows["unbekannt"][header.index("Anrechenbar (EUR)")] == "–"
 
 
 def test_german_kest_is_listed_as_not_creditable_on_zeile_41(tmp_path):
@@ -90,7 +92,7 @@ def test_each_row_shows_the_rate_its_amount_was_limited_to(tmp_path):
     header, rows = _rows_by_country(tables[0])
     rate = header.index("Anr. Satz")
     assert rows["US"][rate] == "15 %"
-    assert rows["unbekannt"][rate] == "ungeprüft"
+    assert rows["unbekannt"][rate] == "–"   # KESt by its rate (changed for PR #102 F1)
     assert rows["DE"][rate] == "–"
 
 
@@ -105,11 +107,12 @@ def test_the_rates_used_are_derived_from_the_bzst_table_of_the_year(tmp_path):
     assert "Stand 1. Januar 2025" in text and "§ 32d Abs. 5 Satz 1" in text
 
 
-def test_the_legend_explains_only_the_unrated_rows_present(tmp_path):
+def test_the_legend_explains_german_kest_and_no_unrated_status(tmp_path):
+    """Changed for PR #102 F1 (approved): an unrated row stops the run, so no
+    'ungeprüft' / 'nicht recherchiert' legend is left to show."""
     _, _, text, _ = _section(tmp_path)
-    assert "ungeprüft: für diesen Quellenstaat" in text          # the row with no state
     assert "deutsche Kapitalertragsteuer" in text and "7/37/38" in text
-    assert "nicht recherchiert:" not in text and "nicht verknüpft" not in text
+    assert "ungeprüft" not in text and "nicht recherchiert" not in text
 
 
 def test_there_is_no_separate_notes_section(tmp_path):

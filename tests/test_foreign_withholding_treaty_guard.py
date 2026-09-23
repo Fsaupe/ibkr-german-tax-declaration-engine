@@ -8,7 +8,10 @@ Satz 2). The guard caps the anrechenbare amount on Zeile 41 to the treaty rate a
 reports the excess as reclaimable in the source state (cap-and-report). The other
 source states and Irish interest follow the same route ([GT-CREDIT-029], [GT-CREDIT-030]). It never defaults an
 unknown source state, and it compares in the row's own currency to the cent so a
-rounded 15 % on a sub-unit gross is not read as an over-withholding.
+rounded 15 % on a sub-unit gross is not read as an over-withholding. A row with no
+supported creditable amount (no linked income, no rate for its state, income kind or
+year) stops the run, every such row named in one FAIL_FAST gap: neither the withheld
+amount nor zero may stand in for the credit (maintainer's review of PR #102, F1).
 
 Measured incidence of a US row above the treaty rate is 0 of 28 US-suffixed
 dividend/PIL withholding rows VZ 2023–2025 (2026-09-22); these fixtures are the hypothetical the issue named (a lapsed W-8BEN
@@ -26,7 +29,7 @@ from decimal import Decimal
 import pytest
 
 from src.engine.loss_offsetting import LossOffsettingEngine
-from src.processing.data_gaps import DataGapCollector, GapSeverity
+from src.processing.data_gaps import DataGapCollector, DataGapError, GapSeverity
 from src.identification.asset_resolver import AssetResolver
 from src.classification.asset_classifier import AssetClassifier
 from src.domain.assets import InvestmentFund
@@ -93,6 +96,20 @@ def _run(events, resolver, tax_year=2025):
 
 def _codes(gaps):
     return [g.code for g in gaps.gaps]
+
+
+def _stopped(events, resolver, tax_year=2025):
+    """Run expecting the stop; return the fatal message and the itemised gaps."""
+    gaps = DataGapCollector()
+    engine = LossOffsettingEngine(
+        realized_gains_losses=[], vorabpauschale_items=[],
+        current_year_financial_events=events, asset_resolver=resolver,
+        tax_year=tax_year, data_gap_collector=gaps)
+    with pytest.raises(DataGapError) as stop:
+        engine.calculate_reporting_figures()
+    fatal = [g for g in gaps.gaps if g.code == "FOREIGN_WHT_CREDIT_UNSUPPORTED"]
+    assert len(fatal) == 1 and fatal[0].severity is GapSeverity.FAIL_FAST
+    return str(stop.value), gaps
 
 
 # --------------------------------------------------------------------------- #
@@ -190,35 +207,34 @@ def test_b3_the_gap_aggregates_the_years_us_rows_into_one(tmp_path):
 
 
 # --------------------------------------------------------------------------- #
-# B4 / B5 — no default for an unknown or absent source state
+# B4 / B5 — no default for an unknown or absent source state: the run stops
 # --------------------------------------------------------------------------- #
 
-def test_b4_a_source_state_with_no_treaty_rate_is_not_defaulted(tmp_path):
+def test_b4_a_source_state_with_no_treaty_rate_stops_the_run(tmp_path):
     """A dividend from Takatukaland, withheld at 21 %: a made-up source state, so the
-    store will never have a rate for it. Zeile 41 keeps the withheld amount (EUR 189), a
-    WARNING gap says the rate is not verified — NOT FAIL_FAST, and NOT capped to 15 %."""
+    store will never have a rate for it. No figure: not the withheld EUR 189, not a
+    15 % cap, not zero. The row is itemised and the stop names its transaction."""
     resolver = _resolver(tmp_path)
     stock = _stock(resolver, isin="XX0000000AAA")
     inc = _income(stock, "1000", country="TAKATUKALAND")
-    form, gaps = _run([inc, _wht(stock, "210", country="TAKATUKALAND", linked_to=inc)], resolver)
+    wht = _wht(stock, "210", country="TAKATUKALAND", linked_to=inc)
+    message, gaps = _stopped([inc, wht], resolver)
 
-    assert form.form_line_values[Z41] == Decimal("189.00"), "as withheld, not capped to 135"
-    g = [x for x in gaps.gaps if x.code == "FOREIGN_WHT_RATE_NOT_VERIFIED"]
-    assert len(g) == 1 and g[0].severity is GapSeverity.WARNING
+    assert "FOREIGN_WHT_RATE_NOT_VERIFIED" in _codes(gaps)
+    assert "TAKATUKALAND" in message and wht.ibkr_transaction_id in message
 
 
-def test_b5_a_row_without_a_country_code_is_treated_like_an_unknown_state(tmp_path):
+def test_b5_a_row_without_a_country_code_is_not_given_a_state_and_stops(tmp_path):
     """A US-ISIN row withheld at 30 % but with no issuer country code: the guard must
-    NOT infer the state from the currency or the ISIN prefix and cap at the US rate. It
-    keeps the withheld amount and flags it rate-not-verified."""
+    NOT infer the state from the currency or the ISIN prefix and cap at the US rate."""
     resolver = _resolver(tmp_path)
     fund = _fund(resolver)
     inc = _income(fund, "1000", kind=FinancialEventType.DISTRIBUTION_FUND, country=None)
-    form, gaps = _run([inc, _wht(fund, "300", country=None, linked_to=inc)], resolver)
+    message, gaps = _stopped([inc, _wht(fund, "300", country=None, linked_to=inc)], resolver)
 
-    assert form.form_line_values[Z41] == Decimal("270.00"), "no state inferred, not capped to 135"
     assert "FOREIGN_WHT_RATE_NOT_VERIFIED" in _codes(gaps)
     assert "FOREIGN_WHT_ABOVE_TREATY_RATE" not in _codes(gaps)
+    assert "ohne Quellenstaat" in message
 
 
 # --------------------------------------------------------------------------- #
@@ -227,26 +243,43 @@ def test_b5_a_row_without_a_country_code_is_treated_like_an_unknown_state(tmp_pa
 
 def test_b6_interest_withholding_is_outside_the_dividend_ceiling(tmp_path):
     """A US interest withholding is not measured against the dividend rate (the store
-    carries no interest treaty rate). Included on Zeile 41 as withheld, flagged
-    rate-not-verified, so the dividend rate is never applied to interest."""
+    carries no US interest rate): no 15 % cap, and no figure -- the run stops."""
     resolver = _resolver(tmp_path)
     stock = _stock(resolver)
     inc = _income(stock, "1000", kind=FinancialEventType.INTEREST_RECEIVED)
-    form, gaps = _run([inc, _wht(stock, "300", linked_to=inc)], resolver)
+    _, gaps = _stopped([inc, _wht(stock, "300", linked_to=inc)], resolver)
 
-    assert form.form_line_values[Z41] == Decimal("270.00"), "interest not capped at the dividend rate"
     assert "FOREIGN_WHT_RATE_NOT_VERIFIED" in _codes(gaps)
+    assert "FOREIGN_WHT_ABOVE_TREATY_RATE" not in _codes(gaps)
 
 
-def test_b7_a_withholding_row_the_linker_could_not_attach_is_reported_not_capped(tmp_path):
-    """A withholding with no income row to measure against: included as withheld and
-    reported unlinked. A rate check needs a denominator and must say when it has none."""
+def test_b7_a_withholding_row_the_linker_could_not_attach_stops_the_run(tmp_path):
+    """A withholding with no income row to measure against has no creditable amount:
+    a rate check needs a denominator. Itemised as unlinked, and the run stops."""
     resolver = _resolver(tmp_path)
     stock = _stock(resolver)
-    form, gaps = _run([_wht(stock, "300", linked_to=None)], resolver)
+    message, gaps = _stopped([_wht(stock, "300", linked_to=None)], resolver)
 
-    assert form.form_line_values[Z41] == Decimal("270.00")
     assert "FOREIGN_WHT_UNLINKED" in _codes(gaps)
+    assert "keinem Ertrag" in message
+
+
+def test_b7_every_unsupported_row_is_named_in_one_stop(tmp_path):
+    """Collect first, then stop: an unlinked row, an unknown state and a capped row in
+    one run -- the fatal message names both unsupported rows, and the capped row is
+    still itemised, so one run shows the whole problem."""
+    resolver = _resolver(tmp_path)
+    stock = _stock(resolver)
+    unlinked = _wht(stock, "300", linked_to=None)
+    other = _stock(resolver, isin="XX0000000BBB")
+    inc_x = _income(other, "1000", country="TAKATUKALAND")
+    unknown = _wht(other, "210", country="TAKATUKALAND", linked_to=inc_x)
+    inc_us = _income(stock, "1000")
+    message, gaps = _stopped([unlinked, inc_x, unknown, inc_us, _wht(stock, "300", linked_to=inc_us)], resolver)
+
+    assert unlinked.ibkr_transaction_id in message and unknown.ibkr_transaction_id in message
+    assert {"FOREIGN_WHT_UNLINKED", "FOREIGN_WHT_RATE_NOT_VERIFIED",
+            "FOREIGN_WHT_ABOVE_TREATY_RATE"} <= set(_codes(gaps))
 
 
 # --------------------------------------------------------------------------- #
@@ -313,13 +346,13 @@ def test_b9_a_japanese_dividend_at_15_315_percent_is_credited_at_15(tmp_path):
 
 
 def test_b9_a_french_fund_distribution_is_not_given_the_share_dividend_rate(tmp_path):
-    """Outside the table's Dividenden: kept as withheld and reported, not capped."""
+    """Outside the table's Dividenden: not capped at 12,8, and no figure -- it stops."""
     resolver = _resolver(tmp_path)
     fund = _fund(resolver, isin="FR00000FUND1")
     inc = _income(fund, "1000", kind=FinancialEventType.DISTRIBUTION_FUND, country="FR")
-    form, gaps = _run([inc, _wht(fund, "250", country="FR", linked_to=inc)], resolver)
-    assert form.form_line_values[Z41] == Decimal("225.00")
+    _, gaps = _stopped([inc, _wht(fund, "250", country="FR", linked_to=inc)], resolver)
     assert "FOREIGN_WHT_RATE_NOT_VERIFIED" in _codes(gaps)
+    assert "FOREIGN_WHT_ABOVE_TREATY_RATE" not in _codes(gaps)
 
 
 # --------------------------------------------------------------------------- #
@@ -333,10 +366,9 @@ def test_b10_a_year_without_a_researched_edition_is_not_given_another_year_s_rat
     resolver = _resolver(tmp_path)
     stock = _stock(resolver)
     inc = _income(stock, "1000")
-    form, gaps = _run([inc, _wht(stock, "300", linked_to=inc)], resolver, tax_year=tax_year)
-    assert form.form_line_values[Z41] == Decimal("270.00"), "as withheld, not capped to 135"
+    message, gaps = _stopped([inc, _wht(stock, "300", linked_to=inc)], resolver, tax_year=tax_year)
     g = [x for x in gaps.gaps if x.code == "FOREIGN_WHT_RATE_YEAR_NOT_RESEARCHED"]
-    assert len(g) == 1 and g[0].severity is GapSeverity.WARNING and str(tax_year) in g[0].detail
+    assert len(g) == 1 and str(tax_year) in g[0].detail and str(tax_year) in message
     assert "FOREIGN_WHT_ABOVE_TREATY_RATE" not in _codes(gaps)
 
 
@@ -370,19 +402,18 @@ def test_b11_irish_interest_withholding_is_not_credited(tmp_path):
     assert len(g) == 1 and "(0%)" in g[0].detail
 
 
-def test_b11_interest_withholding_with_no_configured_state_is_kept_and_reported(tmp_path):
+def test_b11_interest_withholding_with_no_configured_state_stops_and_names_the_setting(tmp_path):
     resolver = _resolver(tmp_path)
     inc, wht = _interest_pair(resolver, None)
-    form, gaps = _run([inc, wht], resolver)
-    assert form.form_line_values[Z41] == Decimal("18.00")
+    message, gaps = _stopped([inc, wht], resolver)
     assert "FOREIGN_WHT_RATE_NOT_VERIFIED" in _codes(gaps)
+    assert "BROKER_ENTITY_COUNTRY" in message
 
 
-def test_b11_irish_interest_in_an_unresearched_year_is_kept_and_reported(tmp_path):
+def test_b11_irish_interest_in_an_unresearched_year_stops(tmp_path):
     resolver = _resolver(tmp_path)
     inc, wht = _interest_pair(resolver, "IE")
-    form, gaps = _run([inc, wht], resolver, tax_year=2027)
-    assert form.form_line_values[Z41] == Decimal("18.00")
+    _, gaps = _stopped([inc, wht], resolver, tax_year=2027)
     assert "FOREIGN_WHT_RATE_YEAR_NOT_RESEARCHED" in _codes(gaps)
 
 

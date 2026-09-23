@@ -53,6 +53,7 @@ The conditions routed through this channel, as of 2026-09-19:
     VORABPAUSCHALE_PRICE_USER_SUPPLIED                 WARNING
     VORABPAUSCHALE_PRICE_WRONG_DAY                     WARNING
     EOY_RECONCILIATION_FAILED                          FAIL_FAST
+    FOREIGN_WHT_CREDIT_UNSUPPORTED                     FAIL_FAST
     GRANTS_WINDOW_INCOMPLETE                           FAIL_FAST
     REPLAY_MARK_MISMATCH                               FAIL_FAST
     SECURITIES_ACQUISITION_HISTORY_UNKNOWN             FAIL_FAST
@@ -76,6 +77,12 @@ securities mismatch always aborts — CLAUDE.md's non-negotiable SoY→EoY rule.
 The WARNING entries are the itemisation the fatal one points at, not a policy
 of tolerating the condition. This paragraph said the opposite until 2026-08-08,
 describing the "log, count, continue" behaviour that predates the abort.
+The foreign-withholding codes follow the same shape. `FOREIGN_WHT_RATE_NOT_VERIFIED`,
+`FOREIGN_WHT_RATE_YEAR_NOT_RESEARCHED` and `FOREIGN_WHT_UNLINKED` itemise the rows
+that have no supported creditable amount, and `FOREIGN_WHT_CREDIT_UNSUPPORTED` then
+names all of them FAIL_FAST: neither the withheld amount nor zero may stand in for
+the Zeile 41 credit. `FOREIGN_WHT_ABOVE_TREATY_RATE` alone continues -- the row is
+capped at a supported rate and the excess is reported.
 
 `CURRENCY_EOY_MISMATCH` is the one that genuinely does continue: a cash-balance
 divergence is about input completeness rather than a ledger disagreeing about a

@@ -318,17 +318,28 @@ class TestWithholdingTaxLinker:
             raw_description="BANK OF NOVA SCOTIA", raw_ibkr_sub_category="COMMON",
         )
 
+        # Changed for PR #102 (F1, approved): an unlinked row now stops the run, so
+        # each tax row is linked to its own dividend at the 15 % CA rate
+        # ([GT-CREDIT-029]); neither is capped and the sum asserted is unchanged.
+        div_a = self.create_dividend_event(amount=Decimal("206.00"), transaction_id="1633926800")
+        div_a.asset_internal_id = asset.internal_asset_id
+        div_a.gross_amount_eur = Decimal("140.00")
+        div_b = self.create_dividend_event(amount=Decimal("100.00"), transaction_id="1633926900")
+        div_b.asset_internal_id = asset.internal_asset_id
+        div_b.gross_amount_eur = Decimal("70.00")
         wht_a = self.create_withholding_tax_event(amount=Decimal("30.90"), transaction_id="1633926801")
         wht_a.asset_internal_id = asset.internal_asset_id
         wht_a.gross_amount_eur = Decimal("21.00")
+        wht_a.taxed_income_event_id = div_a.event_id
         wht_b = self.create_withholding_tax_event(amount=Decimal("15.00"), transaction_id="1633926901")
         wht_b.asset_internal_id = asset.internal_asset_id
         wht_b.gross_amount_eur = Decimal("10.50")
+        wht_b.taxed_income_event_id = div_b.event_id
 
         engine = LossOffsettingEngine(
             realized_gains_losses=[],
             vorabpauschale_items=[],
-            current_year_financial_events=[wht_a, wht_b],
+            current_year_financial_events=[div_a, wht_a, div_b, wht_b],
             asset_resolver=resolver,
             tax_year=2023,
         )

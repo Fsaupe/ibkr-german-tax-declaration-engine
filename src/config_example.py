@@ -54,7 +54,8 @@ ACCOUNT_ID = "U1234567"      # Update with your IBKR account ID
 # and is credited at that country's rate for interest. The export names no country for
 # these rows, and their "@ n%" is not always the rate actually withheld: this setting is
 # the answer, not something to re-derive from the data. One value for every year processed.
-# None: those rows stay on Zeile 41 as withheld and are reported as not verified.
+# None: no country is assumed, and a year with such a row stops before any figure is
+# produced, naming the rows and this setting.
 BROKER_ENTITY_COUNTRY = None
 
 # Interactive mode for asset classification

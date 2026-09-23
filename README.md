@@ -290,8 +290,9 @@ BROKER_ENTITY_COUNTRY = "IE"
 ```
 
 That entity pays your credit interest, so the tax withheld on it (`WITHHOLDING @ ...% ON CREDIT INT`)
-is that country's. The export does not say which country it is. Left at `None`, the withholding is
-kept on Zeile 41 as withheld and reported as not verified.
+is that country's. The export does not say which country it is. Left at `None` (or absent from an
+older `config.py`), a year with such a row stops before any figure is produced, naming the rows and
+this setting: neither the amount withheld nor zero is a supported credit.
 
 ### Recording Query IDs
 

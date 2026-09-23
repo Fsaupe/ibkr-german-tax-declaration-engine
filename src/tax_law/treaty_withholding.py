@@ -14,9 +14,9 @@ not reached: the parser takes branch A ([GT-INVSTG-059]).
 
 This module supplies the treaty rate and the decision for all the rows on one income. It does NOT cap silently
 and it does NOT default an unknown source state: only source states with a rate in the
-store are checked, and a row it cannot verify keeps the amount that was actually
-withheld while telling the caller to flag it. The caller (loss_offsetting) routes the
-flags through the data-gap channel and never past it.
+store are checked. A row it cannot verify gets no creditable amount at all -- neither the
+amount withheld nor zero is a supported figure (maintainer's review of PR #102, F1) -- and
+the caller (loss_offsetting) stops the run, naming every such row.
 
 Scope (issue #78): dividends, and interest where the store has a rate (Irland, 0 %:
 [GT-CREDIT-030]). The rates are per assessment year, from that year's
@@ -28,9 +28,9 @@ Kapitalgesellschaften. Measured 2026-09-22: 28 dividend/PIL withholding
 rows VZ 2023-2025 carry the "- US TAX" suffix, 0 of them above 15 % + 1 cent of their
 paired income. The source state is read from `source_country_code`: IssuerCountryCode,
 or where that is blank (11 dividend/PIL withholding rows, all VZ 2023) the broker's
-"- XX Tax" suffix, filled in by the parser. A row with neither is reported
-rate-not-verified and kept as withheld, never guessed. Every other source state, and interest from a state without a rate, are not in the
-store, so such a row is reported as rate-not-verified, not capped. Adding another state or interest is a store
+"- XX Tax" suffix, filled in by the parser. A row with neither is
+rate-not-verified, never guessed. Every other source state, and interest from a state without a rate, are not in the
+store, so such a row is rate-not-verified, not capped. Adding another state or interest is a store
 extension plus a table row, not a code change here.
 """
 from dataclasses import dataclass
@@ -52,10 +52,16 @@ class WithholdingStatus(Enum):
     UNLINKED = "UNLINKED"                  # no income row to measure the rate against
 
 
+# The statuses with no supported creditable amount: the run stops on any of them.
+UNSUPPORTED = frozenset({WithholdingStatus.RATE_NOT_VERIFIED,
+                         WithholdingStatus.RATE_YEAR_NOT_RESEARCHED,
+                         WithholdingStatus.UNLINKED})
+
+
 @dataclass(frozen=True)
 class WithholdingAssessment:
     status: WithholdingStatus
-    creditable_eur: Decimal      # what belongs on Zeile 41 for this row
+    creditable_eur: Optional[Decimal]  # what belongs on Zeile 41 for this row; None where unsupported
     withheld_eur: Decimal        # what was actually withheld
     source_state: Optional[str]  # the taxing authority, "" if the broker gave none
     treaty_rate: Optional[Decimal] = None
@@ -85,7 +91,7 @@ def assess_withholdings(whts: List[WithholdingTaxEvent],
     states = [(w.source_country_code or "").strip().upper() for w in whts]
 
     def _each(status, rate=None, creditable=None):
-        return [WithholdingAssessment(status, creditable[i] if creditable else withheld[i],
+        return [WithholdingAssessment(status, creditable[i] if creditable else None,
                                       withheld[i], states[i] or None, rate)
                 for i in range(len(whts))]
 
@@ -98,8 +104,8 @@ def assess_withholdings(whts: List[WithholdingTaxEvent],
     rate = rates.pop() if len(rates) == 1 else None
     if rate is None:
         # No treaty rate in the store for this (state, income kind), or rows naming
-        # different states: keep what was withheld, and let the caller flag it. Never
-        # default to a rate.
+        # different states: no creditable amount, and the caller stops. Never default
+        # to a rate.
         return _each(WithholdingStatus.RATE_NOT_VERIFIED)
 
     income_foreign = _abs(income_event.gross_amount_foreign_currency)
@@ -117,7 +123,7 @@ def assess_withholdings(whts: List[WithholdingTaxEvent],
                       for i in range(len(whts))]
         return _each(WithholdingStatus.ABOVE_TREATY_RATE, rate, creditable)
 
-    return _each(WithholdingStatus.OK, rate)
+    return _each(WithholdingStatus.OK, rate, withheld)
 
 
 def _abs(value: Optional[Decimal]) -> Optional[Decimal]:

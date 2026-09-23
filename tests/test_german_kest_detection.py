@@ -22,7 +22,7 @@ from src.domain.events import CashFlowEvent, WithholdingTaxEvent
 from src.domain.enums import FinancialEventType
 from src.engine.loss_offsetting import LossOffsettingEngine
 from src.identification.asset_resolver import AssetResolver
-from src.processing.data_gaps import DataGapCollector, GapSeverity
+from src.processing.data_gaps import DataGapCollector, DataGapError, GapSeverity
 
 
 ZEILE_41 = TaxReportingCategory.ANLAGE_KAP_FOREIGN_TAX_PAID
@@ -79,6 +79,18 @@ def _zeile_41(events, resolver, collector=None):
     return result.form_line_values.get(ZEILE_41, Decimal("0.00"))
 
 
+def _stays_foreign(events, resolver, code):
+    """The row is treated as foreign, not as German KESt. With no source state or no
+    linked income a foreign row has no supported creditable amount, so the run stops
+    (PR #102, F1) -- the stop itself shows the row was not excluded as KESt."""
+    collector = DataGapCollector()
+    with pytest.raises(DataGapError):
+        _zeile_41(events, resolver, collector)
+    codes = {g.code for g in collector.gaps}
+    assert code in codes and "FOREIGN_WHT_CREDIT_UNSUPPORTED" in codes
+    assert "ANLAGE_KAP_GERMAN_KEST_NOT_DECLARABLE" not in codes
+
+
 class TestRateCompositeFallback:
     """No country code — the 26.375% composite has to carry the detection.
 
@@ -104,20 +116,27 @@ class TestRateCompositeFallback:
         ("100.00", "26.00"),     # below the band
         ("100.00", "27.00"),     # above the band
     ])
-    def test_other_rates_stay_on_zeile_41(self, resolver, asset, gross, tax):
+    def test_other_rates_stay_foreign(self, resolver, asset, gross, tax):
         """The detector narrows Zeile 41 and must never widen it: anything it
-        cannot identify as German keeps the pre-existing treatment."""
+        cannot identify as German stays a foreign row. Changed for PR #102 (F1,
+        approved): such a row with no source state no longer reaches Zeile 41 as
+        withheld; the run stops. It was asserted as Zeile 41 == tax."""
         div = _dividend(asset, gross)
-        assert _zeile_41([div, _wht(asset, tax, country=None, linked_to=div)], resolver) == Decimal(tax)
+        _stays_foreign([div, _wht(asset, tax, country=None, linked_to=div)], resolver,
+                       "FOREIGN_WHT_RATE_NOT_VERIFIED")
 
     def test_unlinked_withholding_stays_foreign(self, resolver, asset):
         """No linked income event means no rate to test. Defaulting to German
-        would silently drop a foreign credit."""
-        assert _zeile_41([_wht(asset, "26.375", country=None, linked_to=None)], resolver) == Decimal("26.38")
+        would silently drop a foreign credit. Changed for PR #102 (F1, approved):
+        asserted as Zeile 41 == 26.38; an unlinked foreign row now stops the run."""
+        _stays_foreign([_wht(asset, "26.375", country=None, linked_to=None)], resolver,
+                       "FOREIGN_WHT_UNLINKED")
 
     def test_zero_gross_income_does_not_divide(self, resolver, asset):
+        """Changed for PR #102 (F1, approved): asserted as Zeile 41 == 26.38."""
         div = _dividend(asset, "0.00")
-        assert _zeile_41([div, _wht(asset, "26.375", country=None, linked_to=div)], resolver) == Decimal("26.38")
+        _stays_foreign([div, _wht(asset, "26.375", country=None, linked_to=div)], resolver,
+                       "FOREIGN_WHT_RATE_NOT_VERIFIED")
 
 
 class TestCountryCodePrecedence:
