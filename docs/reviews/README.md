@@ -2,6 +2,13 @@
 
 Start here after context clearing. Last updated: 2026-09-23.
 
+**#76 implemented locally on current main:** `fix/issue76-current`, application
+candidate `a90b0c1`. SYEP fees now reach Anlage SO; current/historical account
+currency behavior and VZ 2023–2025 reports are verified. Clean suite:
+**1,673 passed, 1 skipped**. No publication, merge or closure.
+[Implementation and verification](issue76-lending-fees.md). Grant aggregation
+under GT-ESTG20-063/067 remains open.
+
 **#85 merged as `00ba1a7`, pushed, and CLOSED/COMPLETED.**
 The maintainer accepted the measured 6/6/3 declaration changes for VZ 2023–2025
 and the residual-risk assessment, then authorised merge and closure. Accepted
