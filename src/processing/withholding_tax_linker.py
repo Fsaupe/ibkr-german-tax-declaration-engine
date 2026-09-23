@@ -132,11 +132,27 @@ class WithholdingTaxLinker:
             if match:
                 candidate_matches.append(match)
         
-        # Return the match with highest confidence score
+        # Return the match with highest confidence score. Between equal scores, the income
+        # booked nearest before the tax row: two same-day incomes (a payment in lieu and a
+        # dividend) can both be "sequential" to one tax row, and the treaty-rate guard
+        # measures the tax against the income it is linked to ([GT-CREDIT-027]).
         if candidate_matches:
-            return max(candidate_matches, key=lambda m: m.confidence_score)
-        
+            income_tx = {e.event_id: e.ibkr_transaction_id for e in income_events}
+            return max(candidate_matches, key=lambda m: (
+                m.confidence_score,
+                -self._transaction_id_distance(wht_event.ibkr_transaction_id,
+                                               income_tx.get(m.candidate_event_id))))
+
         return None
+
+    @staticmethod
+    def _transaction_id_distance(wht_tx_id: Optional[str], income_tx_id: Optional[str]) -> int:
+        """How many IDs the income precedes the tax row by; unordered pairs rank last."""
+        try:
+            distance = int(wht_tx_id) - int(income_tx_id)
+        except (TypeError, ValueError):
+            return 10 ** 12
+        return distance if distance > 0 else 10 ** 12
     
     def _try_exact_match(
         self, 
