@@ -158,3 +158,93 @@ column F, *"volles Besteuerungsrecht des Quellenstaats auf Dividenden und Zinsen
 Forderungen mit Gewinnbeteiligung, wenn diese bei der Ermittlung der Gewinne des Schuldners der
 Dividenden oder Zinsen abzugsfaehig sind (Protokoll zum DBA, Ziff. 3 zu den Artikeln 10 und 11)"*,
 which does not reach interest on a cash balance.
+
+---
+
+## [GT-CREDIT-031] Column C for China -- 0 / 10, and the BMF-Schreiben it refers to
+
+**Sources.**
+- The four BZSt editions above, row *China (Volksrepublik ohne Hongkong und Macau)*, page 6 in
+  each; read by the columns' page coordinates, 2026-09-23.
+- BMF-Schreiben vom 31.03.2022, IV C 1 - S 2283-c/19/10012 :004, DOK 2022/0342138, BStBl I 2022
+  S. 328, *"Anrechnung von Quellensteuer, die auf Ausschuettungen von chinesischen Aktien erhoben
+  wird, auf die deutsche Kapitalertragsteuer nach § 43a Absatz 3 EStG"*. Tier 2. The BMF no longer
+  serves it; retrieved 2026-09-23 as the BMF's own PDF (4 pages; PDF metadata Author
+  *Bundesministerium der Finanzen*, created 31.03.2022) from the Internet Archive snapshot of
+  20220817044403 of
+  https://www.bundesfinanzministerium.de/Content/DE/Downloads/BMF_Schreiben/Steuerarten/Abgeltungsteuer/20220331-anrechnung-von-quellensteuer-die-auf-ausschuettungen-von-chinesischen-aktien-erhoben-wird-auf-die-deutsche-kapitalertragsteuer.pdf?__blob=publicationFile&v=2
+- Abkommen vom 28.03.2014 (DBA China), Gesetz vom 22.12.2015, BGBl. 2015 II Nr. 35; retrieved
+  2026-09-23 from
+  https://www.bundesfinanzministerium.de/Content/DE/Standardartikel/Themen/Steuern/Internationales_Steuerrecht/Staatenbezogene_Informationen/Laender_A_Z/China/2015-12-29-China-Abkommen-DBA-Gesetz.pdf?__blob=publicationFile&v=3
+  Tier 1.
+
+**Applicable tax years.** The BMF-Schreiben vom 07.01.2026 on the *Stand der
+Doppelbesteuerungsabkommen* (cited at [GT-CREDIT-027]) lists for *China (ohne Hongkong und Macau)*
+the treaty of 28.03.2014, applicable from 01.01.2017, and nothing later in force; it adds that the
+treaty is *"in Hongkong nicht anwendbar"*, and the same for Macau. Column C reads *0 / 10* in each of
+the 2023, 2024, 2025 and 2026 editions, so the claim below holds per edition for those four
+assessment years and no other.
+
+- *China (ohne Hongkong und Macau)*, code CN. A a) national: 0 / 10 / 20. A b) DBA: 10.
+- Column C, per edition: 2023 **0 / 10**; 2024 **0 / 10**; 2025 **0 / 10**; 2026 **0 / 10**.
+
+Column E, all four editions: *"Dividenden: Zur Anrechnung von Quellensteuer, die auf Ausschuettungen
+von chinesischen Aktien erhoben wird, vgl. BMF-Schreiben vom 31. Maerz 2022 (BStBl I S. 328)"*.
+Column F: the profit-participation rule of the Protokoll, Ziff. 4 zu den Artikeln 10 und 11, in the
+same terms as for the states at [GT-CREDIT-029] and with the same scope.
+
+**The treaty rate. DBA China Art. 10 Abs. 2:** *"Diese Dividenden koennen jedoch auch in dem
+Vertragsstaat, in dem die die Dividenden zahlende Gesellschaft ansaessig ist, nach dem Recht dieses
+Staates besteuert werden; die Steuer darf aber, wenn der Nutzungsberechtigte der Dividenden eine in
+dem anderen Vertragsstaat ansaessige Person ist, nicht uebersteigen: a) 5 Prozent des
+Bruttobetrages der Dividenden, wenn der Nutzungsberechtigte eine Gesellschaft (jedoch keine
+Personengesellschaft) ist, die unmittelbar ueber mindestens 25 Prozent des Kapitals der die
+Dividenden zahlenden Gesellschaft verfuegt; b) 15 Prozent des Bruttobetrags der Dividenden, sofern
+diese Dividenden aus Einkuenften oder Ertraegen gezahlt werden, die unmittelbar oder mittelbar aus
+unbeweglichem Vermoegen im Sinne des Artikels 6 von einem Investmentvehikel erzielt werden, das diese
+Einkuenfte oder Ertraege groesstenteils jaehrlich ausschuettet und dessen Einkuenfte oder Ertraege
+aus dem betreffenden unbeweglichen Vermoegen von der Steuer befreit sind; c) 10 Prozent des
+Bruttobetrags der Dividenden in allen anderen Faellen."* For a private investor's share dividend the
+ceiling is Buchst. c, 10 %; Buchst. a needs a corporate holder, and Buchst. b applies to an
+investment vehicle's distribution out of exempt real-property income, with a 15 % ceiling instead.
+Art. 10 Abs. 1 and 2 require a paying company *"in einem Vertragsstaat ansaessig"*, that is resident
+in the People's Republic under Art. 4.
+
+**What the BMF says decides it.** *"Fuer die Anrechenbarkeit der Quellensteuer ist bei deutschen
+Anlegern jedoch allein auf das Abkommen ... (DBA China) abzustellen, sofern es sich um Dividenden von
+Unternehmen handelt, die nach Artikel 4 DBA China auf dem chinesischen Festland ansaessig sind."*
+The source state's national tax then depends on the share:
+- **A-Aktien** (mainland exchanges, Renminbi): *"Dividendenzahlungen an nichtansaessige natuerliche
+  Personen aus A-Aktien unterliegen einer abgeltenden Quellensteuer von 20 %. Werden A-Aktien
+  zwischen einem Monat und einem Jahr gehalten, wird die Bemessungsgrundlage um 50 % reduziert, so
+  dass sich effektiv eine Steuer von 10 % ergibt. Keine Quellensteuer wird erhoben, wenn die
+  Haltedauer laenger als ein Jahr betraegt. In Deutschland ist im Fall von Streubesitz nach dem DBA
+  China auf Dividenden eine Quellensteuer in Hoehe von 10 % anrechenbar (Artikel 10 Absatz 2 Buchst.
+  c) DBA China). Aufgrund der vielen Besonderheiten kann eine Anrechnung im
+  Kapitalertragsteuerverfahren nicht erfolgen, da die Voraussetzungen im Einzelfall im Rahmen der
+  Veranlagung zu pruefen sind."*
+- **B-Aktien** (mainland exchanges, foreign currency): *"Dividendenzahlungen an nichtansaessige
+  natuerliche Personen aus B-Aktien unterliegen in China keiner Quellensteuer."*
+- **H-Aktien** (Hong Kong): *"unterliegen grundsaetzlich einem Quellensteuersatz von 20 %, unter
+  bestimmten Voraussetzungen (in China gegruendete Unternehmen auslaendischer Investoren) sind sie
+  steuerfrei. In Faellen, in denen ein mit China abgeschlossenes DBA einen niedrigeren Satz
+  vorsieht, kommt dieser zum Tragen."* China withholds a uniform 10 % in practice, often labelled
+  *"enterprise income tax"*, and the BMF does not object where, *"unabhaengig von der Bezeichnung"*,
+  the 10 % of Art. 10 Abs. 2 Buchst. c is credited in the Abzugsverfahren.
+- **D-Aktien** (Frankfurt, CEINEX D-Share market): subject to Chinese withholding; the 10 % of
+  Art. 10 Abs. 2 Buchst. c is credited in the Abzugsverfahren.
+
+**What column C's two values mean** (read with [GT-CREDIT-026] and the Pruefschema quoted at
+[GT-CREDIT-029]). Where China's own law levies nothing on the dividend -- a B-share, an A-share held
+more than a year, an exempt foreign-invested enterprise -- the whole of any tax withheld is an
+Ermaessigungsanspruch under national law, and **0** is creditable. Otherwise the DBA limits the tax
+to 10 % of the gross and **10** is creditable, whatever the tax is called. Three facts about the
+individual dividend therefore decide the credit, and none is a property of the tax row: that the
+paying company is resident in mainland China (Art. 4); that it is not an Art. 10 Abs. 2 Buchst. b
+investment vehicle (15 % ceiling, outside column C); and that China's national law does not exempt
+the dividend.
+
+**What the cited units also contain, not relied on:** DBA China Art. 10 Abs. 3 to 5 (definition,
+permanent establishment, no tax on undistributed profits), Art. 23 (the credit article; the BMF
+cites Abs. 2 Buchst. b (i)); column D (interest, *"10, falls keine Befreiung"*) and column B; the
+Abzugsverfahren rules of the BMF-Schreiben as such, which bind the paying agent.
