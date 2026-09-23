@@ -121,7 +121,7 @@ def assess_withholdings(whts: List[WithholdingTaxEvent],
 
     # The rate holds only where its conditions do ([GT-CREDIT-027]): facts the export
     # does not carry, stated by the taxpayer per instrument and year.
-    met, _, stated_rate = verdict(states[0], income_asset_category, facts)
+    met, _, stated_rate = verdict(states[0], income_asset_category, facts, income_event.event_date)
     if met is Verdict.UNANSWERED:
         return _each(WithholdingStatus.FACTS_UNANSWERED)
     if met is Verdict.NOT_MET:

@@ -333,9 +333,10 @@ start, after the asset classification, and keeps the answers per payer and year 
 
 A share is asked `us_reit` (and, if true, `us_reit_holding_at_most_10pct`); a fund is asked
 `us_ric_exempt_part`. A Chinese share is asked `cn_mainland_resident`,
-`cn_real_estate_investment_vehicle` and `cn_exempt_under_chinese_law` (10 % creditable for a
-mainland company; 0 % where China exempts the dividend, e.g. a B-share or an A-share held over
-a year). A `--no-interactive` run with a question unanswered stops before any
+`cn_real_estate_investment_vehicle` and `cn_exempt_under_chinese_law` -- whether *any* dividend
+of the year was exempt (10 % creditable for a mainland company; 0 % where China exempts the
+dividend, e.g. a B-share or an A-share held over a year). If yes, each dividend is asked by its
+date, `cn_exempt_dividend:YYYY-MM-DD`, since the exemption can differ between dividends. A `--no-interactive` run with a question unanswered stops before any
 figure, naming the ISINs; so does an answer under which the 15 % does not hold.
 
 ### Recording Query IDs

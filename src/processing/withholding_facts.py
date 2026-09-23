@@ -8,9 +8,11 @@ taxpayer states them.
 
 Fourth instance of the pattern `AssetClassifier`, `FundPriceStore` and
 `VorabpauschaleDeclarationStore` follow: a JSON file of answers to something nothing can
-derive, keyed by classification key and year. Per year, not per instrument, because both
-facts are facts of a year: a RIC reports its exempt part dividend by dividend, and REIT
-status is elected per taxable year. So an answer is never carried to another year.
+derive, keyed by classification key and year. Per year, not per instrument, because the
+facts are facts of a year or of a single dividend: a RIC reports its exempt part dividend
+by dividend, REIT status is elected per taxable year, and China's exemption of a dividend
+turns on that dividend ([GT-CREDIT-031]). A question about one dividend is keyed by the
+income's date within the year's entry. An answer is never carried to another year.
 
 - **Written only from an answer**, with where it came from and when.
 - **Nothing is inferred.** An absent entry is not a "no"; the rate then does not apply and
@@ -29,7 +31,7 @@ from datetime import date
 from typing import Callable, Dict, Iterable, List, Optional
 
 from src.domain.assets import Asset
-from src.domain.events import FinancialEvent, WithholdingTaxEvent
+from src.domain.events import CashFlowEvent, FinancialEvent, WithholdingTaxEvent
 from src.domain.exceptions import ProcessingError
 from src.tax_law.withholding_conditions import Question, questions
 
@@ -121,21 +123,28 @@ def resolve_withholding_facts(assets: Iterable[Asset], events: Iterable[Financia
     Asks for what is missing in an interactive run and saves the answers. Returns the
     assets left with a question unanswered; the engine stops on their tax rows."""
     ask = ask or _ask_yes_no
+    events = list(events)
+    income_dates = {e.event_id: e.event_date for e in events if isinstance(e, CashFlowEvent)}
     states_by_asset: Dict[object, set] = {}
+    dates_by_asset: Dict[object, set] = {}
     for e in events:
         if isinstance(e, WithholdingTaxEvent) and e.event_date[:4] == str(tax_year):
             states_by_asset.setdefault(e.asset_internal_id, set()).add(
                 (e.source_country_code or "").strip().upper())
+            if e.taxed_income_event_id in income_dates:
+                dates_by_asset.setdefault(e.asset_internal_id, set()).add(income_dates[e.taxed_income_event_id])
     unanswered: List[Asset] = []
     changed = False
     for asset in assets:
+        dates = sorted(dates_by_asset.get(asset.internal_asset_id, ()))
         for state in sorted(states_by_asset.get(asset.internal_asset_id, ())):
             key = asset.get_classification_key()
             stored = store.get(key, tax_year)
             answers = dict(stored.answers) if stored else {}
             before = dict(answers)
             while True:
-                missing = [q for q in questions(state, asset.asset_category, answers) if q.key not in answers]
+                missing = [q for q in questions(state, asset.asset_category, answers, dates)
+                           if q.key not in answers]
                 if not missing or not interactive:
                     break
                 answers[missing[0].key] = ask(asset, tax_year, missing[0])
@@ -145,7 +154,7 @@ def resolve_withholding_facts(assets: Iterable[Asset], events: Iterable[Financia
                     source="Angabe des Steuerpflichtigen im interaktiven Lauf"))
                 changed = True
             asset.withholding_facts[tax_year] = answers
-            if any(q.key not in answers for q in questions(state, asset.asset_category, answers)):
+            if any(q.key not in answers for q in questions(state, asset.asset_category, answers, dates)):
                 unanswered.append(asset)
     if changed:
         store.save()

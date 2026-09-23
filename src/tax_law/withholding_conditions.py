@@ -16,16 +16,19 @@ year ([GT-CREDIT-027]):
 For a Chinese payer ([GT-CREDIT-031]: BZSt column C "0 / 10", BMF-Schreiben vom 31.03.2022,
 DBA China Art. 10 Abs. 2): the company must be resident in mainland China (Art. 4) and not
 an Art. 10 Abs. 2 Buchst. b investment vehicle (15 % ceiling, outside column C); then the
-rate is 10 %, or 0 % where China's own law exempts the dividend.
+rate is 10 %, or 0 % where China's own law exempts the dividend. The exemption is a fact of
+each dividend (an A-share's turns on how long it was held at payment), so where the
+taxpayer states that any dividend of the year was exempt, each dividend is asked by its
+date.
 
-The facts come from the taxpayer, per instrument and year (src/processing/withholding_facts.py).
+The facts come from the taxpayer, per instrument and year (per dividend where the law says so) (src/processing/withholding_facts.py).
 An unanswered question gives no rate; an answer under which the condition fails gives no
 rate either, since the store then states none this engine applies. Both stop the run.
 """
 from dataclasses import dataclass
 from enum import Enum
 from decimal import Decimal
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, Iterable, List, Optional, Tuple
 
 from src.domain.enums import AssetCategory
 
@@ -58,8 +61,15 @@ CN_INVESTMENT_VEHICLE = Question(
     "Abs. 2 Buchst. b DBA China (ausgeschüttete, steuerbefreite Immobilienerträge)?")
 CN_EXEMPT = Question(
     "cn_exempt_under_chinese_law",
-    "Ist die Dividende nach chinesischem Recht steuerfrei (B-Aktie; A-Aktie länger als ein Jahr "
-    "gehalten; befreites Unternehmen ausländischer Investoren -- BMF-Schreiben vom 31.03.2022)?")
+    "War mindestens eine Dividende dieser Gesellschaft in diesem Jahr nach chinesischem Recht "
+    "steuerfrei (B-Aktie; A-Aktie länger als ein Jahr gehalten; befreites Unternehmen "
+    "ausländischer Investoren -- BMF-Schreiben vom 31.03.2022)?")
+
+
+def cn_exempt_dividend(income_date: str) -> Question:
+    """Asked per dividend once CN_EXEMPT is answered yes ([GT-CREDIT-031])."""
+    return Question(f"cn_exempt_dividend:{income_date}",
+                    f"War die Dividende vom {income_date} nach chinesischem Recht steuerfrei?")
 
 
 class Verdict(Enum):
@@ -69,9 +79,10 @@ class Verdict(Enum):
 
 
 def questions(state: Optional[str], category: Optional[AssetCategory],
-              answers: Dict[str, bool]) -> List[Question]:
+              answers: Dict[str, bool], income_dates: Iterable[str] = ()) -> List[Question]:
     """The questions the rate for this state and instrument class depends on, given the
-    answers so far (a follow-up is asked only where an earlier answer calls for it)."""
+    answers so far (a follow-up is asked only where an earlier answer calls for it).
+    `income_dates`: the dates of the incomes concerned, for a question asked per dividend."""
     state = (state or "").strip().upper()
     if state == "US" and category is AssetCategory.INVESTMENT_FUND:
         return [US_RIC_EXEMPT_PART]
@@ -82,17 +93,21 @@ def questions(state: Optional[str], category: Optional[AssetCategory],
             return [CN_MAINLAND_RESIDENT]
         if answers.get(CN_INVESTMENT_VEHICLE.key) is True:
             return [CN_MAINLAND_RESIDENT, CN_INVESTMENT_VEHICLE]
-        return [CN_MAINLAND_RESIDENT, CN_INVESTMENT_VEHICLE, CN_EXEMPT]
+        asked = [CN_MAINLAND_RESIDENT, CN_INVESTMENT_VEHICLE, CN_EXEMPT]
+        if answers.get(CN_EXEMPT.key):
+            asked += [cn_exempt_dividend(d) for d in sorted(set(income_dates))]
+        return asked
     return []
 
 
 def verdict(state: Optional[str], category: Optional[AssetCategory],
-            answers: Optional[Dict[str, bool]]) -> Tuple[Verdict, str, Optional[Decimal]]:
-    """Whether the conditions of the rate are met, the reason where they are not, and a
-    rate that replaces the table's where the answers fix a different one (None: the
-    table's rate stands)."""
+            answers: Optional[Dict[str, bool]],
+            income_date: Optional[str] = None) -> Tuple[Verdict, str, Optional[Decimal]]:
+    """Whether the conditions of the rate are met for the income of `income_date`, the
+    reason where they are not, and a rate that replaces the table's where the answers fix
+    a different one (None: the table's rate stands)."""
     answers = answers or {}
-    asked = questions(state, category, answers)
+    asked = questions(state, category, answers, [income_date] if income_date else [])
     if any(q.key not in answers for q in asked):
         return Verdict.UNANSWERED, "; ".join(q.text for q in asked if q.key not in answers), None
     if CN_MAINLAND_RESIDENT in asked:
@@ -100,7 +115,7 @@ def verdict(state: Optional[str], category: Optional[AssetCategory],
             return Verdict.NOT_MET, "Gesellschaft nicht auf dem chinesischen Festland ansässig: DBA China nicht anwendbar", None
         if answers[CN_INVESTMENT_VEHICLE.key]:
             return Verdict.NOT_MET, "Investmentvehikel nach Art. 10 Abs. 2 Buchst. b DBA China: kein Satz der Spalte C", None
-        if answers[CN_EXEMPT.key]:
+        if answers[CN_EXEMPT.key] and income_date and answers[cn_exempt_dividend(income_date).key]:
             return Verdict.MET, "", Decimal("0")
     if answers.get(US_RIC_EXEMPT_PART.key) and US_RIC_EXEMPT_PART in asked:
         return Verdict.NOT_MET, ("ein Teil der Ausschüttungen ist nach 26 U.S.C. § 871(k) steuerbefreit; "

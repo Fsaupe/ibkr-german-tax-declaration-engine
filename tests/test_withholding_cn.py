@@ -49,7 +49,8 @@ def test_a_mainland_dividend_withheld_at_20_percent_is_capped_at_10(tmp_path):
 
 def test_a_dividend_china_exempts_is_credited_at_0(tmp_path):
     """Column C's 0: whatever was withheld is reclaimable in China, none is creditable."""
-    form, gaps = _run(*_cn(tmp_path, dict(MAINLAND, cn_exempt_under_chinese_law=True)))
+    form, gaps = _run(*_cn(tmp_path, dict(MAINLAND, cn_exempt_under_chinese_law=True,
+                                          **{"cn_exempt_dividend:2025-06-16": True})))
     assert form.form_line_values.get(Z41, Decimal("0.00")) == Decimal("0.00")
     g = [x for x in gaps.gaps if x.code == "FOREIGN_WHT_ABOVE_TREATY_RATE"]
     assert len(g) == 1 and "(0%)" in g[0].detail
@@ -97,3 +98,63 @@ def test_the_registry_matches_the_store_edition_by_edition():
               for y, low, high in re.findall(r"(\d{4}) \*\*(\d+) / (\d+)\*\*", line)}
     assert parsed == {y: r["CN"] for y, r in registry.CONDITIONAL_DIVIDEND_RATES.items()}
     assert set(parsed) == set(registry.CREDITABLE_DIVIDEND_RATES)
+
+
+# --------------------------------------------------------------------------- #
+# The exemption is a fact of each dividend ([GT-CREDIT-031]: "Three facts about the
+# individual dividend"): an A-share's depends on how long it was held at payment. A year
+# can hold exempt and taxed dividends of one payer, so the answer is given per dividend.
+# --------------------------------------------------------------------------- #
+
+def _two_dividends(tmp_path, facts):
+    resolver = _resolver(tmp_path)
+    stock = _stock(resolver, isin="CNE000000AAA")
+    stock.withholding_facts.clear()
+    stock.withholding_facts[2025] = facts
+    events = []
+    for day in ("2025-03-14", "2025-09-12"):
+        inc = _income(stock, "1000", country="CN")
+        wht = _wht(stock, "100", country="CN", linked_to=inc)
+        inc.event_date = wht.event_date = day
+        events += [inc, wht]
+    return events, resolver
+
+
+def test_a_year_with_an_exempt_and_a_taxed_dividend_credits_each_at_its_own_rate(tmp_path):
+    facts = dict(MAINLAND, cn_exempt_under_chinese_law=True,
+                 **{"cn_exempt_dividend:2025-03-14": True, "cn_exempt_dividend:2025-09-12": False})
+    form, _ = _run(*_two_dividends(tmp_path, facts))
+    assert form.form_line_values[Z41] == Decimal("90.00")   # 0 on March, 10 % on September
+
+
+def test_a_dividend_without_its_own_answer_stops(tmp_path):
+    facts = dict(MAINLAND, cn_exempt_under_chinese_law=True,
+                 **{"cn_exempt_dividend:2025-03-14": True})
+    message, gaps = _stopped(*_two_dividends(tmp_path, facts))
+    assert "FOREIGN_WHT_FACTS_UNANSWERED" in _codes(gaps)
+
+
+def test_the_per_dividend_question_is_asked_only_after_an_exemption_is_stated(tmp_path):
+    from src.processing.withholding_facts import WithholdingFactsStore, resolve_withholding_facts
+    events, resolver = _two_dividends(tmp_path, {})
+    answers = dict(MAINLAND, cn_exempt_under_chinese_law=True,
+                   **{"cn_exempt_dividend:2025-03-14": True, "cn_exempt_dividend:2025-09-12": False})
+    asked = []
+
+    def ask(asset, year, question):
+        asked.append(question.key)
+        return answers[question.key]
+
+    left = resolve_withholding_facts(resolver.assets_by_internal_id.values(), events, 2025,
+                                     WithholdingFactsStore(str(tmp_path / "f.json")), True, ask)
+    assert left == []
+    assert asked == ["cn_mainland_resident", "cn_real_estate_investment_vehicle",
+                     "cn_exempt_under_chinese_law", "cn_exempt_dividend:2025-03-14",
+                     "cn_exempt_dividend:2025-09-12"]
+    form, _ = _run(events, resolver)
+    assert form.form_line_values[Z41] == Decimal("90.00")
+
+
+def test_no_exempt_dividend_needs_no_per_dividend_answer(tmp_path):
+    form, _ = _run(*_two_dividends(tmp_path, MAINLAND))
+    assert form.form_line_values[Z41] == Decimal("180.00")
