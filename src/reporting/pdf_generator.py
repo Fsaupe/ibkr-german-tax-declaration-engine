@@ -1517,7 +1517,8 @@ class PdfReportGenerator:
         zeile = anlage_so_leistungen_zeile(self.tax_year)
         zeile_text = f"Zeile {zeile}" if zeile is not None else "Zeile nicht verifiziert"
         self.story.append(Paragraph(
-            f"4.1 Einnahmen aus Leistungen (§22 Nr. 3 EStG, {zeile_text})", self.styles['H3']))
+            f"4.1 Einnahmen aus Leistungen (§22 Nr. 3 EStG, {zeile_text})",
+            ParagraphStyle('LeistungenHeading', parent=self.styles['H3'], keepWithNext=True)))
 
         leistung_events = [
             ev for ev in self.all_financial_events
@@ -1558,11 +1559,13 @@ class PdfReportGenerator:
             self.styles['SmallText']))
 
     def _add_so_details(self):
-        self.story.append(Paragraph("4 Detaillierte Aufstellung: Anlage SO (Sonstige Einkünfte)", self.styles['H2']))
+        self.story.append(Paragraph("4 Detaillierte Aufstellung: Anlage SO (Sonstige Einkünfte)",
+                                    ParagraphStyle('AnlageSoHeading', parent=self.styles['H2'], keepWithNext=True)))
 
         self._add_so_leistungen_details()
 
-        self.story.append(Paragraph("4.2 Private Veräußerungsgeschäfte (§23 EStG)", self.styles['H3']))
+        self.story.append(Paragraph("4.2 Private Veräußerungsgeschäfte (§23 EStG)",
+                                    ParagraphStyle('PrivateSalesHeading', parent=self.styles['H3'], keepWithNext=True)))
 
         sec23_rgls_taxable = [
             rgl for rgl in self.realized_gains_losses 
@@ -1576,7 +1579,8 @@ class PdfReportGenerator:
         ]
 
         if sec23_rgls_taxable:
-            self.story.append(Paragraph("Steuerpflichtige Veräußerungen nach §23 EStG", self.styles['H3']))
+            self.story.append(Paragraph("Steuerpflichtige Veräußerungen nach §23 EStG",
+                                        ParagraphStyle('TaxablePrivateSalesHeading', parent=self.styles['H3'], keepWithNext=True)))
             data = [["Bezeichnung", "Veräuß. am", "Anschaff. am", "Veräuß.preis EUR", "Ansch.kosten EUR", "Werbungsk. EUR", "G/V EUR", "Haltefrist"]]
             total_net_gain_loss_so = Decimal(0)
             for rgl in sorted(sec23_rgls_taxable, key=lambda x: (self._get_asset_details(x.asset_internal_id)[0], x.realization_date)):
