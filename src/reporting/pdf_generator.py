@@ -20,6 +20,7 @@ from src.domain.assets import Asset, InvestmentFund, Stock, Bond, Derivative
 from src.domain.enums import AssetCategory, InvestmentFundType, FinancialEventType, RealizationType, TaxReportingCategory
 from src.reporting.reporting_utils import _q, _q_price, _q_qty, format_date_german
 from src.reporting.form_rules import get_form_rules, unverified_form_rules_source
+from src.tax_law.registry import get_section23_form_line, section23_form_warning
 import src.config as app_config 
 from src.utils.tax_utils import get_teilfreistellung_rate_for_fund_type
 
@@ -311,8 +312,12 @@ class PdfReportGenerator:
             # form reaches Zeilen 14/17/20/23/26 through Zeile 54, which subtracts Z53.
             "ANLAGE_KAP_INV_ZEILE_53_VORABPAUSCHALE_ABZUG": "KAP-INV Z53 (Waehrend der Besitzzeit angesetzte Vorabpauschalen; bereits in Z14/17/20/23/26 abgezogen)",
         }
+        so_line = get_section23_form_line(self.tax_year)
+        so_warning = section23_form_warning(self.tax_year)
+        if so_warning:
+            self.story.append(Paragraph(so_warning, self.styles['BodyText']))
         so_lines_map = {
-             "ANLAGE_SO_Z54_NET_GV": "Anlage SO Zeile 54 (G/V §23 EStG)"
+             "ANLAGE_SO_NET_GV": f"Anlage SO Zeile {so_line} (G/V §23 EStG)"
         }
         
         declared_values_map = {
@@ -341,12 +346,12 @@ class PdfReportGenerator:
             TaxReportingCategory.ANLAGE_KAP_INV_AUSLANDS_IMMOBILIENFONDS_VORABPAUSCHALE_BRUTTO: kap_inv_lines_map["ANLAGE_KAP_INV_ZEILE_12_AUSLANDS_IMMOBILIENFONDS_VORABPAUSCHALE_BRUTTO"],
             TaxReportingCategory.ANLAGE_KAP_INV_SONSTIGE_FONDS_VORABPAUSCHALE_BRUTTO: kap_inv_lines_map["ANLAGE_KAP_INV_ZEILE_13_SONSTIGE_FONDS_VORABPAUSCHALE_BRUTTO"],
             TaxReportingCategory.ANLAGE_KAP_INV_VORABPAUSCHALE_ABZUG_Z53: kap_inv_lines_map["ANLAGE_KAP_INV_ZEILE_53_VORABPAUSCHALE_ABZUG"],
-            "ANLAGE_SO_Z54_NET_GV": so_lines_map["ANLAGE_SO_Z54_NET_GV"],
+            "ANLAGE_SO_NET_GV": so_lines_map["ANLAGE_SO_NET_GV"],
             "TOTAL_ANRECHENBARE_AUSL_STEUERN": kap_lines_map["ANLAGE_KAP_ZEILE_41"]
         })
 
         form_values = self.loss_offsetting_result.form_line_values
-        # Order by line numbers (KAP 19-24, then KAP 41, then KAP-INV 4-26, then SO 54)
+        # Order by form: KAP, KAP-INV, then the annual SO allocation line.
         key_order = [
             TaxReportingCategory.ANLAGE_KAP_AUSLAENDISCHE_KAPITALERTRAEGE_GESAMT,  # Zeile 19
             TaxReportingCategory.ANLAGE_KAP_AKTIEN_GEWINN,  # Zeile 20
@@ -377,7 +382,7 @@ class PdfReportGenerator:
             TaxReportingCategory.ANLAGE_KAP_INV_AUSLANDS_IMMOBILIENFONDS_GEWINN_GROSS,  # KAP-INV Zeile 23
             TaxReportingCategory.ANLAGE_KAP_INV_SONSTIGE_FONDS_GEWINN_GROSS,  # KAP-INV Zeile 26
             TaxReportingCategory.ANLAGE_KAP_INV_VORABPAUSCHALE_ABZUG_Z53,  # KAP-INV Zeile 53
-            "ANLAGE_SO_Z54_NET_GV"  # SO Zeile 54
+            "ANLAGE_SO_NET_GV"  # Annual SO taxpayer allocation
         ]
 
         for key_to_lookup in key_order:
@@ -1505,7 +1510,8 @@ class PdfReportGenerator:
                     str(rgl.holding_period_days or "") + " Tage"
                 ])
                 total_net_gain_loss_so += rgl.gross_gain_loss_eur or Decimal(0)
-            data.append([Paragraph("Gesamter G/V §23 EStG (Zeile 54):", self.styles['TableHeader']), "", "", "", "", "", Paragraph(self._format_decimal(total_net_gain_loss_so).replace('.',','), self.styles['TableCellRight']), ""])
+            so_line = get_section23_form_line(self.tax_year)
+            data.append([Paragraph(f"Gesamter G/V §23 EStG (Zeile {so_line}):", self.styles['TableHeader']), "", "", "", "", "", Paragraph(self._format_decimal(total_net_gain_loss_so).replace('.',','), self.styles['TableCellRight']), ""])
             table = self._create_styled_table(data, col_widths=[3*cm, 1.8*cm, 1.8*cm, 2.2*cm, 2.2*cm, 2.2*cm, 2.2*cm, 2*cm])
             self.story.append(KeepTogether(table))
         else:
