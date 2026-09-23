@@ -1548,7 +1548,9 @@ class PdfReportGenerator:
             Paragraph(self._format_decimal(total).replace('.', ','), self.styles['TableCellRight']),
         ])
         table = self._create_styled_table(data, col_widths=[9*cm, 2.5*cm, 3.5*cm])
-        self.story.append(KeepTogether(table))
+        # Let the table split with repeated column headings. A nested KeepTogether
+        # defeats the preceding heading's keepWithNext when the table moves pages.
+        self.story.append(table)
         self.story.append(Paragraph(
             "Entgelt für die Überlassung von Wertpapieren (Wertpapierdarlehen). Sonstige "
             "Einkünfte nach §22 Nr. 3 EStG — nicht Kapitalvermögen, daher nicht in Anlage KAP "
@@ -1598,7 +1600,7 @@ class PdfReportGenerator:
             so_line = get_section23_form_line(self.tax_year)
             data.append([Paragraph(f"Gesamter G/V §23 EStG (Zeile {so_line}):", self.styles['TableHeader']), "", "", "", "", "", Paragraph(self._format_decimal(total_net_gain_loss_so).replace('.',','), self.styles['TableCellRight']), ""])
             table = self._create_styled_table(data, col_widths=[3*cm, 1.8*cm, 1.8*cm, 2.2*cm, 2.2*cm, 2.2*cm, 2.2*cm, 2*cm])
-            self.story.append(KeepTogether(table))
+            self.story.append(table)
         else:
             self.story.append(Paragraph("Keine steuerpflichtigen Veräußerungen nach §23 EStG in diesem Steuerjahr.", self.styles['BodyText']))
 
