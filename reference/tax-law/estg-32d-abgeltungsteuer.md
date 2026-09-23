@@ -141,9 +141,10 @@ applies to all open cases (Rn. 324). The DBA rate is 2006-Protokoll and unchange
 ([GT-CREDIT-027]).
 
 The form takes the figure on **Zeile 41**, *"noch nicht angerechnete auslaendische Steuer"*
-(verified identical in the 2024 and 2025 Anleitung). The Anleitung places Zeilen 37 to 42 under
-*"anzurechnende Steuern"* ([GT-FORM-006]), so the amount entered is the tax to be credited: the
-withheld tax reduced by the Ermaessigungsanspruch of Satz 1 (this claim). The per-Kapitalertrag
+(verified identical in the 2024 and 2025 Anleitung). The amount entered is the tax to be credited:
+the withheld tax reduced by the Ermaessigungsanspruch of Satz 1 (this claim). That follows from
+Satz 1 itself; the Anleitung's heading *"anzurechnende Steuern"* for Zeilen 37 to 42 is consistent
+with it but does not decide it ([GT-FORM-006]). The per-Kapitalertrag
 ceiling of Satz 1 ([GT-CREDIT-005]) and the per-VZ ceiling of Satz 3 ([GT-CREDIT-006]) are applied
 in the assessment.
 

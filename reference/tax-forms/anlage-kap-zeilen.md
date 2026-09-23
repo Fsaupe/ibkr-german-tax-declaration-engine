@@ -139,12 +139,18 @@ governed by 32d Abs. 5, not by 34c Abs. 1: see
 **What the line takes: the tax to be credited.** The Anleitung heads Zeilen 37 to 42 *"Wo koennen
 Sie anzurechnende Steuern geltend machen?"* and says of Zeilen 40 and 41: *"Die bereits durch das
 Kreditinstitut angerechnete auslaendische Steuer tragen Sie in Zeile 40, die noch nicht angerechnete
-auslaendische Steuer in Zeile 41 (und nicht in der Anlage AUS) ein."*, closing the block with *"Die
-anzurechnenden Betraege weisen Sie bitte anhand von Steuerbescheinigungen nach."*
-(`../Anltg_KAP_24.md` and `../Anltg_KAP_25.md`, same wording in both; read 2026-09-22). The Anleitung
-names the amount by its function -- *anzurechnend* -- and does not itself state how it is reduced;
-what is anzurechnen is fixed by § 32d Abs. 5 Satz 1, the withheld tax *"um einen entstandenen
-Ermaessigungsanspruch gekuerzt"* ([GT-CREDIT-026]).
+auslaendische Steuer in Zeile 41 (und nicht in der Anlage AUS) ein."*
+(`../Anltg_KAP_24.md` and `../Anltg_KAP_25.md`, same wording in both; read 2026-09-22). The sentence
+*"Die anzurechnenden Betraege weisen Sie bitte anhand von Steuerbescheinigungen nach."* stands after
+the Zeilen 43 to 45 paragraph in both years (re-read 2026-09-23) and is not relied on here.
+
+**The heading alone does not decide between the withheld and the reduced amount.** The same heading
+covers Zeile 37, which the Anleitung describes as the *"einbehaltene Kapitalertragsteuer"*, and the
+Anleitung does not itself state how a foreign tax is reduced. What is anzurechnen is fixed by the
+statute: § 32d Abs. 5 Satz 1 credits the withheld tax *"um einen entstandenen Ermaessigungsanspruch
+gekuerzt"*, and the BZSt makes *"nur die auslaendische Steuer anrechenbar ... fuer die im
+Quellenstaat ... kein Ermaessigungsanspruch geltend gemacht werden kann"* ([GT-CREDIT-026]). The
+heading is consistent with that; it is not the ground for it.
 
 ## [GT-FORM-007] Zeilen 7 and 37-39 -- German KESt via a foreign depot
 

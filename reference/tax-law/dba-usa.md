@@ -22,8 +22,15 @@ the treaty that § 32d Abs. 5 Satz 2 EStG folds into the unilateral credit mecha
 
 **Applicable tax years.** The 2006 Protokoll is in force for every assessment year in scope (regime
 floor VZ 2023). No later protocol has changed the
-Article 10 rates or the Article 23 credit method for a privately held portfolio as of the retrieval
-date. The rates are not year-parameterised within the window.
+Article 10 rates or the Article 23 credit method: BMF-Schreiben vom 07.01.2026, *"Stand der
+Doppelbesteuerungsabkommen und anderer Abkommen im Steuerbereich sowie der Abkommensverhandlungen am
+1. Januar 2026"*, GZ IV B 2 - S 1301/01499/005/004, retrieved 2026-09-23 from
+https://www.bundesfinanzministerium.de/Content/DE/Downloads/BMF_Schreiben/Internationales_Steuerrecht/Allgemeine_Informationen/2026-01-07-stand-DBA-1-januar-2026.pdf?__blob=publicationFile&v=3
+(Tier 2). Part I (*Geltende Abkommen*), income taxes, lists for the Vereinigte Staaten the treaty of
+29.08.1989 and the protocol of 01.06.2006 (Neufassung bekannt gemacht 04.06.2008, BGBl. 2008 II
+S. 611/851), and nothing later; Part II.1 (*Kuenftige Abkommen und laufende Verhandlungen*, income
+taxes) has no entry for the Vereinigte Staaten -- the only US entry in Part II is under
+*Amtshilfe und Informationsaustausch*. The rates are not year-parameterised within the window.
 
 ---
 
@@ -42,6 +49,12 @@ Hundert des Bruttobetrags der Dividenden in allen anderen Faellen."*
 
 **The rate for a German private investor is Abs. 2 Buchst. b: 15 % of the gross.** Buchst. a (5 %)
 needs a corporate holder with a 10 % voting stake and cannot be reached by a natural person.
+
+**The limit is on the tax on a dividend, measured against that dividend.** Abs. 2 limits *"die
+Steuer"* on *"diese Dividenden"* to a percentage *"des Bruttobetrags der Dividenden"*: the measure is
+all the tax the source state levies on one dividend, set against the gross of that same dividend.
+Tax levied in more than one booking on the same dividend is measured together; tax on a different
+dividend -- including a different payment of the same issuer on the same day -- is not.
 
 **Art. 10 Abs. 4 Saetze 1 und 2:** *"Absatz 2 Buchstabe a und Absatz 3 Buchstabe a sind nicht bei
 Dividenden anzuwenden, die von einer Person der Vereinigten Staaten, bei der es sich um eine
@@ -120,10 +133,14 @@ applies follows the § 39 AO attribution decided at [GT-INVSTG-059] / [GT-ESTG20
 
 - **Reading A (Art. 10), on branch A** -- attribution stayed with the lender. What the lender
   receives is, for German tax, the company's dividend reaching its Nutzungsberechtigten
-  ([GT-ESTG20-045], Rz. 12). Art. 10 Abs. 1's condition -- a payment by a company of one state to a
-  resident of the other -- is met; and Art. 10 Abs. 5 independently brings in *"andere Einkuenfte,
-  die nach dem Recht des [Quellenstaats] den Einkuenften aus Aktien steuerlich gleichgestellt sind"*,
-  which US law does in terms (above). The administration's own framework for the mirror-image case
+  ([GT-ESTG20-045], Rz. 12). **This reading is a subsumption, not a sourced rule** -- the paragraph
+  above records that no Tier 1 or Tier 2 source names the case. Its ground: the payment the lender
+  receives is in fact made by the borrower, not by *"eine ... ansaessige Gesellschaft"*, so Art. 10
+  Abs. 1 is not met on its words; what brings the payment into Art. 10 is Abs. 5, which takes as
+  *"Dividenden"* the *"andere Einkuenfte, die nach dem Recht des [Quellenstaats] den Einkuenften aus
+  Aktien steuerlich gleichgestellt sind"*, and US law does that in terms (above). On branch A the
+  residence state treats the payment as the company's dividend too, so the two states agree on its
+  character and no qualification conflict arises. The administration's own framework for the mirror-image case
   (Germany as source state) makes Art. 10 turn on exactly that condition: BMF-Antwort vom 06.10.2025
   an den Wissenschaftlichen Beirat, GZ I A 1 - Vw 3160/00134/002/001, quoted with page references by
   the Wissenschaftliche Dienste des Deutschen Bundestages, WD 4 - 3000 - 062/25, "Cum/Cum-
