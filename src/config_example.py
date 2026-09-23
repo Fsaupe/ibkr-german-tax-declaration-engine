@@ -48,10 +48,13 @@ TAXPAYER_NAME = "Your Name"  # Update with your name
 ACCOUNT_ID = "U1234567"      # Update with your IBKR account ID
 
 # Country (ISO code) of the IBKR legal entity that carries your account -- the entity
-# that signs your activity statements, e.g. "IE" for Interactive Brokers Ireland
-# Limited. It pays your credit interest, so the tax withheld on that interest
-# ("WITHHOLDING @ ...% ON CREDIT INT") is that country's; the export does not say so.
-# None: that withholding is reported as rate-not-verified and kept as withheld.
+# named in the header of your activity statements, e.g. "IE" for Interactive Brokers
+# Ireland Limited. It decides how the "WITHHOLDING @ ...% ON CREDIT INT" rows are handled:
+# that entity pays your credit interest and withholds on it, so the tax is that country's
+# and is credited at that country's rate for interest. The export names no country for
+# these rows, and their "@ n%" is not always the rate actually withheld: this setting is
+# the answer, not something to re-derive from the data. One value for every year processed.
+# None: those rows stay on Zeile 41 as withheld and are reported as not verified.
 BROKER_ENTITY_COUNTRY = None
 
 # Interactive mode for asset classification
