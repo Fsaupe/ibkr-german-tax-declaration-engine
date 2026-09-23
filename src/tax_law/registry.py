@@ -203,6 +203,68 @@ _FORM_RULES_BY_YEAR: dict[int, FormYearRules] = {
 # years is verified reuse, not an assumption about an unpublished form.
 _VERIFIED_FORM_YEAR_SOURCES: dict[int, int] = {2022: 2021, 2023: 2021}
 
+# =============================================================================
+# Anlage SO form structure per assessment year (§ 22 Nr. 3 EStG, Leistungen)
+# =============================================================================
+# Kept apart from FormYearRules above, which is Anlage KAP and falls back to 2021.
+# The Leistungen block is verified only from VZ 2023, and its numbering moves in a way the KAP
+# fallback would hide: between VZ 2024 and VZ 2025 every block on the sheet shifted, and
+# not by a constant. reference/tax-forms/anlage-so-zeilen.md [GT-FORM-024].
+#
+# A § 22 Nr. 3 receipt is declared on an entry line -- a free-text *Art der Einnahmen*
+# with the amount beside it -- and the form adds the entry lines into the Kennzahl-bearing
+# *Summe*. So the line below is where the figure goes, not where it is totalled.
+
+@dataclass(frozen=True)
+class AnlageSoFormYearRules:
+    """Year-specific line numbers in the Anlage SO projection."""
+    leistungen_einnahmen_zeile: int
+
+
+# Read off the official form for each year in the Formular-Management-System der
+# Bundesfinanzverwaltung on 2026-08-09; the Anleitungen are reference/Anltg_SO_23.md,
+# reference/Anltg_SO_24.md and reference/Anltg_SO_25.md. The print identifiers are what
+# distinguish the sheets: 2023AnlSO131NET, 2024AnlSO131NET, 2025AnlSO131NET.
+_ANLAGE_SO_RULES_BY_YEAR: dict[int, AnlageSoFormYearRules] = {
+    2023: AnlageSoFormYearRules(leistungen_einnahmen_zeile=12),  # block Zeilen 10-16
+    2024: AnlageSoFormYearRules(leistungen_einnahmen_zeile=12),  # block Zeilen 10-16
+    2025: AnlageSoFormYearRules(leistungen_einnahmen_zeile=16),  # block Zeilen 14-21
+}
+
+
+def get_anlage_so_form_rules(tax_year: int) -> AnlageSoFormYearRules:
+    """Anlage SO line numbers for an assessment year.
+
+    Exact year first, otherwise the nearest EARLIER configured year — a form structure
+    holds until a later year changes it, so carrying the most recent verified one forward
+    is sound and is the only option for a year whose form is unpublished.
+
+    Backward is not sound and is refused. The earliest verified year is 2023, which is
+    also the earliest assessment year used for real-data validation."""
+    if tax_year in _ANLAGE_SO_RULES_BY_YEAR:
+        return _ANLAGE_SO_RULES_BY_YEAR[tax_year]
+
+    available_years = sorted(_ANLAGE_SO_RULES_BY_YEAR.keys())
+    fallback_year = None
+    for year in available_years:
+        if year <= tax_year:
+            fallback_year = year
+    if fallback_year is not None:
+        logger.info(
+            f"No Anlage SO form rules defined for tax year {tax_year}, falling back to "
+            f"{fallback_year} rules.")
+        return _ANLAGE_SO_RULES_BY_YEAR[fallback_year]
+
+    earliest = available_years[0]
+    raise ProcessingError(
+        f"No Anlage SO form rules for tax year {tax_year}: the earliest verified form "
+        f"year is {earliest}. The Anlage SO numbering is not stable across years — every "
+        f"block moved between VZ 2024 and VZ 2025, and not by a constant — so the "
+        f"{earliest} projection must not be applied backwards. Add a verified entry to "
+        f"src/tax_law/registry.py, checked against that year's official form "
+        f"(reference/tax-forms/anlage-so-zeilen.md)."
+    )
+
 # Unverified forward-carry is warned once per year, not per call (get_form_rules is called
 # several times a run). Reset in tests that assert the warning.
 _warned_carry_years: set[int] = set()

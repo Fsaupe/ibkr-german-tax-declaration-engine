@@ -18,7 +18,11 @@ from src.domain.events import FinancialEvent, CashFlowEvent, WithholdingTaxEvent
     CorpActionSplitForward, CorpActionMergerCash, CorpActionStockDividend, CorpActionMergerStock
 from src.domain.assets import Asset, InvestmentFund, Stock, Bond, Derivative
 from src.domain.enums import AssetCategory, InvestmentFundType, FinancialEventType, RealizationType, TaxReportingCategory
-from src.reporting.reporting_utils import _q, _q_price, _q_qty, format_date_german
+from src.reporting.reporting_utils import (
+    _q, _q_price, _q_qty, format_date_german,
+    anlage_so_leistungen_line_label, anlage_so_leistungen_zeile,
+    display_rounding_difference, rounding_difference_label,
+)
 from src.reporting.form_rules import get_form_rules, unverified_form_rules_source
 from src.tax_law.registry import get_section23_form_line, section23_form_warning
 import src.config as app_config 
@@ -317,7 +321,8 @@ class PdfReportGenerator:
         if so_warning:
             self.story.append(Paragraph(so_warning, self.styles['BodyText']))
         so_lines_map = {
-             "ANLAGE_SO_NET_GV": f"Anlage SO Zeile {so_line} (G/V §23 EStG)"
+             "ANLAGE_SO_NET_GV": f"Anlage SO Zeile {so_line} (G/V §23 EStG)",
+             TaxReportingCategory.ANLAGE_SO_LEISTUNGEN_EINNAHMEN.name: f"Anlage SO {anlage_so_leistungen_line_label(self.tax_year)}",
         }
         
         declared_values_map = {
@@ -347,6 +352,7 @@ class PdfReportGenerator:
             TaxReportingCategory.ANLAGE_KAP_INV_SONSTIGE_FONDS_VORABPAUSCHALE_BRUTTO: kap_inv_lines_map["ANLAGE_KAP_INV_ZEILE_13_SONSTIGE_FONDS_VORABPAUSCHALE_BRUTTO"],
             TaxReportingCategory.ANLAGE_KAP_INV_VORABPAUSCHALE_ABZUG_Z53: kap_inv_lines_map["ANLAGE_KAP_INV_ZEILE_53_VORABPAUSCHALE_ABZUG"],
             "ANLAGE_SO_NET_GV": so_lines_map["ANLAGE_SO_NET_GV"],
+            TaxReportingCategory.ANLAGE_SO_LEISTUNGEN_EINNAHMEN: so_lines_map[TaxReportingCategory.ANLAGE_SO_LEISTUNGEN_EINNAHMEN.name],
             "TOTAL_ANRECHENBARE_AUSL_STEUERN": kap_lines_map["ANLAGE_KAP_ZEILE_41"]
         })
 
@@ -382,6 +388,7 @@ class PdfReportGenerator:
             TaxReportingCategory.ANLAGE_KAP_INV_AUSLANDS_IMMOBILIENFONDS_GEWINN_GROSS,  # KAP-INV Zeile 23
             TaxReportingCategory.ANLAGE_KAP_INV_SONSTIGE_FONDS_GEWINN_GROSS,  # KAP-INV Zeile 26
             TaxReportingCategory.ANLAGE_KAP_INV_VORABPAUSCHALE_ABZUG_Z53,  # KAP-INV Zeile 53
+            TaxReportingCategory.ANLAGE_SO_LEISTUNGEN_EINNAHMEN,
             "ANLAGE_SO_NET_GV"  # Annual SO taxpayer allocation
         ]
 
@@ -482,7 +489,24 @@ class PdfReportGenerator:
             f"-{self._format_decimal(other_losses).replace('.', ',')}",
             "siehe Abschnitt 2.3"
         ])
-        
+
+        # The rows above and the total below are rounded independently from the same exact
+        # figures, so they can miss each other by a cent. Shown rather than left silent: a
+        # breakdown that does not add up reads exactly like one with a component missing.
+        signed_components = [stock_gains, derivative_gains, other_income_positive,
+                             -stock_losses, -other_losses]
+        if form_rules.z19_subtracts_derivative_losses:
+            signed_components.append(-derivative_losses)
+        difference = display_rounding_difference(
+            [_q(c) for c in signed_components], _q(kap_zeile_19_value))
+        if difference is not None:
+            amount, is_rounding = difference
+            breakdown_data.append([
+                rounding_difference_label(is_rounding),
+                self._format_decimal(amount).replace('.', ','),
+                "",
+            ])
+
         # Add total row
         breakdown_data.append([
             Paragraph("<b>Summe (Anlage KAP Zeile 19)</b>", self.styles['TableHeader']),
@@ -1480,9 +1504,71 @@ class PdfReportGenerator:
             self.story.append(KeepTogether(table))
 
 
+    def _add_so_leistungen_details(self):
+        """Anlage SO, Leistungen block: the §22 Nr. 3 receipts, listed row by row.
+
+        legal_basis: [GT-ESTG20-049] and [GT-ESTG20-050] put the securities-lending fee
+        under §22 Nr. 3 rather than anywhere in §20 EStG; [GT-FORM-024] gives the entry
+        line, which differs by assessment year.
+
+        Listed individually because the form wants an *Art der Einnahmen* beside the
+        amount, so the filer needs to know what the figure is made of.
+        """
+        zeile = anlage_so_leistungen_zeile(self.tax_year)
+        zeile_text = f"Zeile {zeile}" if zeile is not None else "Zeile nicht verifiziert"
+        self.story.append(Paragraph(
+            f"4.1 Einnahmen aus Leistungen (§22 Nr. 3 EStG, {zeile_text})",
+            ParagraphStyle('LeistungenHeading', parent=self.styles['H3'], keepWithNext=True)))
+
+        leistung_events = [
+            ev for ev in self.all_financial_events
+            if isinstance(ev, CashFlowEvent)
+            and ev.event_type == FinancialEventType.SECURITIES_LENDING_FEE_RECEIVED
+        ]
+
+        if not leistung_events:
+            self.story.append(Paragraph(
+                "Keine Einnahmen aus Leistungen aus Wertpapierdarlehen in diesem Steuerjahr.",
+                self.styles['BodyText']))
+            return
+
+        data = [["Art der Einnahmen", "Datum", "Betrag (EUR)"]]
+        total = Decimal(0)
+        for event in sorted(leistung_events, key=lambda x: x.event_date):
+            gross_eur = event.gross_amount_eur or Decimal(0)
+            total += gross_eur
+            data.append([
+                event.ibkr_activity_description or "Entgelt aus Wertpapierdarlehen",
+                format_date_german(event.event_date),
+                self._format_decimal(gross_eur).replace('.', ','),
+            ])
+        data.append([
+            Paragraph(f"Summe Einnahmen aus Leistungen ({zeile_text}):", self.styles['TableHeader']),
+            "",
+            Paragraph(self._format_decimal(total).replace('.', ','), self.styles['TableCellRight']),
+        ])
+        table = self._create_styled_table(data, col_widths=[9*cm, 2.5*cm, 3.5*cm])
+        # Let the table split with repeated column headings. A nested KeepTogether
+        # defeats the preceding heading's keepWithNext when the table moves pages.
+        self.story.append(table)
+        self.story.append(Paragraph(
+            "Entgelt für die Überlassung von Wertpapieren (Wertpapierdarlehen). Sonstige "
+            "Einkünfte nach §22 Nr. 3 EStG — nicht Kapitalvermögen, daher nicht in Anlage KAP "
+            "und nicht in die Verlustverrechnung nach §20 Abs. 6 EStG einbezogen. Die "
+            "Freigrenze des §22 Nr. 3 Satz 2 EStG (256 EUR) bezieht sich auf die gesamten "
+            "Einkünfte aus Leistungen im Kalenderjahr aus allen Quellen und ist hier nicht "
+            "angewendet; die Angabe erfolgt brutto.",
+            self.styles['SmallText']))
+
     def _add_so_details(self):
-        self.story.append(Paragraph("4 Detaillierte Aufstellung: Anlage SO (Sonstige Einkünfte - §23 EStG)", self.styles['H2']))
-        
+        self.story.append(Paragraph("4 Detaillierte Aufstellung: Anlage SO (Sonstige Einkünfte)",
+                                    ParagraphStyle('AnlageSoHeading', parent=self.styles['H2'], keepWithNext=True)))
+
+        self._add_so_leistungen_details()
+
+        self.story.append(Paragraph("4.2 Private Veräußerungsgeschäfte (§23 EStG)",
+                                    ParagraphStyle('PrivateSalesHeading', parent=self.styles['H3'], keepWithNext=True)))
+
         sec23_rgls_taxable = [
             rgl for rgl in self.realized_gains_losses 
             if rgl.asset_category_at_realization == AssetCategory.PRIVATE_SALE_ASSET 
@@ -1495,7 +1581,8 @@ class PdfReportGenerator:
         ]
 
         if sec23_rgls_taxable:
-            self.story.append(Paragraph("Steuerpflichtige Veräußerungen nach §23 EStG", self.styles['H3']))
+            self.story.append(Paragraph("Steuerpflichtige Veräußerungen nach §23 EStG",
+                                        ParagraphStyle('TaxablePrivateSalesHeading', parent=self.styles['H3'], keepWithNext=True)))
             data = [["Bezeichnung", "Veräuß. am", "Anschaff. am", "Veräuß.preis EUR", "Ansch.kosten EUR", "Werbungsk. EUR", "G/V EUR", "Haltefrist"]]
             total_net_gain_loss_so = Decimal(0)
             for rgl in sorted(sec23_rgls_taxable, key=lambda x: (self._get_asset_details(x.asset_internal_id)[0], x.realization_date)):
@@ -1513,7 +1600,7 @@ class PdfReportGenerator:
             so_line = get_section23_form_line(self.tax_year)
             data.append([Paragraph(f"Gesamter G/V §23 EStG (Zeile {so_line}):", self.styles['TableHeader']), "", "", "", "", "", Paragraph(self._format_decimal(total_net_gain_loss_so).replace('.',','), self.styles['TableCellRight']), ""])
             table = self._create_styled_table(data, col_widths=[3*cm, 1.8*cm, 1.8*cm, 2.2*cm, 2.2*cm, 2.2*cm, 2.2*cm, 2*cm])
-            self.story.append(KeepTogether(table))
+            self.story.append(table)
         else:
             self.story.append(Paragraph("Keine steuerpflichtigen Veräußerungen nach §23 EStG in diesem Steuerjahr.", self.styles['BodyText']))
 
@@ -1536,8 +1623,8 @@ class PdfReportGenerator:
         self._add_so_leistungen_manual_entries()
 
     def _add_so_leistungen_manual_entries(self):
-        """The § 22 Nr. 3 receipt and return of awarded shares, which this report cannot
-        put on a line (issue #76) and must therefore hand to the reader in full.
+        """The § 22 Nr. 3 receipt and return of awarded shares remain manual entries,
+        separate from the automatically aggregated securities-lending fees.
 
         The processor states each with amount, year and destination as a data gap, and the
         console prints every gap. This PDF rendered only the reconciliation gaps, so a run
@@ -1557,7 +1644,8 @@ class PdfReportGenerator:
             "Einkünfte aus Leistungen (§ 22 Nr. 3 EStG) – manuell einzutragen", self.styles['H3']))
         self.story.append(Paragraph(
             f"ACHTUNG: {len(gaps)} Vorgang/Vorgänge mit zugeteilten Aktien gehören in die Anlage SO "
-            "(Einkünfte aus Leistungen). Dieser Bericht enthält dafür keine Zeile; die Beträge sind "
+            "(Einkünfte aus Leistungen). Die automatische Leistungen-Zeile enthält nur "
+            "Wertpapierdarlehen; diese Aktienzuteilungsbeträge sind "
             "in keiner der oben ausgewiesenen Summen enthalten und müssen von Hand in die Erklärung "
             "übernommen werden.", self.styles['BodyText']))
         for gap in gaps:

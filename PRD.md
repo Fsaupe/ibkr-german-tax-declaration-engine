@@ -421,9 +421,19 @@ Assuming Zeile 18 (Inländische Kapitalerträge) = 0:
 - **Zeile 23:** Auslands-Immobilienfonds (`TaxReportingCategory.ANLAGE_KAP_INV_AUSLANDS_IMMOBILIENFONDS_GEWINN_GROSS`).
 - **Zeile 26:** Sonstige Investmentfonds (`TaxReportingCategory.ANLAGE_KAP_INV_SONSTIGE_FONDS_GEWINN_GROSS`).
 
-#### Anlage SO (Sonstige Einkünfte - §23 EStG Private Sales Transactions) - 2023 Form Structure
+#### Anlage SO (Sonstige Einkünfte) - 2023 Form Structure
 
-Applies to `AssetCategory.PRIVATE_SALE_ASSET` if sold within 1 year (holding period check), with `realization_date` in 2023.
+Two separate blocks of the form, from two different provisions.
+
+**Leistungen (§22 Nr. 3 EStG).** Gross Einnahmen from a Leistung, which for this engine means the
+fee received for lending securities out (`FinancialEventType.SECURITIES_LENDING_FEE_RECEIVED` →
+`TaxReportingCategory.ANLAGE_SO_LEISTUNGEN_EINNAHMEN`). A different Einkunftsart from §20, so it
+takes no part in the §20 Abs. 6 offsetting and none of the Anlage KAP lines. The entry line is
+year-specific and comes from `get_anlage_so_form_rules(tax_year)`; the §22 Nr. 3 Satz 2 Freigrenze
+is deliberately not applied, because it is a threshold on income from every source.
+
+**Private Veräußerungsgeschäfte (§23 EStG).** Applies to `AssetCategory.PRIVATE_SALE_ASSET` if sold
+within 1 year (holding period check), with `realization_date` in 2023.
 
 *For each taxable transaction (from `RealizedGainLoss` with `realization_date` in 2023 and `TaxReportingCategory.SECTION_23_ESTG_TAXABLE_GAIN` or `_LOSS`):*
 - **Zeile 42 / 48 (Bezeichnung / Art des Wirtschaftsguts):** `Asset.description`.
@@ -472,7 +482,7 @@ Does not calculate *creditable* WHT.
 Figures for **direct entry onto current tax year forms**.
 - Anlage KAP: Values for Zeile 19, 20, 21, 22, 23, 24 as calculated per Section 2.7.
 - Anlage KAP-INV: GROSS amounts for Zeilen 4-8 and 14, 17, 20, 23, 26.
-- Anlage SO: Net G/L for the annual allocation line (GT-FORM-020): Zeile 54 in VZ 2023/2024, Zeile 58 in VZ 2025.
+- Anlage SO: Gross lending-fee Einnahmen aus Leistungen (GT-FORM-024), and net G/L for the annual allocation line (GT-FORM-020): Zeile 54 in VZ 2023/2024, Zeile 58 in VZ 2025.
 
 Values will be quantized to `OUTPUT_PRECISION_AMOUNTS` for display.
 
@@ -696,7 +706,7 @@ Summed net income/G/L per tax pot after local calculations and Finanzamt-style o
 Figures for **direct entry onto current tax year forms**.
 - Anlage KAP: Values for Zeile 19 (Ausländische Kapitalerträge nach Saldierung), Zeile 20 (Gewinne Aktien), Zeile 21 (Gewinne Termingeschäfte), Zeile 22 (Sonstige Verluste), Zeile 23 (Verluste Aktien), Zeile 24 (Verluste Termingeschäfte) as calculated per Section 2.7.
 - Anlage KAP-INV: GROSS amounts for lines 4-8 (Distributions) and 14, 17, 20, 23, 26 (Gains/Losses).
-- Anlage SO: Net G/L for the annual allocation line (GT-FORM-020): Zeile 54 in VZ 2023/2024, Zeile 58 in VZ 2025.
+- Anlage SO: Gross lending-fee Einnahmen aus Leistungen (GT-FORM-024), and net G/L for the annual allocation line (GT-FORM-020): Zeile 54 in VZ 2023/2024, Zeile 58 in VZ 2025.
 
 Values will be `Decimal` formatted and quantized to 2 decimal places (e.g., using `OUTPUT_PRECISION_AMOUNTS`).
 

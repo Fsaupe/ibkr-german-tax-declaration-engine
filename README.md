@@ -773,7 +773,9 @@ Nothing recomputes this file either. Back it up with the others.
     foreign withholding tax.
 *   **Anlage KAP-INV:** investment fund distributions, Vorabpauschale and disposal gains, entered
     gross (before Teilfreistellung).
-*   **Anlage SO:** private sales under § 23 EStG disposed of within the one-year period.
+*   **Anlage SO:** private sales under § 23 EStG disposed of within the one-year period, and
+    Einnahmen aus Leistungen under § 22 Nr. 3 EStG — the fee received for lending securities
+    out, which is not capital income and does not belong on Anlage KAP.
 
 **Line numbers are deliberately not listed here.** They are legal facts, they are year-specific,
 and CLAUDE.md permits them in exactly one place: `reference/`. See
@@ -825,7 +827,7 @@ uv run pytest tests/test_group7_currency_fifo.py -v   # Currency FIFO
 ## Known Limitations
 
 *   **IBKR API history:** The Flex Web Service API only retains ~2 calendar years of data. Older years come from the Client Portal instead, either with the browser downloader or by hand (see [Client Portal Download](#client-portal-download-for-older-years)).
-*   **Awarded shares: one programme, and the sale is handled while the receipt is not.** The only share-award programme supported is **IBKR's Refer-A-Friend award**; the export does not name the programme, so you confirm it once by setting `STOCK_AWARD_PROGRAMME = "IBKR_REFER_A_FRIEND"` in `src/config.py`, and a run with grant rows and no confirmation stops. For that programme the engine gives the shares a real acquisition date and cost basis, so the **gain when you sell them** is computed correctly on Anlage KAP. It does **not** declare the **award itself** as income in the year you received it, nor the negative receipt when shares are handed back. Both are *Leistungen* under § 22 Nr. 3 EStG ([GT-ESTG20-063], [GT-ESTG20-067]), which belong on **Anlage SO**, and the reporting layer has no line for them — the same gap as for a securities-lending fee, tracked as issue #76. The run prints the amount, year and form for each; **entering them is yours to do.**
+*   **Awarded shares: one programme, and the sale is handled while the receipt is not.** The only share-award programme supported is **IBKR's Refer-A-Friend award**; the export does not name the programme, so you confirm it once by setting `STOCK_AWARD_PROGRAMME = "IBKR_REFER_A_FRIEND"` in `src/config.py`, and a run with grant rows and no confirmation stops. For that programme the engine gives the shares a real acquisition date and cost basis, so the **gain when you sell them** is computed correctly on Anlage KAP. It does **not** declare the **award itself** as income in the year you received it, nor the negative receipt when shares are handed back. Both are *Leistungen* under § 22 Nr. 3 EStG ([GT-ESTG20-063], [GT-ESTG20-067]), which belong on **Anlage SO**, but are not included in the automatic Leistungen line, which currently covers securities-lending fees only. Grant aggregation remains an open follow-up (GT-ESTG20-063/067). The run prints the amount, year and form for each; **entering them is yours to do.**
 *   **No "Alt-Anteile":** Assumes all investment fund shares were acquired on or after January 1, 2018.
 *   **Foreign WHT:** Aggregates WHT paid (Anlage KAP Zeile 41) but does not calculate creditable WHT.
 *   **No loss carry-forward/backward:** Calculations are limited to the specified tax year.
