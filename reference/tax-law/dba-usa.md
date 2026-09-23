@@ -122,6 +122,46 @@ the exemption applies, the United States levies no tax on the dividend, so any t
 wholly subject to an Ermaessigungsanspruch and none of it is creditable ([GT-CREDIT-026]).
 Zinsen: anrechenbar 0.
 
+### What the two conditions turn on (US law, cited for a fact only)
+
+The 15 % of Abs. 2 b is conditional twice over: *"falls keine Befreiung"* for a RIC's dividend, and
+Abs. 4 Satz 3 for a REIT's. Both conditions are facts of US law about the individual dividend, in
+the same sense as the substitute-payment fact above: not German ground truth, quoted because the
+Ermaessigungsanspruch is measured by the source state's law. Retrieved 2026-09-23 via
+law.cornell.edu (US Code mirror).
+
+**The RIC exemption is reported per dividend, by the RIC.** 26 U.S.C. § 871(k)(1)(A): *"no tax
+shall be imposed under paragraph (1)(A) of subsection (a) on any interest-related dividend received
+from a regulated investment company which meets the requirements of section 852(a) for the taxable
+year with respect to which the dividend is paid."* § 871(k)(1)(C)(i): *"an interest related dividend
+is any dividend, or part thereof, which is reported by the company as an interest related dividend in
+written statements furnished to its shareholders."* § 871(k)(2)(A) and (C)(i) say the same of a
+*"short-term capital gain dividend"*, *"any dividend, or part thereof, which is reported by the
+company as a short-term capital gain dividend in written statements furnished to its shareholders"*.
+So the exempt part of a RIC dividend is **whatever part of that dividend the RIC reports** as one of
+the two kinds; it can be the whole, a part or nothing, and it is fixed dividend by dividend in the
+RIC's statements, not by the kind of fund. The tax withheld on a dividend does not show it: tax
+withheld on a reported part is wholly subject to an Ermaessigungsanspruch ([GT-CREDIT-026]), and
+the 15 % of Abs. 2 b applies to the unreported part only. Also in the cited unit and not relied on:
+§ 871(k)(1)(B) (no exemption on interest from the holder's own or a 10 %-related debtor's debt, none
+without a statement that the owner is not a US person, none during a period of § 871(h)(6));
+§ 871(k)(2)(B) (no short-term-gain exemption for a nonresident alien taxable under § 871(a)(2),
+i.e. present in the US for 183 days or more in the taxable year); the excess-reported-amount rules
+of § 871(k)(1)(C)(ii)-(iii) and (2)(C)(ii)-(iii).
+
+**REIT status is held per taxable year.** 26 U.S.C. § 856(c)(1): *"A corporation, trust, or
+association shall not be considered a real estate investment trust for any taxable year unless— (1)
+it files with its return for the taxable year an election to be a real estate investment trust or
+has made such election for a previous taxable year, and such election has not been terminated or
+revoked under subsection (g)"*. Whether a payer is a REIT is therefore a fact of the payer's taxable
+year, and the Abs. 4 Satz 3 conditions are facts of the holder's participation in it; neither is a
+permanent property of the instrument. The rest of § 856(c) (the income and asset tests) is not
+relied on.
+
+**Applicable years.** Both sections were read in their current text, which states no expiry for
+either provision. Whether either was amended within the assessment years 2023 to 2026 has not been
+examined; the text quoted is the version in force on 2026-09-23.
+
 ---
 
 ## [GT-CREDIT-028] Art. 23 and Art. 21 -- the credit for US tax, and the character of a substitute payment
