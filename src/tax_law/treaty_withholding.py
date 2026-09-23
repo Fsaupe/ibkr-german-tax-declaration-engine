@@ -17,7 +17,8 @@ store are checked, and a row it cannot verify keeps the amount that was actually
 withheld while telling the caller to flag it. The caller (loss_offsetting) routes the
 flags through the data-gap channel and never past it.
 
-Scope (issue #78): dividends only. The rates are per assessment year, from that year's
+Scope (issue #78): dividends, and interest where the store has a rate (Irland, 0 %:
+[GT-CREDIT-030]). The rates are per assessment year, from that year's
 BZSt edition ([GT-CREDIT-029]), held in `src/tax_law/registry.py`; a year whose edition
 has not been read has no rates and every row is reported, never given another year's
 rate. The US rate covers a US fund's distribution too (the treaty covers RICs); the
@@ -27,8 +28,8 @@ rows VZ 2023-2025 carry the "- US TAX" suffix, 0 of them above 15 % + 1 cent of 
 paired income. The source state is read from `source_country_code` (IssuerCountryCode),
 which is blank on 11 dividend/PIL withholding rows, all VZ 2023 (7 US, 3 CA, 1 FR by
 their suffix): they are reported rate-not-verified and kept as withheld, never guessed.
-Interest rates and every other source state are not in the store, so such a row is
-reported as rate-not-verified, not capped. Adding another state or interest is a store
+Every other source state, and interest from a state without a rate, are not in the
+store, so such a row is reported as rate-not-verified, not capped. Adding another state or interest is a store
 extension plus a table row, not a code change here.
 """
 from dataclasses import dataclass
@@ -37,7 +38,7 @@ from enum import Enum
 from typing import List, Optional
 
 from src.domain.events import CashFlowEvent, WithholdingTaxEvent
-from src.tax_law.registry import creditable_dividend_rate, creditable_dividend_rates_researched
+from src.tax_law.registry import creditable_rate, creditable_rates_researched
 
 _CENT = Decimal("0.01")
 
@@ -89,10 +90,10 @@ def assess_withholdings(whts: List[WithholdingTaxEvent],
 
     if income_event is None:
         return _each(WithholdingStatus.UNLINKED)
-    if not creditable_dividend_rates_researched(tax_year):
+    if not creditable_rates_researched(tax_year):
         return _each(WithholdingStatus.RATE_YEAR_NOT_RESEARCHED)
 
-    rates = {creditable_dividend_rate(tax_year, state, income_event.event_type) for state in states}
+    rates = {creditable_rate(tax_year, state, income_event.event_type) for state in states}
     rate = rates.pop() if len(rates) == 1 else None
     if rate is None:
         # No treaty rate in the store for this (state, income kind), or rows naming
@@ -107,7 +108,10 @@ def assess_withholdings(whts: List[WithholdingTaxEvent],
 
     total_foreign = sum(withheld_foreign, Decimal("0"))
     treaty_tax_foreign = (rate * income_foreign).quantize(_CENT, rounding=ROUND_HALF_UP)
-    if total_foreign - treaty_tax_foreign > _CENT:
+    # The cent absorbs a positive rate rounded up on a sub-unit gross; at a 0 % rate
+    # there is nothing to round, and any amount withheld is above it.
+    tolerance = _CENT if rate > 0 else Decimal("0")
+    if total_foreign - treaty_tax_foreign > tolerance:
         creditable = [(withheld[i] * treaty_tax_foreign / total_foreign).quantize(_CENT, rounding=ROUND_HALF_UP)
                       for i in range(len(whts))]
         return _each(WithholdingStatus.ABOVE_TREATY_RATE, rate, creditable)

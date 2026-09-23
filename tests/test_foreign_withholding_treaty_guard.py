@@ -346,3 +346,52 @@ def test_b10_each_researched_year_caps_with_its_own_rate(tmp_path, tax_year):
     inc = _income(stock, "1000")
     form, _ = _run([inc, _wht(stock, "300", linked_to=inc)], resolver, tax_year=tax_year)
     assert form.form_line_values[Z41] == Decimal("135.00")
+
+
+# --------------------------------------------------------------------------- #
+# B11 — Irish interest withholding: 0 % creditable ([GT-CREDIT-030])
+# --------------------------------------------------------------------------- #
+# The taxing state of credit-interest withholding is the broker entity's country, which
+# only the taxpayer's configuration supplies (config.BROKER_ENTITY_COUNTRY).
+
+def _interest_pair(resolver, country):
+    stock = _stock(resolver)   # the asset is irrelevant to the rate; kind and state decide
+    inc = _income(stock, "100", kind=FinancialEventType.INTEREST_RECEIVED, country=country)
+    return inc, _wht(stock, "20", country=country, linked_to=inc)
+
+
+def test_b11_irish_interest_withholding_is_not_credited(tmp_path):
+    resolver = _resolver(tmp_path)
+    inc, wht = _interest_pair(resolver, "IE")
+    form, gaps = _run([inc, wht], resolver)
+    assert form.form_line_values.get(Z41, Decimal("0.00")) == Decimal("0.00")
+    g = [x for x in gaps.gaps if x.code == "FOREIGN_WHT_ABOVE_TREATY_RATE"]
+    assert len(g) == 1 and "(0%)" in g[0].detail
+
+
+def test_b11_interest_withholding_with_no_configured_state_is_kept_and_reported(tmp_path):
+    resolver = _resolver(tmp_path)
+    inc, wht = _interest_pair(resolver, None)
+    form, gaps = _run([inc, wht], resolver)
+    assert form.form_line_values[Z41] == Decimal("18.00")
+    assert "FOREIGN_WHT_RATE_NOT_VERIFIED" in _codes(gaps)
+
+
+def test_b11_irish_interest_in_an_unresearched_year_is_kept_and_reported(tmp_path):
+    resolver = _resolver(tmp_path)
+    inc, wht = _interest_pair(resolver, "IE")
+    form, gaps = _run([inc, wht], resolver, tax_year=2027)
+    assert form.form_line_values[Z41] == Decimal("18.00")
+    assert "FOREIGN_WHT_RATE_YEAR_NOT_RESEARCHED" in _codes(gaps)
+
+
+def test_b11_a_one_cent_irish_interest_withholding_is_not_credited_either(tmp_path):
+    """The cent tolerance absorbs a positive rate rounded up on a sub-unit gross. At a
+    0 % rate there is nothing to round: any amount withheld is above it. Measured
+    2026-09-23: 3 such rows in VZ 2023 (NOK, NZD), each at most 0.01."""
+    resolver = _resolver(tmp_path)
+    stock = _stock(resolver)
+    inc = _income(stock, "0.05", kind=FinancialEventType.INTEREST_RECEIVED, country="IE")
+    form, gaps = _run([inc, _wht(stock, "0.01", country="IE", linked_to=inc)], resolver)
+    assert form.form_line_values.get(Z41, Decimal("0.00")) == Decimal("0.00")
+    assert "FOREIGN_WHT_ABOVE_TREATY_RATE" in _codes(gaps)

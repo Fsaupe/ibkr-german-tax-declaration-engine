@@ -29,8 +29,12 @@ from src.utils.type_utils import parse_ibkr_date, safe_decimal
 logger = logging.getLogger(__name__)
 
 class DomainEventFactory:
-    def __init__(self, asset_resolver: AssetResolver):
+    def __init__(self, asset_resolver: AssetResolver, broker_entity_country: Optional[str] = None):
+        """`broker_entity_country`: the taxpayer's configured country of the broker entity
+        that pays credit interest (config.BROKER_ENTITY_COUNTRY). None when not
+        configured: the export does not name it, so no country is assumed."""
         self.asset_resolver = asset_resolver
+        self.broker_entity_country = broker_entity_country
         self.processed_ibkr_trade_ids_for_options: Set[str] = set()
         self.wht_on_interest_pattern = re.compile(
             r"WITHHOLDING\s*(?:@\s*\d{1,3}(?:\.\d+)?%)?\s*ON\s*(?:CREDIT\s*)?INT(?:EREST)?.*",
@@ -697,7 +701,7 @@ class DomainEventFactory:
                 source_country_for_interest = rct.issuer_country_code
                 if asset_for_event.asset_category == AssetCategory.CASH_BALANCE and \
                    ("BROKER INTEREST" in desc_upper or "DEPOSIT INTEREST" in desc_upper or desc_upper.startswith("CREDIT INTEREST")):
-                    source_country_for_interest = "IE"
+                    source_country_for_interest = self.broker_entity_country
 
                 # Stückzinsen (Accrued Interest Paid) are typically costs (negative amount)
                 # Interest Received are income (positive amount)
@@ -737,7 +741,7 @@ class DomainEventFactory:
                 if self.wht_on_interest_pattern.match(rct.description or "") and not source_country_for_wht:
                     match_country_in_desc = re.search(r"\b([A-Z]{2})\b\s*\(DETAILS\)", desc_upper) # Example pattern
                     if match_country_in_desc: source_country_for_wht = match_country_in_desc.group(1)
-                    elif asset_for_event.asset_category == AssetCategory.CASH_BALANCE: source_country_for_wht = "IE"
+                    elif asset_for_event.asset_category == AssetCategory.CASH_BALANCE: source_country_for_wht = self.broker_entity_country
                 
                 # WHT amount should be stored as a positive value representing the tax paid.
                 # raw_amount for WHT is typically negative in IBKR reports.

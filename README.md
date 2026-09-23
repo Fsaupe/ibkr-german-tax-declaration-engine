@@ -280,6 +280,19 @@ To use the automated download feature (`--download`), you need to enable the Fle
 
 **Note:** Generating a new token invalidates the previous one. Tokens can expire (default: 6 hours unless configured longer).
 
+### Broker entity
+
+Set the country of the IBKR entity that carries your account -- the one named on your activity
+statements -- in `src/config.py`, e.g. for Interactive Brokers Ireland Limited:
+
+```python
+BROKER_ENTITY_COUNTRY = "IE"
+```
+
+That entity pays your credit interest, so the tax withheld on it (`WITHHOLDING @ ...% ON CREDIT INT`)
+is that country's. The export does not say which country it is. Left at `None`, the withholding is
+kept on Zeile 41 as withheld and reported as not verified.
+
 ### Recording Query IDs
 
 After creating each query, IBKR assigns a numeric **Query ID**. You can find it in the Flex Queries list. Enter these IDs in `src/config.py`:

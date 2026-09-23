@@ -231,3 +231,35 @@ class TestCreditableDividendRatesReferenceConsistency:
         assert not registry.creditable_dividend_rates_researched(year)
         assert registry.creditable_dividend_rate(
             year, "US", FinancialEventType.DIVIDEND_CASH) is None
+
+
+class TestCreditableInterestRatesReferenceConsistency:
+    """The per-year creditable interest rates must equal the per-edition D columns of
+    the store's [GT-CREDIT-030] table.
+    Source: reference/bmf-guidance/bzst-anrechenbare-quellensteuer.md."""
+
+    REFERENCE_DOC = TestCreditableDividendRatesReferenceConsistency.REFERENCE_DOC
+
+    @staticmethod
+    def _parse(text: str) -> dict[int, dict[str, Decimal]]:
+        years: list[int] = []
+        rates: dict[int, dict[str, Decimal]] = {}
+        for line in text.splitlines():
+            if line.startswith("| Source state | Code |"):
+                years = [int(y) for y in re.findall(r"D (\d{4})", line)]
+                continue
+            m = re.match(r"^\|[^|]+\|\s*([A-Z]{2})\s*\|[^|]+\|[^|]+\|(.*)$", line)
+            if years and m:
+                cells = [c.strip() for c in m.group(2).split("|")][:len(years)]
+                for year, cell in zip(years, cells):
+                    rates.setdefault(year, {})[m.group(1)] = (
+                        Decimal(cell.replace(",", ".")) / 100)
+        return rates
+
+    def test_registry_matches_the_reference_document(self):
+        parsed = self._parse(self.REFERENCE_DOC.read_text(encoding="utf-8"))
+        assert len(parsed) >= 4, parsed
+        assert registry.CREDITABLE_INTEREST_RATES == parsed
+
+    def test_the_two_tables_cover_the_same_years(self):
+        assert set(registry.CREDITABLE_INTEREST_RATES) == set(registry.CREDITABLE_DIVIDEND_RATES)

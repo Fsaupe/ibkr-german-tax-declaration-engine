@@ -119,7 +119,8 @@ def run_core_processing_pipeline(
     orchestrator = ParsingOrchestrator(
         asset_resolver=asset_resolver,
         asset_classifier=asset_classifier,
-        interactive_classification=interactive_classification_mode
+        interactive_classification=interactive_classification_mode,
+        broker_entity_country=config.BROKER_ENTITY_COUNTRY,
     )
 
     logger.info("Starting parsing pipeline...")

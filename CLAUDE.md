@@ -148,7 +148,8 @@ cp src/config_example.py src/config.py     # config.py is gitignored; it holds p
 ```
 
 `src/config.py` carries the default tax year, taxpayer identity for reports, the interactive
-classification switch, and Flex Query IDs. `config_example.py` is the tracked template and must
+classification switch, Flex Query IDs, and the broker entity's country (`BROKER_ENTITY_COUNTRY`,
+the taxing state of credit-interest withholding, which the export does not give). `config_example.py` is the tracked template and must
 define every attribute `src/` reads — `tests/test_config_example_completeness.py` enforces this.
 
 ## Running

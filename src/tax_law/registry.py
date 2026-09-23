@@ -153,6 +153,35 @@ CREDITABLE_DIVIDEND_KINDS: dict[str, frozenset] = {
 }
 
 
+# [GT-CREDIT-030]: column D, the creditable interest rate, per edition likewise. Which
+# state levied an interest withholding is not in the export; the parser takes it from
+# the taxpayer's configuration (the broker entity's country).
+CREDITABLE_INTEREST_RATES: dict[int, dict[str, Decimal]] = {
+    2023: {"IE": Decimal("0")},
+    2024: {"IE": Decimal("0")},
+    2025: {"IE": Decimal("0")},
+    2026: {"IE": Decimal("0")},
+}
+
+
+def creditable_rates_researched(tax_year: int) -> bool:
+    """Whether the BZSt edition for `tax_year` has been read for dividends and interest."""
+    return (creditable_dividend_rates_researched(tax_year)
+            and tax_year in CREDITABLE_INTEREST_RATES)
+
+
+def creditable_rate(tax_year: int, source_state: Optional[str],
+                    income_kind: FinancialEventType) -> Optional[Decimal]:
+    """The creditable rate for a state and income kind in `tax_year`: the interest rate
+    for interest, the dividend rate otherwise. None where not in the table; never
+    another year's."""
+    if income_kind is FinancialEventType.INTEREST_RECEIVED:
+        if not source_state:
+            return None
+        return CREDITABLE_INTEREST_RATES.get(tax_year, {}).get(source_state.strip().upper())
+    return creditable_dividend_rate(tax_year, source_state, income_kind)
+
+
 def creditable_dividend_rates_researched(tax_year: int) -> bool:
     """Whether the BZSt edition for `tax_year` has been read into the table."""
     return tax_year in CREDITABLE_DIVIDEND_RATES

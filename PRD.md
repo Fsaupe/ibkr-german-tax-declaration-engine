@@ -108,7 +108,7 @@ It must calculate cost basis and proceeds in EUR (as `Decimal`) for all transact
 
 For `CurrencyConversionEvent`, the parent `FinancialEvent`'s `gross_amount_foreign_currency` and `local_currency` fields are populated with the `to_amount` and `to_currency` of the conversion, respectively.
 
-It must identify the source country for withholding tax purposes based on available data (e.g., ISIN, descriptions from cash transaction reports, `issuer_country_code` from IBKR data). For broker interest, the source country may be heuristically set (e.g., to "IE"). A regex (`wht_on_interest_pattern`) aids in identifying WHT on interest from event descriptions.
+It must identify the source country for withholding tax purposes based on available data (e.g., ISIN, descriptions from cash transaction reports, `issuer_country_code` from IBKR data). For withholding on broker credit interest, the export names no country; the source country is the country of the broker entity paying the interest, supplied by the user as `BROKER_ENTITY_COUNTRY` in `src/config.py`, and not assumed when unset. A regex (`wht_on_interest_pattern`) aids in identifying WHT on interest from event descriptions.
 
 #### Enhanced Data Validation & Error Handling (v3.3.1)
 

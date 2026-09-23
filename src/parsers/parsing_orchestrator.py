@@ -229,8 +229,10 @@ def _one_snapshot_currency(existing: Optional[str], row_currency: Optional[str],
 
 
 class ParsingOrchestrator:
-    def __init__(self, asset_resolver: AssetResolver, asset_classifier: AssetClassifier, interactive_classification: bool = True):
+    def __init__(self, asset_resolver: AssetResolver, asset_classifier: AssetClassifier, interactive_classification: bool = True,
+                 broker_entity_country: Optional[str] = None):
         self.asset_resolver = asset_resolver
+        self.broker_entity_country = broker_entity_country
         self.asset_classifier = asset_classifier
         self.interactive_classification = interactive_classification
 
@@ -1416,7 +1418,8 @@ class ParsingOrchestrator:
             self._verify_prior_year_snapshot_survived_classification()
             self._ensure_soy_quantities_are_set()
 
-            event_factory = DomainEventFactory(asset_resolver=self.asset_resolver)
+            event_factory = DomainEventFactory(asset_resolver=self.asset_resolver,
+                                               broker_entity_country=self.broker_entity_country)
             # MODIFIED: Call the new method that prepares for linking
             self.create_domain_events_and_prepare_for_linking(event_factory)
             

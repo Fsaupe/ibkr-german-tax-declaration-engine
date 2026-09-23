@@ -47,6 +47,13 @@ FUND_PRICE_AUTO_FETCH = True
 TAXPAYER_NAME = "Your Name"  # Update with your name
 ACCOUNT_ID = "U1234567"      # Update with your IBKR account ID
 
+# Country (ISO code) of the IBKR legal entity that carries your account -- the entity
+# that signs your activity statements, e.g. "IE" for Interactive Brokers Ireland
+# Limited. It pays your credit interest, so the tax withheld on that interest
+# ("WITHHOLDING @ ...% ON CREDIT INT") is that country's; the export does not say so.
+# None: that withholding is reported as rate-not-verified and kept as withheld.
+BROKER_ENTITY_COUNTRY = None
+
 # Interactive mode for asset classification
 IS_INTERACTIVE_CLASSIFICATION = True
 
