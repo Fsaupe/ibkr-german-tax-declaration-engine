@@ -1,4 +1,4 @@
-# Anlage SO -- Zeilenreferenz (Private Veraeusserungsgeschaefte)
+# Anlage SO -- Zeilenreferenz (Leistungen und private Veraeusserungsgeschaefte)
 
 ## Source
 
@@ -20,7 +20,7 @@
 
 ## Structure
 
-Anlage SO covers two things, of which only the second is relevant here:
+The following Anlage SO blocks are relevant here:
 
 1. **Leistungen** (22 Nr. 3 EStG)
 2. **Private Veraeusserungsgeschaefte** (22 Nr. 2, 23 EStG)
@@ -30,6 +30,79 @@ Within the second, the form separates:
 - Grundstuecke und grundstuecksgleiche Rechte (ten-year period, 23 Abs. 1 Satz 1 Nr. 1)
 - Kryptowaehrungen / virtuelle Waehrungen (one-year period)
 - **Andere Wirtschaftsgueter** (one-year period; annual lines below)
+
+## [GT-FORM-024] The *Leistungen* block -- where 22 Nr. 3 EStG income enters, per year
+
+Tier 1 basis: § 22 Nr. 3 Satz 1 EStG; the subsidiarity and neighbouring
+threshold/loss provisions are stated at [GT-ESTG20-049] and [GT-ESTG20-062].
+Applicable verified years: VZ 2023–2025. No earlier mapping is established here;
+an unverified forward carry must be identified as such. These are annual form
+layouts, not amendments to the statute.
+
+Individual Tier 3 sources, retrieved 2026-08-09 from sheet 1 of the official FMS:
+
+| VZ | Form source and print identifier | Anleitung held with its source PDF |
+|---|---|---|
+| 2023 | [034029_23](https://www.formulare-bfinv.de/ffw/action/invoke.do?id=034029_23), 2023AnlSO131NET, September 2023 | [Anleitung SO 2023](../Anltg_SO_23.md) |
+| 2024 | [034029_24](https://www.formulare-bfinv.de/ffw/action/invoke.do?id=034029_24), 2024AnlSO131NET, September 2024 | [Anleitung SO 2024](../Anltg_SO_24.md) |
+| 2025 | [034029_25](https://www.formulare-bfinv.de/ffw/action/invoke.do?id=034029_25), 2025AnlSO131NET, September 2025 | [Anleitung SO 2025](../Anltg_SO_25.md) |
+
+Read off the forms on 2026-08-09. The Anleitungen give the block only -- *"Zeile 10 bis 16
+Leistungen"* (VZ 2023 and VZ 2024) and *"Zeile 14 bis 21 Leistungen"* (VZ 2025) -- and never
+break out the lines inside it, so the table below comes from the sheets.
+
+| Content | VZ 2023 | VZ 2024 | VZ 2025 |
+|---|---|---|---|
+| *Haben Sie Einkuenfte aus Mining, Forging, Staking, Lending ... erzielt?* (Kennzahl 162 / 163) | 10 | 10 | 14 |
+| Einnahmen im Zusammenhang mit virtuellen Waehrungen / Kryptowerten | 11 | 11 | 15 |
+| **Angaben zu weiteren Leistungen -- *Einnahmen aus:*, a free-text Art der Einnahmen with the amount beside it** | **12** | **12** | **16** |
+| a second such entry | 13 | 13 | 17 |
+| *Summe der Einnahmen* (Kennzahl 164 / 165) | 14 | 14 | 18 |
+| *Werbungskosten zu den Einnahmen* (Kennzahl 176 / 177) | 15 | 15 | 19 |
+| *Einkuenfte*, computed | 16 | 16 | 20 |
+| Wirtschafts-Identifikationsnummer to the two entry lines | -- | 17 | 21 |
+| Waiver of the 10d Abs. 1 Verlustrücktrag (Kennzahl 804 / 805) | 18 | 18 | 22 |
+
+**A 22 Nr. 3 receipt is declared on an entry line, not on the sum.** The two entry lines carry
+no Kennzahl of their own: what they take is a description of the Leistung together with its
+gross Einnahmen, and the form adds them into the Kennzahl-bearing *Summe* line. So the figure a
+declaration has to state for such a receipt belongs on **Zeile 12** (VZ 2023, VZ 2024) or
+**Zeile 16** (VZ 2025), with the Art der Einnahmen written next to it.
+
+**Werbungskosten are one line for the whole block**, deducted from the sum rather than matched
+to an entry. The Einkuenfte line is computed and is not something a filer enters.
+
+**The Leistungen block is where the sheet expects income that is neither Kapitalvermoegen nor a
+Veraeusserungsgeschaeft.** Both the VZ 2024 and the VZ 2025 Anleitung open the block by
+excluding what belongs elsewhere -- *"sofern sie keiner anderen Einkunftsart (z. B. Einkuenfte
+aus Gewerbebetrieb oder Kapitalvermoegen) zuzurechnen sind"* -- which is the subsidiarity of
+22 Nr. 3 restated on the form.
+
+**VZ 2023 has no Wirtschafts-Identifikationsnummer line**; its Zeile 17 is the Bruttoentlastungs-
+betrag zur Gas- / Waermepreisbremse, a provision of that year only. This is why the block is
+Zeilen 10-16 in both 2023 and 2024 and yet the two sheets are not the same sheet.
+
+### Freigrenze, as the Anleitung states it
+
+The 256 Euro Freigrenze of 22 Nr. 3 Satz 2 is a rule of the statute in every year -- see
+[GT-ESTG20-049]. What differs is whether the Anleitung repeats it:
+
+| VZ | Anleitung wording |
+|---|---|
+| 2023 | not mentioned in the Leistungen block |
+| 2024 | *"Haben Sie im Jahr 2024 Einkuenfte aus Leistungen von insgesamt weniger als 256 € (Freigrenze) erzielt? Dann muessen Sie diese in der Anlage SO nicht eintragen. Bei einer Zusammenveranlagung gilt die Freigrenze i. H. v. 256 € fuer jede Person."* |
+| 2025 | the same sentence, with the year changed |
+
+It is a threshold on the taxpayer's Einkuenfte aus Leistungen **in total**, from every source,
+not on one payer's.
+
+> **A misprint to be aware of when reading the VZ 2025 Anleitung.** Its Zeile 21 paragraph says
+> the Wirtschafts-Identifikationsnummer is the one issued *"fuer die Leistungen laut den Zeilen
+> 16 und 13"*. The form's own Zeile 21 label reads *"Wirtschafts-Identifikationsnummer zu den
+> Zeilen 16 und 17"*, which are the two entry lines and the only reading that makes sense of the
+> block. The Anleitung's "13" appears to be an unupdated carry-over. The form governs.
+
+## [GT-FORM-020] Andere Wirtschaftsgueter -- Zeilen 48-55 in VZ 2023 and VZ 2024
 
 ## [GT-FORM-020] Andere Wirtschaftsgueter -- annual calculation and allocation lines
 

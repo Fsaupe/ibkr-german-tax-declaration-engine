@@ -646,6 +646,12 @@ acquisition date is compared with the disposal date, so it can decide taxability
 
 ## Anlage KAP-INV form structure
 
+Leistungen form integration, store-first record:
+
+| Claim | Position | Module | Guarding tests | Notes |
+|---|---|---|---|---|
+| GT-FORM-024 | deviates | No Leistungen form category yet; issue #76 | none | Verified entry lines Z12 (2023/2024), Z16 (2025). Integration of the preserved lending-fee fix follows this store commit. Grant receipts and returns remain separately disclosed pending aggregation integration. |
+
 | Claim | Position | Module | Guarding tests | Notes |
 |---|---|---|---|---|
 | GT-FORM-030 | implements | `ANLAGE_KAP_INV_*_AUSSCHUETTUNG_GROSS`, one per fund type | `test_vorabpauschale.py::TestGetVpReportingCategory` | Zeilen 4–8. |
