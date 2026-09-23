@@ -246,3 +246,24 @@ def test_b7_a_withholding_row_the_linker_could_not_attach_is_reported_not_capped
 
     assert form.form_line_values[Z41] == Decimal("270.00")
     assert "FOREIGN_WHT_UNLINKED" in _codes(gaps)
+
+
+# --------------------------------------------------------------------------- #
+# B8 — the treaty rate limits all the tax on one dividend, not each row
+# --------------------------------------------------------------------------- #
+
+def test_b8_two_tax_rows_on_one_dividend_are_measured_together(tmp_path):
+    """Art. 10 Abs. 2 limits *"die Steuer"* on a dividend against *"des Bruttobetrags
+    der Dividenden"* ([GT-CREDIT-027]): all the tax on one dividend, together. Two rows
+    of 15 % each on one 1000 USD dividend are 30 %; 150 USD is creditable, 135.00 EUR.
+    Measured one row at a time, each passes and 270.00 reaches Zeile 41. Measured
+    2026-09-23: no income in Cash_Transactions-{2023..2025} has two tax rows linked to
+    it, so this is the hypothetical of an additional withholding booked as its own row."""
+    resolver = _resolver(tmp_path)
+    stock = _stock(resolver)
+    inc = _income(stock, "1000")
+    first = _wht(stock, "150", linked_to=inc)
+    second = _wht(stock, "150", linked_to=inc)
+    form, gaps = _run([inc, first, second], resolver)
+    assert form.form_line_values[Z41] == Decimal("135.00")
+    assert "FOREIGN_WHT_ABOVE_TREATY_RATE" in _codes(gaps)

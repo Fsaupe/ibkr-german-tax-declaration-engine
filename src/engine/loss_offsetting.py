@@ -15,7 +15,7 @@ from src.utils.tax_utils import get_teilfreistellung_rate_for_fund_type
 from src.reporting.form_rules import get_form_rules
 from src.processing.data_gaps import DataGapCollector, GapSeverity
 from src.tax_law.treaty_withholding import (
-    assess_withholding, WithholdingAssessment, WithholdingStatus,
+    assess_withholdings, WithholdingAssessment, WithholdingStatus,
 )
 import src.config as global_config
 
@@ -383,6 +383,10 @@ class LossOffsettingEngine:
         # (status, source state). No status is fatal: cap-and-report keeps a complete,
         # correct set of figures and surfaces the excess (issue #78 decision).
         treaty_flags: Dict[tuple, List[tuple]] = defaultdict(list)
+        # The treaty limits all the tax on one income ([GT-CREDIT-027]), so the foreign
+        # rows are assessed per linked income; a row with no income in this year stands alone.
+        foreign_rows: List[WithholdingTaxEvent] = []
+        rows_by_income: Dict[object, List[WithholdingTaxEvent]] = defaultdict(list)
         for event in self.current_year_financial_events:
             if isinstance(event, WithholdingTaxEvent):
                 tax_amount = event.gross_amount_eur if event.gross_amount_eur is not None else self.ctx.create_decimal(Decimal('0'))
@@ -390,15 +394,22 @@ class LossOffsettingEngine:
                     german_kest_total = self.ctx.add(german_kest_total, tax_amount)
                     german_kest_count += 1
                     continue
+                foreign_rows.append(event)
                 income_event = income_by_id.get(event.taxed_income_event_id)
-                assessment = assess_withholding(event, income_event)
-                # Only the anrechenbare amount reaches Zeile 41: the withheld tax reduced
-                # by the source state's Ermäßigungsanspruch ([GT-CREDIT-026]). For a row at
-                # or below the treaty rate this equals what was withheld, so no figure
-                # moves; measured 0 US rows above the rate VZ 2023–2025 (issue #78).
-                foreign_tax_total = self.ctx.add(foreign_tax_total, assessment.creditable_eur)
-                if assessment.status is not WithholdingStatus.OK:
-                    treaty_flags[(assessment.status, assessment.source_state or "")].append((event, assessment))
+                rows_by_income[income_event.event_id if income_event else id(event)].append(event)
+        assessments: Dict[int, WithholdingAssessment] = {}
+        for rows in rows_by_income.values():
+            for row, assessment in zip(rows, assess_withholdings(rows, income_by_id.get(rows[0].taxed_income_event_id))):
+                assessments[id(row)] = assessment
+        for event in foreign_rows:
+            assessment = assessments[id(event)]
+            # Only the anrechenbare amount reaches Zeile 41: the withheld tax reduced
+            # by the source state's Ermäßigungsanspruch ([GT-CREDIT-026]). For a row at
+            # or below the treaty rate this equals what was withheld, so no figure
+            # moves; measured 0 US rows above the rate VZ 2023–2025 (issue #78).
+            foreign_tax_total = self.ctx.add(foreign_tax_total, assessment.creditable_eur)
+            if assessment.status is not WithholdingStatus.OK:
+                treaty_flags[(assessment.status, assessment.source_state or "")].append((event, assessment))
         self._record_german_kest_gap(german_kest_count, german_kest_total)
         self._record_treaty_withholding_gaps(treaty_flags)
 
