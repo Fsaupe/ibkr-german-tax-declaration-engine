@@ -1,5 +1,13 @@
 # PR review and merge train
 
+**#76 merged and pushed as `f261bb2`; CLOSED/COMPLETED.**
+The maintainer accepted the reported SYEP fee correction and authorized merge
+and closure. GitHub confirmed exact tree equality with candidate `37f4a4d` and
+closure at 2026-09-23 11:22:07 UTC. Clean suite: **1,673 passed, 1 skipped**;
+VZ 2023–2025 fee reclassification and PDF output verified.
+[Implementation and completion](issue76-lending-fees.md). Grant aggregation
+under GT-ESTG20-063/067 and other deferred work remain open.
+
 **#79 merged and pushed as `8686b05`; CLOSED/COMPLETED.**
 Official forms establish SO allocation Z54/Z54/Z58 for VZ 2023/2024/2025.
 Clean suite: **1,633 passed/1 skipped**. Real-data amounts unchanged;

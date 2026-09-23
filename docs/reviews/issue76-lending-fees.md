@@ -1,8 +1,15 @@
 # Issue #76 — securities-lending receipts on Anlage SO
 
+**Completed 2026-09-23:** the maintainer accepted the reported correction and
+instructed merge and closure. Merged and pushed as **`f261bb2`** from candidate
+`37f4a4d`. GitHub confirmed the merge tree exactly matches the verified candidate
+(`270a6f35b424d0fdaa047bf81d7fc3a509379a7a`). Issue #76 is **CLOSED/COMPLETED**,
+confirmed at **11:22:07 UTC**. No unresolved question remains for this issue;
+GT-ESTG20-063/067 grant aggregation and existing deferred work remain open.
+
 Implemented locally on 2026-09-23 on `fix/issue76-current`, based on refreshed
 GitHub main `3bd4a2e`. Application/test candidate: `a90b0c1`.
-No remote branch publication, merge or issue closure is authorized by this record.
+The implementation and verification below preceded the authorized merge.
 
 The isolated checkout is `/private/tmp/issue76.yvvgIK/work`. The original
 issue #76 checkout, its earlier commits and unrelated edits are preserved.
