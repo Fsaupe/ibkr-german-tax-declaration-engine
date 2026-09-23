@@ -7,8 +7,8 @@ its own law or a DBA (reference/tax-law/estg-32d-abgeltungsteuer.md [GT-CREDIT-0
 BMF Rn. 207a, BZSt Erlaeuterungen). For a US dividend, and a payment in lieu on branch A,
 the two grounds coincide: the US keeps 15 % and refunds the rest
 (reference/tax-law/dba-usa.md [GT-CREDIT-027], [GT-CREDIT-028], Art. 10 Abs. 2 b /
-Abs. 4 Satz 2; a REIT's dividend only under the holding conditions of Abs. 4 Satz 3,
-assumed met -- see `CREDITABLE_DIVIDEND_RATES`). Anything withheld above that is not creditable in Germany; it is claimed
+Abs. 4 Satz 2; a RIC's only without an exempt part, a REIT's only under the holding
+conditions of Abs. 4 Satz 3 -- facts the taxpayer states, src/tax_law/withholding_conditions.py). Anything withheld above that is not creditable in Germany; it is claimed
 back from the IRS. Branch B (Art. 21), where the US does not apply the treaty's allocation, is open (Q23) and
 not reached: the parser takes branch A ([GT-INVSTG-059]).
 
@@ -36,11 +36,12 @@ extension plus a table row, not a code change here.
 from dataclasses import dataclass
 from decimal import Decimal, ROUND_HALF_UP
 from enum import Enum
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from src.domain.enums import AssetCategory
 from src.domain.events import CashFlowEvent, WithholdingTaxEvent
 from src.tax_law.registry import creditable_rate, creditable_rates_researched
+from src.tax_law.withholding_conditions import Verdict, verdict
 
 _CENT = Decimal("0.01")
 
@@ -51,12 +52,16 @@ class WithholdingStatus(Enum):
     RATE_NOT_VERIFIED = "RATE_NOT_VERIFIED"  # no creditable rate in the store for this row
     RATE_YEAR_NOT_RESEARCHED = "RATE_YEAR_NOT_RESEARCHED"  # no rates read for this tax year at all
     UNLINKED = "UNLINKED"                  # no income row to measure the rate against
+    FACTS_UNANSWERED = "FACTS_UNANSWERED"  # the rate depends on a fact the taxpayer has not stated
+    CONDITION_NOT_MET = "CONDITION_NOT_MET"  # stated, and the rate's condition fails
 
 
 # The statuses with no supported creditable amount: the run stops on any of them.
 UNSUPPORTED = frozenset({WithholdingStatus.RATE_NOT_VERIFIED,
                          WithholdingStatus.RATE_YEAR_NOT_RESEARCHED,
-                         WithholdingStatus.UNLINKED})
+                         WithholdingStatus.UNLINKED,
+                         WithholdingStatus.FACTS_UNANSWERED,
+                         WithholdingStatus.CONDITION_NOT_MET})
 
 
 @dataclass(frozen=True)
@@ -75,7 +80,8 @@ class WithholdingAssessment:
 def assess_withholdings(whts: List[WithholdingTaxEvent],
                         income_event: Optional[CashFlowEvent],
                         tax_year: int,
-                        income_asset_category: Optional[AssetCategory] = None) -> List[WithholdingAssessment]:
+                        income_asset_category: Optional[AssetCategory] = None,
+                        facts: Optional[Dict[str, bool]] = None) -> List[WithholdingAssessment]:
     """Decide the creditable amount of every foreign (non-German-KESt) withholding row
     linked to one income, one assessment per row in the order given.
 
@@ -110,6 +116,14 @@ def assess_withholdings(whts: List[WithholdingTaxEvent],
         # different states: no creditable amount, and the caller stops. Never default
         # to a rate.
         return _each(WithholdingStatus.RATE_NOT_VERIFIED)
+
+    # The rate holds only where its conditions do ([GT-CREDIT-027]): facts the export
+    # does not carry, stated by the taxpayer per instrument and year.
+    met, _ = verdict(states[0], income_asset_category, facts)
+    if met is Verdict.UNANSWERED:
+        return _each(WithholdingStatus.FACTS_UNANSWERED)
+    if met is Verdict.NOT_MET:
+        return _each(WithholdingStatus.CONDITION_NOT_MET)
 
     income_foreign = _abs(income_event.gross_amount_foreign_currency)
     withheld_foreign = [_abs(w.gross_amount_foreign_currency) for w in whts]

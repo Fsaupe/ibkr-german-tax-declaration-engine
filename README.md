@@ -294,6 +294,29 @@ is that country's. The export does not say which country it is. Left at `None` (
 older `config.py`), a year with such a row stops before any figure is produced, naming the rows and
 this setting: neither the amount withheld nor zero is a supported credit.
 
+### Facts the US withholding credit depends on
+
+The US tax on a dividend is creditable at 15 % only if the paying fund reported no part of
+that year's distributions as exempt (`interest-related` or `short-term capital gain dividend`,
+shown on Form 1042-S), and, for a US REIT, only if you held not more than 10 % of it. The
+export shows neither. An interactive run asks for each US payer with tax in the year, at the
+start, after the asset classification, and keeps the answers per payer and year in
+`cache/withholding_facts.json`:
+
+```json
+{
+  "ISIN:US0000000000|2025": {
+    "answers": {"us_reit": false},
+    "date_set": "2026-09-23",
+    "source": "Angabe des Steuerpflichtigen im interaktiven Lauf"
+  }
+}
+```
+
+A share is asked `us_reit` (and, if true, `us_reit_holding_at_most_10pct`); a fund is asked
+`us_ric_exempt_part`. A `--no-interactive` run with a question unanswered stops before any
+figure, naming the ISINs; so does an answer under which the 15 % does not hold.
+
 ### Recording Query IDs
 
 After creating each query, IBKR assigns a numeric **Query ID**. You can find it in the Flex Queries list. Enter these IDs in `src/config.py`:

@@ -20,6 +20,7 @@ from src.utils.exchange_rate_provider import ECBExchangeRateProvider, ExchangeRa
 from src.processing.data_gaps import DataGap, DataGapCollector
 from src.processing.fund_prices import (
     FundPriceStore, make_price_prompt, resolve_year_start_prices)
+from src.processing.withholding_facts import WithholdingFactsStore, resolve_withholding_facts
 from src.processing.vorabpauschale_declarations import (
     VorabpauschaleDeclarationStore, make_declaration_prompt)
 from src.engine.calculation_engine import run_main_calculations
@@ -242,6 +243,15 @@ def run_core_processing_pipeline(
             ask=make_price_prompt(financial_events_enriched),
             auto_fetch=getattr(config, "FUND_PRICE_AUTO_FETCH", True),
         )
+
+        # Facts a creditable withholding rate depends on and no export carries (a US
+        # REIT holding, an exempt part of a US fund's distribution), per instrument and
+        # year. Asked here, with the fund type and the fund price, in an interactive run;
+        # an unanswered one stops the run at Zeile 41. See src/processing/withholding_facts.py.
+        resolve_withholding_facts(
+            assets=list(orchestrator.asset_resolver.assets_by_internal_id.values()),
+            events=financial_events_enriched, tax_year=tax_year_to_process,
+            store=WithholdingFactsStore(), interactive=interactive_classification_mode)
 
         # What was DECLARED as Vorabpauschale on earlier returns. Read on every run and
         # written on none: the Zeile 53 deduction (19 Abs. 1 Satz 3 InvStG) may rest only

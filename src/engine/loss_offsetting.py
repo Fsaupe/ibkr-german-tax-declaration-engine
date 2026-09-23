@@ -255,14 +255,29 @@ class LossOffsettingEngine:
             return (f"{count} Quellensteuerzeile(n) aus {state_label}: für das Steuerjahr "
                     f"{self.tax_year} ist die BZSt-Übersicht (Stand 1. Januar {self.tax_year}) nicht "
                     f"eingelesen; Sätze anderer Jahre werden nicht übernommen.")
+        if status is WithholdingStatus.FACTS_UNANSWERED:
+            return (f"{count} Quellensteuerzeile(n) aus {state_label}: der anrechenbare Satz hängt von "
+                    f"Angaben ab, die der Export nicht enthält (REIT; steuerbefreiter Teil einer "
+                    f"RIC-Ausschüttung). Im interaktiven Lauf beantworten (--interactive) oder in "
+                    f"cache/withholding_facts.json eintragen (siehe README).")
+        if status is WithholdingStatus.CONDITION_NOT_MET:
+            return (f"{count} Quellensteuerzeile(n) aus {state_label}: nach Ihren Angaben gilt der "
+                    f"anrechenbare Satz nicht (REIT-Beteiligung über 10 % oder steuerbefreiter Teil "
+                    f"einer RIC-Ausschüttung); der anrechenbare Betrag ist nicht ermittelbar.")
         return (f"{count} Quellensteuerzeile(n) konnten keinem Ertrag desselben Kontos zugeordnet "
                 f"werden, sodass der einbehaltene Satz nicht gegen den anrechenbaren Satz geprüft "
                 f"werden kann.")
 
+    def _isins(self, rows) -> str:
+        isins = sorted({getattr(self.asset_resolver.get_asset_by_id(ev.asset_internal_id), "ibkr_isin", None) or "—"
+                        for ev, _ in rows})
+        return " (ISIN: " + ", ".join(isins) + ")"
+
     def _unsupported_credit_detail(self, unsupported: Dict[tuple, List[tuple]]) -> str:
         """The one fatal message naming every row with no supported creditable amount."""
         parts = [self._unsupported_reason(status, state, len(rows))
-                 + " Transaktionen: " + ", ".join(ev.ibkr_transaction_id or "—" for ev, _ in rows) + "."
+                 + " Transaktionen: " + ", ".join(ev.ibkr_transaction_id or "—" for ev, _ in rows)
+                 + self._isins(rows) + "."
                  for (status, state), rows in sorted(unsupported.items(), key=lambda kv: (kv[0][0].value, kv[0][1]))]
         return ("Für Anlage KAP Zeile 41 ist nicht jede ausländische Quellensteuer belegbar anrechenbar. "
                 "Weder der einbehaltene Betrag noch null darf an ihre Stelle treten; es werden keine "
@@ -429,7 +444,8 @@ class LossOffsettingEngine:
             # The rate depends on what the instrument is ([GT-CREDIT-029], column F).
             income_asset = self.asset_resolver.get_asset_by_id(income.asset_internal_id) if income else None
             category = income_asset.asset_category if income_asset else None
-            for row, assessment in zip(rows, assess_withholdings(rows, income, self.tax_year, category)):
+            facts = income_asset.withholding_facts.get(self.tax_year) if income_asset else None
+            for row, assessment in zip(rows, assess_withholdings(rows, income, self.tax_year, category, facts)):
                 assessments[id(row)] = assessment
         for event in foreign_rows:
             assessment = assessments[id(event)]

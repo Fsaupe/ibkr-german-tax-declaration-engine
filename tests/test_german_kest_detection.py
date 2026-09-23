@@ -156,6 +156,7 @@ class TestCountryCodePrecedence:
         an ABOVE_TREATY_RATE gap is recorded, and there is NO German-KESt gap. A KESt
         exclusion would instead give Zeile 41 = 0 with a German-KESt gap.
         """
+        asset.withholding_facts[2023] = {"us_reit": False}  # stated answer the US 15 % needs (PR #102 F2, approved)
         collector = DataGapCollector()
         div = _dividend(asset, "1204.00")
         zeile_41 = _zeile_41([div, _wht(asset, "317.56", country="US", linked_to=div)],
@@ -194,6 +195,7 @@ class TestTheExcludedAmountReachesTheUser:
         assert gaps[0].severity is GapSeverity.WARNING
 
     def test_no_gap_when_all_withholding_is_foreign(self, resolver, asset):
+        asset.withholding_facts[2023] = {"us_reit": False}  # stated answer the US 15 % needs (PR #102 F2, approved)
         collector = DataGapCollector()
         div = _dividend(asset, "100.00")
         _zeile_41([div, _wht(asset, "15.00", country="US", linked_to=div)], resolver, collector)
@@ -213,6 +215,7 @@ class TestTheExcludedAmountReachesTheUser:
 
     def test_zeile_41_still_sums_the_foreign_rows_alongside(self, resolver, asset):
         """Excluding German KESt must not disturb the foreign total next to it."""
+        asset.withholding_facts[2023] = {"us_reit": False}  # stated answer the US 15 % needs (PR #102 F2, approved)
         d1, d2 = _dividend(asset, "100.00"), _dividend(asset, "200.00")
         events = [d1, d2,
                   _wht(asset, "26.375", country="DE", linked_to=d1),

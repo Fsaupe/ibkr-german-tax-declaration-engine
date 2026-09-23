@@ -39,6 +39,8 @@ The conditions routed through this channel, as of 2026-09-19:
     FOREIGN_WHT_RATE_NOT_VERIFIED                      WARNING
     FOREIGN_WHT_RATE_YEAR_NOT_RESEARCHED               WARNING
     FOREIGN_WHT_UNLINKED                               WARNING
+    FOREIGN_WHT_FACTS_UNANSWERED                       WARNING
+    FOREIGN_WHT_CONDITION_NOT_MET                      WARNING
     KAP_INV_Z53_VORABPAUSCHALE_DECLARATION_UNKNOWN     WARNING
     KAP_INV_Z53_VORABPAUSCHALE_NOT_ATTRIBUTABLE        WARNING
     KAP_INV_Z53_VORABPAUSCHALE_NOT_DECLARED            WARNING
@@ -78,7 +80,8 @@ The WARNING entries are the itemisation the fatal one points at, not a policy
 of tolerating the condition. This paragraph said the opposite until 2026-08-08,
 describing the "log, count, continue" behaviour that predates the abort.
 The foreign-withholding codes follow the same shape. `FOREIGN_WHT_RATE_NOT_VERIFIED`,
-`FOREIGN_WHT_RATE_YEAR_NOT_RESEARCHED` and `FOREIGN_WHT_UNLINKED` itemise the rows
+`FOREIGN_WHT_RATE_YEAR_NOT_RESEARCHED`, `FOREIGN_WHT_UNLINKED`,
+`FOREIGN_WHT_FACTS_UNANSWERED` and `FOREIGN_WHT_CONDITION_NOT_MET` itemise the rows
 that have no supported creditable amount, and `FOREIGN_WHT_CREDIT_UNSUPPORTED` then
 names all of them FAIL_FAST: neither the withheld amount nor zero may stand in for
 the Zeile 41 credit. `FOREIGN_WHT_ABOVE_TREATY_RATE` alone continues -- the row is

@@ -48,15 +48,24 @@ def _resolver(tmp_path):
     return AssetResolver(asset_classifier=AssetClassifier(cache_file_path=str(tmp_path / "c.json")))
 
 
+# The taxpayer's answers the US 15 % depends on ([GT-CREDIT-027]; test_withholding_facts.py):
+# the fixtures' share is not a REIT and the fund reported no exempt part, in every year
+# the tests use. A test of the facts themselves clears them.
+_YEARS = range(2020, 2031)
+
+
 def _stock(resolver, isin="US0000000AAA"):
-    return resolver.get_or_create_asset(
+    stock = resolver.get_or_create_asset(
         raw_isin=isin, raw_conid="C" + isin[-4:], raw_symbol="ACME", raw_currency="USD",
         raw_ibkr_asset_class="STK", raw_description="ACME", raw_ibkr_sub_category="COMMON")
+    stock.withholding_facts.update({y: {"us_reit": False} for y in _YEARS})
+    return stock
 
 
 def _fund(resolver, isin="US00000FUND1"):
     fund = InvestmentFund(fund_type=InvestmentFundType.AKTIENFONDS, description="TF ETF",
                           currency="USD", ibkr_isin=isin, ibkr_symbol="TF")
+    fund.withholding_facts.update({y: {"us_ric_exempt_part": False} for y in _YEARS})
     resolver.assets_by_internal_id[fund.internal_asset_id] = fund
     return fund
 

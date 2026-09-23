@@ -82,6 +82,13 @@ def _enrich_eur(events):
 
 
 def _run_loss_offsetting(events, resolver, tmp_path, tax_year=2025):
+    # The taxpayer's answers the US 15 % depends on ([GT-CREDIT-027], PR #102 F2): the
+    # fixtures' shares are not REITs and their funds reported no exempt part.
+    for asset in resolver.assets_by_internal_id.values():
+        if asset.asset_category is AssetCategory.STOCK:
+            asset.withholding_facts[tax_year] = {"us_reit": False}
+        elif asset.asset_category is AssetCategory.INVESTMENT_FUND:
+            asset.withholding_facts[tax_year] = {"us_ric_exempt_part": False}
     gaps = DataGapCollector()
     engine = LossOffsettingEngine(
         realized_gains_losses=[],

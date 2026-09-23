@@ -23,6 +23,10 @@ class Asset:
     ibkr_isin: Optional[str] = None
     ibkr_asset_class_raw: Optional[str] = None # e.g., "STK", "OPT", "FUND", "CASH"
     ibkr_sub_category_raw: Optional[str] = None # e.g. "COMMON", "ETF"
+    # The taxpayer's answers a creditable withholding rate depends on, per tax year
+    # (src/processing/withholding_facts.py). Facts of the payer and of the beneficial
+    # owner, not of an account; absent means not answered.
+    withholding_facts: Dict[int, Dict[str, bool]] = field(default_factory=dict)
 
     # No snapshot of a holding is here, and none may be added.
     #

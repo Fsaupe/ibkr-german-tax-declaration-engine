@@ -23,6 +23,10 @@ ECB_RATES_CACHE_FILE_PATH = "cache/ecb_exchange_rates.json"
 # interactive run asks for it and remembers the answer here. Like the
 # classification cache, nothing recomputes this file.
 FUND_PRICE_CACHE_FILE_PATH = "cache/user_fund_prices.json"
+# The taxpayer's answers on which a creditable withholding rate depends (a US REIT
+# holding, an exempt part of a US fund's distribution), per instrument and year. Asked
+# in an interactive run; like the classifications, nothing recomputes this file.
+WITHHOLDING_FACTS_STORE_PATH = "cache/withholding_facts.json"
 
 # Record of the Vorabpauschale DECLARED on earlier returns, per fund and calendar
 # year. 19 Abs. 1 Satz 3 InvStG deducts the Vorabpauschalen angesetzt during the
