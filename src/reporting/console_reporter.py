@@ -14,10 +14,13 @@ from src.identification.asset_resolver import AssetResolver
 import src.config as config
 from src.utils.type_utils import parse_ibkr_date
 from src.engine.loss_offsetting import LossOffsettingResult
-from src.reporting.reporting_utils import _q, _q_qty, _q_price, get_kap_inv_category_for_reporting
+from src.reporting.reporting_utils import (
+    _q, _q_qty, _q_price, get_kap_inv_category_for_reporting,
+    anlage_so_leistungen_line_label,
+    display_rounding_difference, rounding_difference_label,
+)
 from src.reporting.form_rules import get_form_rules, unverified_form_rules_source
 from src.tax_law.registry import get_section23_form_line, section23_form_warning
-from src.reporting.reporting_utils import anlage_so_leistungen_line_label
 
 
 logger = logging.getLogger(__name__)
@@ -350,24 +353,37 @@ def generate_console_tax_report(
         elif rgl.asset_category_at_realization == AssetCategory.CASH_BALANCE:
             sum_fx_gains_gross += gl
 
-    print(f"      Zinserträge (brutto positiv): {_q(sum_interest_income_gross)}")
-    print(f"      Dividenden (Aktien, brutto positiv, inkl. steuerpfl. Stock-Dividenden): {_q(sum_non_fund_dividends_gross)}")
-    print(f"      Gewinne aus Anleihenverkäufen (brutto positiv): {_q(sum_bond_gains_gross)}")
+    printed_components = [_q(sum_interest_income_gross),
+                          _q(sum_non_fund_dividends_gross),
+                          _q(sum_bond_gains_gross)]
+    print(f"      Zinserträge (brutto positiv): {printed_components[0]}")
+    print(f"      Dividenden (Aktien, brutto positiv, inkl. steuerpfl. Stock-Dividenden): {printed_components[1]}")
+    print(f"      Gewinne aus Anleihenverkäufen (brutto positiv): {printed_components[2]}")
     # Printed only when such an instrument was disposed of: without one the line is a
     # constant zero for every taxpayer, and this category is rare by construction.
     if sum_sonstige_kapitalforderung_gains_gross > Decimal('0'):
-        print(f"      Gewinne aus sonstigen Kapitalforderungen (§20 Abs. 2 S. 1 Nr. 7, keine Anleihen; brutto positiv): {_q(sum_sonstige_kapitalforderung_gains_gross)}")
+        printed_components.append(_q(sum_sonstige_kapitalforderung_gains_gross))
+        print(f"      Gewinne aus sonstigen Kapitalforderungen (§20 Abs. 2 S. 1 Nr. 7, keine Anleihen; brutto positiv): {printed_components[-1]}")
     # FX (Währungspositionen) feeds the same Zeile 19/22. Only the sums are shown here; the
     # per-position detail is in the PDF report (Abschnitt 2.3.5). Printed only when present, so
     # an account without currency disposals is unchanged.
     if sum_fx_gains_gross > Decimal('0'):
+        printed_components.append(_q(sum_fx_gains_gross))
         print(f"      FX-Gewinne (Währungspositionen, brutto positiv): {_q(sum_fx_gains_gross)}")
 
     total_kap_other_income_positive_components = (
         sum_interest_income_gross + sum_non_fund_dividends_gross + sum_bond_gains_gross
         + sum_sonstige_kapitalforderung_gains_gross + sum_fx_gains_gross
     )
-    print(f"      Summe dieser positiven Komponenten (nicht Fonds): {_q(total_kap_other_income_positive_components)}")
+    printed_total = _q(total_kap_other_income_positive_components)
+    # The parts and the total are rounded independently from the same exact figures, so
+    # they can miss each other by a cent. Say so rather than leave a breakdown that does
+    # not add up: unexplained, it is indistinguishable from a component gone missing.
+    difference = display_rounding_difference(printed_components, printed_total)
+    if difference is not None:
+        amount, is_rounding = difference
+        print(f"      {rounding_difference_label(is_rounding)}: {amount}")
+    print(f"      Summe dieser positiven Komponenten (nicht Fonds): {printed_total}")
     if sum_fx_losses_abs > Decimal('0'):
         print(f"      FX-Verluste (Währungspositionen, in 'Sonstige Verluste'/Zeile 22 enthalten): {_q(sum_fx_losses_abs)}")
     if sum_fx_gains_gross > Decimal('0') or sum_fx_losses_abs > Decimal('0'):

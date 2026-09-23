@@ -18,10 +18,13 @@ from src.domain.events import FinancialEvent, CashFlowEvent, WithholdingTaxEvent
     CorpActionSplitForward, CorpActionMergerCash, CorpActionStockDividend, CorpActionMergerStock
 from src.domain.assets import Asset, InvestmentFund, Stock, Bond, Derivative
 from src.domain.enums import AssetCategory, InvestmentFundType, FinancialEventType, RealizationType, TaxReportingCategory
-from src.reporting.reporting_utils import _q, _q_price, _q_qty, format_date_german
+from src.reporting.reporting_utils import (
+    _q, _q_price, _q_qty, format_date_german,
+    anlage_so_leistungen_line_label, anlage_so_leistungen_zeile,
+    display_rounding_difference, rounding_difference_label,
+)
 from src.reporting.form_rules import get_form_rules, unverified_form_rules_source
 from src.tax_law.registry import get_section23_form_line, section23_form_warning
-from src.reporting.reporting_utils import anlage_so_leistungen_line_label, anlage_so_leistungen_zeile
 import src.config as app_config 
 from src.utils.tax_utils import get_teilfreistellung_rate_for_fund_type
 
@@ -486,7 +489,24 @@ class PdfReportGenerator:
             f"-{self._format_decimal(other_losses).replace('.', ',')}",
             "siehe Abschnitt 2.3"
         ])
-        
+
+        # The rows above and the total below are rounded independently from the same exact
+        # figures, so they can miss each other by a cent. Shown rather than left silent: a
+        # breakdown that does not add up reads exactly like one with a component missing.
+        signed_components = [stock_gains, derivative_gains, other_income_positive,
+                             -stock_losses, -other_losses]
+        if form_rules.z19_subtracts_derivative_losses:
+            signed_components.append(-derivative_losses)
+        difference = display_rounding_difference(
+            [_q(c) for c in signed_components], _q(kap_zeile_19_value))
+        if difference is not None:
+            amount, is_rounding = difference
+            breakdown_data.append([
+                rounding_difference_label(is_rounding),
+                self._format_decimal(amount).replace('.', ','),
+                "",
+            ])
+
         # Add total row
         breakdown_data.append([
             Paragraph("<b>Summe (Anlage KAP Zeile 19)</b>", self.styles['TableHeader']),
