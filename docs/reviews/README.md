@@ -1,16 +1,17 @@
 # Review and maintenance handoff
 
-Start here after context clearing. Last updated: 2026-09-22.
+Start here after context clearing. Last updated: 2026-09-23.
 
-**#85 implemented locally; measured differences await acceptance.**
-Isolated branch `fix/issue85-option-premiums`, base `a3a3b5c`, worktree
-`/private/tmp/ibkr-issue85-20260922`. Writer premiums are separate from closing,
-assignment and cash settlement; holder costs survive historical/fund delivery.
-The maintainer retained trade dates with a boundary warning and approved eight
-fixture corrections. Dedicated regressions: 26 passed; reference checks: 33
-passed; clean suite: 1,599 passed/1 skipped; export schemas: 10 passed.
-VZ 2023–2025 runs and repeat controls complete. No merge/publication.
-[Implementation and verification](issue85-option-premiums.md).
+**#85 merged as `00ba1a7`, pushed, and CLOSED/COMPLETED.**
+The maintainer accepted the measured 6/6/3 declaration changes for VZ 2023–2025
+and the residual-risk assessment, then authorised merge and closure. Accepted
+candidate `7b51ef9` equals the merge tree. Clean suite: **1,599 passed/1 skipped**;
+export schemas: **10 passed**; fresh focused review: **103 passed**.
+Final real-data runs and repeat controls pass; actual PDF warnings are verified.
+Independent checks reconcile raw premiums, all ending short-option quantities
+and all 12 writer cash-settlement groups in 2025. **PM-006 is Done**.
+TradeDate remains accepted; unrelated follow-up and local issue #76 work remain
+separate. [Acceptance, verification and completion](issue85-option-premiums.md).
 
 **#11 merged as `5bc506a`, pushed, and CLOSED/COMPLETED.** The maintainer chose
 zero contribution until covering, with a conditional complete year-end inventory
