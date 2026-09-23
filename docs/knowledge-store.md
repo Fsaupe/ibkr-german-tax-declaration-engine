@@ -337,6 +337,20 @@ engine and the store relate, which no file inside may do.
 
 ## Retrieval notes
 
+- **FMS annual SO sheets, verified 2026-09-23:** POST `clientCaps=unknown` to
+  `https://www.formulare-bfinv.de/ffw/action/invoke.do?id=034029_23`
+  (likewise `_24`, `_25`). Preserve the session cookie and hidden `$context`
+  and `$csrf` fields. POST those fields plus a parameter named
+  `$action:/form/showPage.do?id=Seite3` to `/ffw/form/update.do` for the
+  private-sales sheet. Read both accessible labels and printed paragraphs;
+  calculated results are non-editable elements with `aria-label`, not inputs.
+  Authenticate each year by its printed `202xAnlSO133NET` identifier. The
+  calculation line and the taxpayer allocation line are distinct. A bare
+  navigation POST without the hidden fields returns no usable sheet.
+  The VZ 2021/2022 entries (`034029_21`, `_22`) have two sheets: request
+  `Seite2` and check `202xAnlSO132NET`. These source checks do not authorize
+  real-data assessment runs before VZ 2023.
+
 Hard-won and otherwise rediscovered each time. None of this changes what counts as a source —
 only how to get at one.
 

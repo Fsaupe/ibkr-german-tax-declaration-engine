@@ -346,8 +346,8 @@ class LossOffsettingEngine:
         result.form_line_values[TaxReportingCategory.ANLAGE_KAP_AUSLAENDISCHE_KAPITALERTRAEGE_GESAMT] = zeile_19_amount.quantize(self.TWO_PLACES, context=self.ctx)
 
 
-        # Anlage SO
-        result.form_line_values["ANLAGE_SO_Z54_NET_GV"] = p23_net_total.quantize(self.TWO_PLACES, context=self.ctx)
+        # GT-FORM-020: the annual destination is resolved by the reporters.
+        result.form_line_values["ANLAGE_SO_NET_GV"] = p23_net_total.quantize(self.TWO_PLACES, context=self.ctx)
 
         # Anlage KAP-INV (Gross Figures)
         kap_inv_gross_dist_collector = defaultdict(lambda: self.ctx.create_decimal(Decimal('0')))

@@ -135,6 +135,41 @@ class FormYearRules:
     z22_includes_derivative_losses: bool
 
 
+# GT-FORM-020, reference/tax-forms/anlage-so-zeilen.md: independently checked
+# annual taxpayer allocation lines, not the individual-disposal calculation.
+_SECTION23_FORM_LINES = {2021: 48, 2022: 48, 2023: 54, 2024: 54, 2025: 58}
+
+
+def _section23_form_source(tax_year: int) -> int:
+    years = [year for year in _SECTION23_FORM_LINES if year <= tax_year]
+    if not years:
+        raise ProcessingError(
+            f"No Anlage SO form rules for tax year {tax_year}: earliest verified "
+            f"year is {min(_SECTION23_FORM_LINES)}; backward projection is not supported."
+        )
+    return max(years)
+
+
+def section23_form_warning(tax_year: int) -> Optional[str]:
+    """Visible notice for an unverified forward carry of the SO destination."""
+    source = _section23_form_source(tax_year)
+    if source == tax_year:
+        return None
+    return (
+        f"ACHTUNG: Anlage SO fuer VZ {tax_year} ist UNGEPRUEFT. "
+        f"Die Formularzuordnung wird aus VZ {source} uebernommen "
+        f"(forward-carry); gegen das amtliche Formular fuer VZ {tax_year} pruefen."
+    )
+
+
+def get_section23_form_line(tax_year: int) -> int:
+    """Annual §23 taxpayer allocation destination (GT-FORM-020)."""
+    warning = section23_form_warning(tax_year)
+    if warning:
+        logger.warning(warning)
+    return _SECTION23_FORM_LINES[_section23_form_source(tax_year)]
+
+
 # Verified against the official form for each year (see the verification table in
 # reference/tax-law/estg-20-abs6-verlustverrechnung.md). 2021 is the EARLIEST:
 # on the VZ 2020 form (Formularstand 2020AnlKAP051) Zeilen 21 and 24 are printed

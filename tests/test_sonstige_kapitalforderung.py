@@ -206,7 +206,7 @@ class TestSonstigeKapitalforderungReporting(FifoTestCaseBase):
         assert form.get(TaxReportingCategory.ANLAGE_KAP_TERMIN_GEWINN,
                         Decimal("0.00")) == Decimal("0.00")
         # Rz. 57: no physical backing, so not Anlage SO either.
-        assert form.get("ANLAGE_SO_Z54_NET_GV", Decimal("0.00")) == Decimal("0.00")
+        assert form.get("ANLAGE_SO_NET_GV", Decimal("0.00")) == Decimal("0.00")
 
     def test_loss_feeds_zeile_22(self, mock_config_paths):
         """BUY 100 @ 20.00 in 2022, SELL 100 @ 18.50 in 2023 → loss of 150.00 on Zeile 22."""

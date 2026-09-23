@@ -16,6 +16,7 @@ from src.utils.type_utils import parse_ibkr_date
 from src.engine.loss_offsetting import LossOffsettingResult
 from src.reporting.reporting_utils import _q, _q_qty, _q_price, get_kap_inv_category_for_reporting
 from src.reporting.form_rules import get_form_rules, unverified_form_rules_source
+from src.tax_law.registry import get_section23_form_line, section23_form_warning
 
 
 logger = logging.getLogger(__name__)
@@ -258,9 +259,13 @@ def generate_console_tax_report(
 
     # --- Anlage SO (from LossOffsettingResult) ---
     print("\nAnlage SO (Sonstige Einkünfte - §23 EStG Private Sales)")
-    so_z54_value = loss_offsetting_summary.form_line_values.get("ANLAGE_SO_Z54_NET_GV", Decimal(0)) 
-    print(f"  Zeile 54 (Aggregierter Gewinn/Verlust aus §23 EStG Veräußerungen): {_q(so_z54_value)}")
-    if so_z54_value != Decimal(0):
+    so_line = get_section23_form_line(tax_year)
+    so_warning = section23_form_warning(tax_year)
+    if so_warning:
+        print(f"  {so_warning}")
+    so_value = loss_offsetting_summary.form_line_values.get("ANLAGE_SO_NET_GV", Decimal(0))
+    print(f"  Zeile {so_line} (Aggregierter Gewinn/Verlust aus §23 EStG Veräußerungen): {_q(so_value)}")
+    if so_value != Decimal(0):
          print("    (Details zu §23 EStG Transaktionen werden im PDF-Bericht erwartet.)")
 
     # --- Summary of Net Taxable Income per Conceptual Pot (from LossOffsettingResult) ---

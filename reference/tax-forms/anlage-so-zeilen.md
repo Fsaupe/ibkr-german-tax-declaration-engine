@@ -4,15 +4,17 @@
 
 - **Legal basis (Tier 1):** 22 Nr. 2, 23 Abs. 1 Satz 1 Nr. 2 EStG -- see
   [`../tax-law/estg-23-private-veraeusserung.md`](../tax-law/estg-23-private-veraeusserung.md)
-- **ELSTER Help 2024 (Tier 3):** [elster.de -- Anleitung SO](https://www.elster.de/eportal/helpGlobal?themaGlobal=help_est_ufa_12_2024)
+- **Official forms (Tier 3):** Formular-Management-System der Bundesfinanzverwaltung,
+  retrieved 2026-09-23, sheet 3 of each form. Exact annual sources are listed under
+  [GT-FORM-020]. The former ELSTER link identified ESt 1 C, not Anleitung SO.
 - **EStH 2024 -- 23 EStG:** [esth.bundesfinanzministerium.de](https://esth.bundesfinanzministerium.de/esth/2024/A-Einkommensteuergesetz/II-Einkommen-2-24b/8-Die-einzelnen-Einkunftsarten-13-24b/g-Sonstige-Einkuenfte-22-23/Paragraf-23/inhalt.html)
 - **EStH 2024 -- Anhang 26 Private Veraeusserungsgeschaefte:** [esth.bundesfinanzministerium.de](https://esth.bundesfinanzministerium.de/esth/2024/C-Anhaenge/Anhang-26/inhalt.html)
 
-> **Sourcing status.** The form download reference is a portal root
-> (`https://www.formulare-bfinv.de/`), not a per-year document, and no Anleitung zur Anlage SO
-> for a specific assessment year is held in this repository -- unlike Anlage KAP and KAP-INV,
-> whose Anleitungen are transcribed here. The line numbers below have therefore **not** been
-> verified per year to the standard Validation Protocol item 4 requires. Scheduled for re-audit.
+> **Sourcing status, 2026-09-23.** The private-sales lines below were read from
+> each official annual sheet, including its accessible labels and printed text.
+> The previous table was unsourced and incorrectly separated the two dates onto
+> different lines. The annual allocation lines are verified for VZ 2023–2025;
+> historical allocation destinations for VZ 2021/2022 are also verified below.
 
 ---
 
@@ -26,21 +28,59 @@ Anlage SO covers two things, of which only the second is relevant here:
 Within the second, the form separates:
 
 - Grundstuecke und grundstuecksgleiche Rechte (ten-year period, 23 Abs. 1 Satz 1 Nr. 1)
-- Kryptowaehrungen / virtuelle Waehrungen (one-year period, Zeilen 41-47)
-- **Andere Wirtschaftsgueter** (one-year period, Zeilen 48-55)
+- Kryptowaehrungen / virtuelle Waehrungen (one-year period)
+- **Andere Wirtschaftsgueter** (one-year period; annual lines below)
 
-## [GT-FORM-020] Zeilen 48-55 -- Andere Wirtschaftsgueter
+## [GT-FORM-020] Andere Wirtschaftsgueter -- annual calculation and allocation lines
 
-| Zeile | Content |
-|-------|---------|
-| 48 | Art des Wirtschaftsguts |
-| 49 | Anschaffungsdatum |
-| 50 | Veraeusserungsdatum |
-| 51 | Veraeusserungspreis |
-| 52 | Anschaffungskosten |
-| 53 | Werbungskosten |
-| 54 | Gewinn / Verlust |
-| 55 | Summe / weitere Angaben |
+Tier 1 basis: § 22 Nr. 2 in conjunction with § 23 Abs. 1 Satz 1 Nr. 2 Satz 1
+and Abs. 3 Satz 1 EStG (gain is proceeds less acquisition and advertising costs).
+The neighbouring exclusion for everyday-use objects and the holding-period rules
+remain as stated in the statute reference. Form numbering is a Tier 3 annual
+layout change, not an amendment to that gain calculation.
+
+All three sources retrieved 2026-09-23 from the official FMS renderer:
+
+| VZ | Exact source | Sheet identifier | Verified lines |
+|---|---|---|---|
+| 2023 | [FMS 034029_23](https://www.formulare-bfinv.de/ffw/action/invoke.do?id=034029_23) | 2023AnlSO133NET, sheet 3 | 48–55 |
+| 2024 | [FMS 034029_24](https://www.formulare-bfinv.de/ffw/action/invoke.do?id=034029_24) | 2024AnlSO133NET, sheet 3 | 48–55 |
+| 2025 | [FMS 034029_25](https://www.formulare-bfinv.de/ffw/action/invoke.do?id=034029_25) | 2025AnlSO133NET, sheet 3 | 52–59 |
+
+Each column below was read independently from its annual source above.
+
+| Content | VZ 2023 | VZ 2024 | VZ 2025 |
+|---|---|---|---|
+| Art des Wirtschaftsguts | 48 | 48 | 52 |
+| Zeitpunkt der Anschaffung **and** Zeitpunkt der Veraeusserung | 49 | 49 | 53 |
+| Veraeusserungspreis oder an dessen Stelle tretender Wert | 50 | 50 | 54 |
+| abzueglich Anschaffungskosten / Ersatzwert, ggf. gemindert um AfA | 51 | 51 | 55 |
+| abzueglich Werbungskosten | 52 | 52 | 56 |
+| Gewinn / Verlust, zu uebertragen nach der Zurechnungszeile | 53 | 53 | 57 |
+| **Zurechnung der Betraege**, taxpayer / spouse columns | **54** | **54** | **58** |
+| Gewinne / Verluste aus weiteren Veraeusserungen, laut gesonderter Aufstellung | 55 | 55 | 59 |
+
+The VZ 2023 and VZ 2024 sheets say **"Gewinn / Verlust (zu uebertragen nach
+Zeile 54)"** at line 53; line 54 says **"Zurechnung der Betraege aus den Zeilen
+47 und 53"** (the other amount is from the crypto block). VZ 2025 says
+**"Gewinn / Verlust (zu uebertragen nach Zeile 58)"** at line 57 and
+**"Zurechnung der Betraege aus den Zeilen 51 und 57"** at line 58.
+Thus the taxpayer allocation destination corresponding to the earlier line 54
+is **line 58**, not the individual-disposal calculation line 57. Further
+disposals reported by separate schedule have their own line, 55 / 59; do not
+enter the same gain twice. The form requests a separate explanation of the gain
+calculation. Neither a form label nor the transfer changes its amount.
+
+Historical allocation destinations, independently retrieved 2026-09-23:
+
+| VZ | Exact source | Sheet identifier | Printed calculation / allocation text |
+|---|---|---|---|
+| 2021 | [FMS 034029_21](https://www.formulare-bfinv.de/ffw/action/invoke.do?id=034029_21) | 2021AnlSO132NET, sheet 2 | Z47: "Gewinn / Verlust (zu uebertragen nach Zeile 48)"; Z48: "Zurechnung des Betrags aus Zeile 47" |
+| 2022 | [FMS 034029_22](https://www.formulare-bfinv.de/ffw/action/invoke.do?id=034029_22) | 2022AnlSO132NET, sheet 2 | Z47: "Gewinn / Verlust (zu uebertragen nach Zeile 48)"; Z48: "Zurechnung des Betrags aus Zeile 47" |
+
+Applicable verified allocation years: VZ 2021–2025. These sources do not
+establish earlier mappings. A later form must be checked for changes;
+an unverified forward carry must not be presented as annual verification.
 
 A disposal outside the Jahresfrist is not reported at all: it is not a
 Veraeusserungsgeschaeft under 23 Abs. 1 Satz 1 Nr. 2 and there is no line for it.

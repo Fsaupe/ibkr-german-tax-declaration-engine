@@ -240,7 +240,7 @@ FORM_LINE_TO_ENGINE_KEY = {
     "form_kap_z22_sonstige_v": TaxReportingCategory.ANLAGE_KAP_SONSTIGE_VERLUSTE,
     "form_kap_z23_aktien_v": TaxReportingCategory.ANLAGE_KAP_AKTIEN_VERLUST,
     "form_kap_z24_derivate_v": TaxReportingCategory.ANLAGE_KAP_TERMIN_VERLUST,
-    "form_so_z54_p23_net_gv": "ANLAGE_SO_Z54_NET_GV",  # String key
+    "form_so_p23_net_gv": "ANLAGE_SO_NET_GV",  # Year-neutral output key
 }
 
 CONCEPTUAL_TO_ENGINE_FIELD = {

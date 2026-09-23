@@ -472,7 +472,7 @@ Does not calculate *creditable* WHT.
 Figures for **direct entry onto current tax year forms**.
 - Anlage KAP: Values for Zeile 19, 20, 21, 22, 23, 24 as calculated per Section 2.7.
 - Anlage KAP-INV: GROSS amounts for Zeilen 4-8 and 14, 17, 20, 23, 26.
-- Anlage SO: Net G/L for Zeile 54.
+- Anlage SO: Net G/L for the annual allocation line (GT-FORM-020): Zeile 54 in VZ 2023/2024, Zeile 58 in VZ 2025.
 
 Values will be quantized to `OUTPUT_PRECISION_AMOUNTS` for display.
 
@@ -696,7 +696,7 @@ Summed net income/G/L per tax pot after local calculations and Finanzamt-style o
 Figures for **direct entry onto current tax year forms**.
 - Anlage KAP: Values for Zeile 19 (Ausländische Kapitalerträge nach Saldierung), Zeile 20 (Gewinne Aktien), Zeile 21 (Gewinne Termingeschäfte), Zeile 22 (Sonstige Verluste), Zeile 23 (Verluste Aktien), Zeile 24 (Verluste Termingeschäfte) as calculated per Section 2.7.
 - Anlage KAP-INV: GROSS amounts for lines 4-8 (Distributions) and 14, 17, 20, 23, 26 (Gains/Losses).
-- Anlage SO: Net G/L for Zeile 54.
+- Anlage SO: Net G/L for the annual allocation line (GT-FORM-020): Zeile 54 in VZ 2023/2024, Zeile 58 in VZ 2025.
 
 Values will be `Decimal` formatted and quantized to 2 decimal places (e.g., using `OUTPUT_PRECISION_AMOUNTS`).
 
