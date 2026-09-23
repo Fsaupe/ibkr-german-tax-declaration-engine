@@ -136,8 +136,10 @@ whose `Description` adds ` - REVERSAL`; the withholding reversal is a positive `
 with the same `Description`. Each carries the same account, instrument, currency and magnitude as the
 row it reverses, and a higher `TransactionID`. The parser drops each reversal together with the
 latest such earlier row, so only the rebooking remains. A reversal with no such earlier row in the
-input stops the run. Measured 2026-09-22 across `Cash_Transactions-{2021..2025}.csv`: one correction,
-in 2025 -- one dividend reversal and one withholding reversal, each matched. A negative
+input, or whose match falls in a different calendar year, stops the run. Measured 2026-09-22 across
+`Cash_Transactions-{2022..2025}.csv` (no 2021 file is in `data_import/`): one correction, in 2025 --
+one dividend reversal and one withholding reversal, each matched within its year; 0 across a year
+end (2026-09-23). A negative
 `Payment In Lieu Of Dividends` is not a reversal; it is the fee in the table above.
 
 ---

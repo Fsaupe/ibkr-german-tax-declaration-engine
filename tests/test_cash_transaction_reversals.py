@@ -5,7 +5,7 @@ The broker corrects a dividend by reversing it and booking it again: the dividen
 is repeated with the opposite sign and ``- REVERSAL`` in its description, the
 withholding row is repeated with the opposite sign and the same description, each with
 a higher TransactionID than the row it reverses. Measured on
-``data_import/Cash_Transactions-{2021..2025}.csv`` (2026-09-22): one such correction,
+``data_import/Cash_Transactions-{2022..2025}.csv`` (2026-09-22; no 2021 file is present): one such correction,
 VZ 2025 -- one negative dividend row and one positive withholding row, each matching an
 earlier row of the same account, instrument, amount and description.
 
@@ -113,3 +113,42 @@ class TestAReversalWithNothingToReverse:
         with pytest.raises(DataIntegrityError) as exc:
             _events(tmp_path, [_tax("15", "3001"), _dividend("-90", "3002", reversal=True)])
         assert "3001" in str(exc.value) and "3002" in str(exc.value)
+
+
+class TestAReversalAcrossAYearEnd:
+    """A reversal cancels a booking of its own calendar year only.
+
+    Dropping the pair when the two fall in different years declares the dividend twice
+    across the two assessments: the earlier year's run keeps the original, the later
+    year's run drops it with the reversal and keeps the rebooking. Whether a reversal in
+    a later year is a negative Einnahme of that year is not settled in reference/, so the
+    run stops. Measured 2026-09-23 on data_import/Cash_Transactions-{2022..2025}.csv:
+    0 such pairs.
+    """
+
+    def test_a_reversal_of_last_year_s_dividend_stops_the_run(self, tmp_path):
+        with pytest.raises(DataIntegrityError, match="3003"):
+            _events(tmp_path, [
+                _rct(type_="Dividends", description=DIV + " (Ordinary Dividend)", amount=Decimal("100"),
+                     tx_id="3001", settle="2024-12-16", **_STK),
+                _rct(type_="Dividends", description=DIV + " - REVERSAL (Ordinary Dividend)",
+                     amount=Decimal("-100"), tx_id="3003", settle="2025-01-10", **_STK),
+                _rct(type_="Dividends", description=DIV + " (Ordinary Dividend)", amount=Decimal("100"),
+                     tx_id="3005", settle="2025-01-10", **_STK),
+            ])
+
+    def test_the_latest_match_is_cancelled_so_a_same_year_original_is_found(self, tmp_path):
+        """Two identical quarterly dividends, December and March, and a reversal in April:
+        it reverses March's. Cancelling December's instead would move a dividend between
+        years -- here it stops the run."""
+        events, _ = _events(tmp_path, [
+            _rct(type_="Dividends", description=DIV + " (Ordinary Dividend)", amount=Decimal("100"),
+                 tx_id="3001", settle="2024-12-16", **_STK),
+            _rct(type_="Dividends", description=DIV + " (Ordinary Dividend)", amount=Decimal("100"),
+                 tx_id="3002", settle="2025-03-17", **_STK),
+            _rct(type_="Dividends", description=DIV + " - REVERSAL (Ordinary Dividend)",
+                 amount=Decimal("-100"), tx_id="3003", settle="2025-04-01", **_STK),
+            _rct(type_="Dividends", description=DIV + " (Ordinary Dividend)", amount=Decimal("100"),
+                 tx_id="3004", settle="2025-04-01", **_STK),
+        ])
+        assert sorted(e.ibkr_transaction_id for e in events if isinstance(e, CashFlowEvent)) == ["3001", "3004"]

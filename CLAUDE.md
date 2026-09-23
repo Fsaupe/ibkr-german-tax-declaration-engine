@@ -246,10 +246,12 @@ run.
   ordinary scenario. Dropping or swapping the short two at all three tax sites left the suite
   green. A rule keyed on direction needs a long and a short scenario each.
 
-- **Which earlier row a cash reversal cancels.** `_cancel_reversals` takes the latest matching
-  row before the reversal; taking the earliest leaves the suite green. The figure cannot move --
-  the match key fixes the amount -- only which TransactionID and date survive. It matters once a
-  consumer reads the surviving row's id or date.
+- **Which earlier row a cash reversal cancels, within one year.** `_cancel_reversals` takes the
+  latest matching row before the reversal. Taking the earliest is caught only where the two
+  candidates straddle a year end (`TestAReversalAcrossAYearEnd`), because a pair spanning two
+  years stops the run. Within one year it leaves the suite green, and there the figure cannot
+  move -- the match key fixes the amount and the year is the same -- only which TransactionID and
+  date survive. It matters once a consumer reads the surviving row's id or date.
 
 Add to this list whenever a probe finds a site the suite cannot observe.
 

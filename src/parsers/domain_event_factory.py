@@ -516,7 +516,8 @@ class DomainEventFactory:
 
         The broker reverses a dividend with a negative row whose description adds
         " - REVERSAL", and a withholding with a positive row of the same description.
-        A negative Payment In Lieu is a fee the lender pays, not a reversal.
+        A negative Payment In Lieu is not a reversal; the parser books it as a fee
+        (input_data_spec.md, the type table).
         """
         type_upper = (rct.type or "").upper()
         if "DIVIDEND" in type_upper and "PAYMENT IN LIEU" not in type_upper and rct.amount < 0:
@@ -540,8 +541,9 @@ class DomainEventFactory:
         ([GT-ESTG20-001]) and the credit is for tax *festgesetzt und gezahlt*
         ([GT-CREDIT-004]); a reversed booking is neither. A reversal cancels the latest
         earlier row (by TransactionID) of the opposite sign with the same account,
-        instrument, currency, amount and description. One that matches none is recorded
-        in `data_errors` -- it cannot be read either way.
+        instrument, currency, amount and description. One that matches none, or whose
+        match falls in a different calendar year, is recorded in `data_errors` -- it
+        cannot be read either way.
         """
         originals: Dict[tuple, List[RawCashTransactionRecord]] = defaultdict(list)
         reversals: List[tuple] = []
@@ -575,6 +577,14 @@ class DomainEventFactory:
                     f"with the same account, instrument, amount and description is in the input.")
                 continue
             original = max(candidates, key=_tx_number)
+            if (original.settle_date or "")[:4] != (rev.settle_date or "")[:4]:
+                # Dropping the pair would keep the original in its own year's run and the
+                # rebooking in this one: the dividend declared twice. Not settled in reference/.
+                data_errors.append(
+                    f"Cash transaction {rev.transaction_id} (Type: {rev.type}, Desc: '{rev.description}', "
+                    f"Date: {rev.settle_date}) reverses {original.transaction_id} of {original.settle_date}, "
+                    f"a different calendar year; a reversal across a year end is not supported.")
+                continue
             cancelled.update((id(original), id(rev)))
             logger.info(f"Cash transaction {rev.transaction_id} reverses {original.transaction_id} "
                         f"({reversal_kind}, {rev.settle_date}); both dropped.")

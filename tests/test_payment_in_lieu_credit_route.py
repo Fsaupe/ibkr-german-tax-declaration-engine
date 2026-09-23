@@ -107,8 +107,8 @@ class TestAPaymentInLieuTakesTheInstrumentsOwnEventKind:
 
     legal_basis: [GT-INVSTG-059] branch A — the substitute payment is the fund's
     Ausschuettung / the share's dividend, taken as the taxpayer's own income; and
-    [GT-ESTG20-045], Rz. 12. The negative-PIL branch ([GT-ESTG20-067], a stock
-    lending fee the lender pays) is asserted too so it is not swept into income.
+    [GT-ESTG20-045], Rz. 12. The negative-PIL branch (booked as a fee, per the type
+    table in input_data_spec.md) is asserted too so it is not swept into income.
     """
 
     def test_a_positive_fund_payment_in_lieu_becomes_a_fund_distribution(self, tmp_path):
@@ -139,7 +139,7 @@ class TestAPaymentInLieuTakesTheInstrumentsOwnEventKind:
         assert events[0].event_type == FinancialEventType.DIVIDEND_CASH
 
     def test_a_negative_fund_payment_in_lieu_is_a_fee_not_income(self, tmp_path):
-        """A PIL the lender pays (short position over the record date) is a cost,
+        """A negative PIL (the account pays it; booked as a fee per input_data_spec.md) is a cost,
         not an Ausschuettung — it must not add to any income line."""
         resolver = _resolver(tmp_path)
         factory = DomainEventFactory(resolver)
