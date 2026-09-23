@@ -26,7 +26,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 from typing import Optional
 
-from src.domain.enums import FinancialEventType, InvestmentFundType
+from src.domain.enums import AssetCategory, FinancialEventType, InvestmentFundType
 from src.domain.exceptions import ProcessingError
 
 logger = logging.getLogger(__name__)
@@ -148,19 +148,26 @@ CREDITABLE_DIVIDEND_RATES: dict[int, dict[str, Decimal]] = {
 
 # The income kinds a state's dividend rate governs. The table's "Dividenden" are
 # distributions of Kapitalgesellschaften, so share dividends only; the US treaty puts a
-# RIC's distribution on the dividend rate too (Art. 10 Abs. 4 Satz 2). A payment in lieu
-# reaches these kinds as its instrument's own income on branch A ([GT-INVSTG-059]), but
-# the store establishes its treaty character as a dividend for the US only ([GT-CREDIT-028],
-# via Art. 10 Abs. 5 and US law). Assumed, not checked, that no payment in lieu carries
-# another state's tax: such a row would get that state's dividend rate with no basis in
-# the store. Measured 2026-09-23: 8 withholding rows on a payment in lieu in
-# Cash_Transactions-{2022..2025}, all "- US TAX" -- 0 non-US.
+# RIC's distribution on the dividend rate too (Art. 10 Abs. 4 Satz 2).
 _SHARE_DIVIDEND = frozenset({FinancialEventType.DIVIDEND_CASH})
 CREDITABLE_DIVIDEND_KINDS: dict[str, frozenset] = {
     "US": frozenset({FinancialEventType.DIVIDEND_CASH, FinancialEventType.DISTRIBUTION_FUND}),
     "FR": _SHARE_DIVIDEND, "JP": _SHARE_DIVIDEND, "CA": _SHARE_DIVIDEND,
     "KR": _SHARE_DIVIDEND, "NL": _SHARE_DIVIDEND, "TW": _SHARE_DIVIDEND,
 }
+
+# The instrument class each dividend kind requires. Column C holds for a dividend on an
+# ordinary share; the column-F notes take a right or share whose payment the payer deducts
+# out of it ([GT-CREDIT-029]), so an instrument not classified as an Aktie gets no rate. A
+# fund distribution needs a fund (the US RIC route).
+_KIND_ASSET = {
+    FinancialEventType.DIVIDEND_CASH: AssetCategory.STOCK,
+    FinancialEventType.DISTRIBUTION_FUND: AssetCategory.INVESTMENT_FUND,
+}
+# The states for which the store establishes a payment in lieu's treaty character as a
+# dividend ([GT-CREDIT-028], via DBA-USA Art. 10 Abs. 5 and US law). For any other state
+# the payment has no rate.
+PAYMENT_IN_LIEU_STATES = frozenset({"US"})
 
 
 # [GT-CREDIT-030]: column D, the creditable interest rate, per edition likewise. Which
@@ -181,14 +188,21 @@ def creditable_rates_researched(tax_year: int) -> bool:
 
 
 def creditable_rate(tax_year: int, source_state: Optional[str],
-                    income_kind: FinancialEventType) -> Optional[Decimal]:
+                    income_kind: FinancialEventType,
+                    asset_category: Optional[AssetCategory] = None,
+                    payment_in_lieu: bool = False) -> Optional[Decimal]:
     """The creditable rate for a state and income kind in `tax_year`: the interest rate
-    for interest, the dividend rate otherwise. None where not in the table; never
-    another year's."""
+    for interest, the dividend rate otherwise -- and a dividend rate only for the
+    instrument class it covers, and for a payment in lieu only where the store gives it
+    a treaty character. None where not in the table; never another year's."""
     if income_kind is FinancialEventType.INTEREST_RECEIVED:
         if not source_state:
             return None
         return CREDITABLE_INTEREST_RATES.get(tax_year, {}).get(source_state.strip().upper())
+    if asset_category is not _KIND_ASSET.get(income_kind):
+        return None
+    if payment_in_lieu and (source_state or "").strip().upper() not in PAYMENT_IN_LIEU_STATES:
+        return None
     return creditable_dividend_rate(tax_year, source_state, income_kind)
 
 

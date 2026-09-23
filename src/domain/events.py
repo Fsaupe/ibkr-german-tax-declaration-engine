@@ -182,15 +182,21 @@ class TradeEvent(FinancialEvent):
 class CashFlowEvent(FinancialEvent): # For dividends, distributions, interest
     _: KW_ONLY
     source_country_code: Optional[str] = None # ISO country code, if applicable (e.g., for WHT context)
+    # A payment in lieu booked as the instrument's own income (branch A, [GT-INVSTG-059]).
+    # Kept because the treaty character of a substitute payment is established for the US
+    # only ([GT-CREDIT-028]): another state's dividend rate must not reach it.
+    is_payment_in_lieu: bool = False
     # event_type will be one of:
     # DIVIDEND_CASH, DISTRIBUTION_FUND, INTEREST_RECEIVED
     # gross_amount_foreign_currency in FinancialEvent holds the income amount.
     def __init__(self, asset_internal_id: uuid.UUID, event_date: str, *,
                  event_type: FinancialEventType, # Ensure event_type is passed correctly
                  source_country_code: Optional[str] = None,
+                 is_payment_in_lieu: bool = False,
                  **kwargs_for_parent_kw_only):
         super().__init__(asset_internal_id, event_date, event_type=event_type, **kwargs_for_parent_kw_only)
         self.source_country_code = source_country_code
+        self.is_payment_in_lieu = is_payment_in_lieu
 
     def __post_init__(self):
         super().__post_init__()

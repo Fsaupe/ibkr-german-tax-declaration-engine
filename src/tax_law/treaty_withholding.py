@@ -38,6 +38,7 @@ from decimal import Decimal, ROUND_HALF_UP
 from enum import Enum
 from typing import List, Optional
 
+from src.domain.enums import AssetCategory
 from src.domain.events import CashFlowEvent, WithholdingTaxEvent
 from src.tax_law.registry import creditable_rate, creditable_rates_researched
 
@@ -73,7 +74,8 @@ class WithholdingAssessment:
 
 def assess_withholdings(whts: List[WithholdingTaxEvent],
                         income_event: Optional[CashFlowEvent],
-                        tax_year: int) -> List[WithholdingAssessment]:
+                        tax_year: int,
+                        income_asset_category: Optional[AssetCategory] = None) -> List[WithholdingAssessment]:
     """Decide the creditable amount of every foreign (non-German-KESt) withholding row
     linked to one income, one assessment per row in the order given.
 
@@ -100,7 +102,8 @@ def assess_withholdings(whts: List[WithholdingTaxEvent],
     if not creditable_rates_researched(tax_year):
         return _each(WithholdingStatus.RATE_YEAR_NOT_RESEARCHED)
 
-    rates = {creditable_rate(tax_year, state, income_event.event_type) for state in states}
+    rates = {creditable_rate(tax_year, state, income_event.event_type, income_asset_category,
+                             income_event.is_payment_in_lieu) for state in states}
     rate = rates.pop() if len(rates) == 1 else None
     if rate is None:
         # No treaty rate in the store for this (state, income kind), or rows naming

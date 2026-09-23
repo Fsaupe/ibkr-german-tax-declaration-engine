@@ -425,7 +425,11 @@ class LossOffsettingEngine:
                 rows_by_income[income_event.event_id if income_event else id(event)].append(event)
         assessments: Dict[int, WithholdingAssessment] = {}
         for rows in rows_by_income.values():
-            for row, assessment in zip(rows, assess_withholdings(rows, income_by_id.get(rows[0].taxed_income_event_id), self.tax_year)):
+            income = income_by_id.get(rows[0].taxed_income_event_id)
+            # The rate depends on what the instrument is ([GT-CREDIT-029], column F).
+            income_asset = self.asset_resolver.get_asset_by_id(income.asset_internal_id) if income else None
+            category = income_asset.asset_category if income_asset else None
+            for row, assessment in zip(rows, assess_withholdings(rows, income, self.tax_year, category)):
                 assessments[id(row)] = assessment
         for event in foreign_rows:
             assessment = assessments[id(event)]

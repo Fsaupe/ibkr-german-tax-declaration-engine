@@ -299,3 +299,17 @@ class TestCentRoundedWithholdingIsNotAnOverWithholding:
         # 0.045 EUR + 0.027 EUR = 0.072 -> 0.07
         assert _line(form, TaxReportingCategory.ANLAGE_KAP_FOREIGN_TAX_PAID) == Decimal("0.07")
         assert len(gaps) == 0
+
+
+def test_the_parser_marks_a_payment_in_lieu_as_one(tmp_path):
+    """The classification the rate depends on is preserved on the event (review F2)."""
+    from tests.test_cash_transaction_reversals import _events
+    rows = [
+        _rct(type_="Payment In Lieu Of Dividends", description="ACME(US0000000AAA) PAYMENT IN LIEU OF DIVIDEND",
+             amount=Decimal("100"), tx_id="8001", asset_class="STK", isin="US0000000AAA", symbol="ACME"),
+        _rct(type_="Dividends", description="ACME(US0000000AAA) CASH DIVIDEND USD 1.00 PER SHARE",
+             amount=Decimal("100"), tx_id="8002", asset_class="STK", isin="US0000000AAA", symbol="ACME"),
+    ]
+    events, _ = _events(tmp_path, rows)
+    marks = {e.ibkr_transaction_id: e.is_payment_in_lieu for e in events if isinstance(e, CashFlowEvent)}
+    assert marks == {"8001": True, "8002": False}

@@ -695,7 +695,12 @@ class DomainEventFactory:
                     evt_type = FinancialEventType.DISTRIBUTION_FUND
                 else:
                     evt_type = FinancialEventType.DIVIDEND_CASH
-                domain_event_instance = CashFlowEvent(asset_for_event.internal_asset_id, event_date_str, event_type=evt_type, source_country_code=rct.issuer_country_code, **event_params_kw)
+                domain_event_instance = CashFlowEvent(
+                    asset_for_event.internal_asset_id, event_date_str, event_type=evt_type,
+                    source_country_code=rct.issuer_country_code,
+                    is_payment_in_lieu=("PAYMENT IN LIEU" in event_type_str_upper
+                                        and evt_type is not FinancialEventType.FEE_TRANSACTION),
+                    **event_params_kw)
 
             elif "INTEREST" in event_type_str_upper or desc_upper.startswith("CREDIT INTEREST") or desc_upper.startswith("DEBIT INTEREST"):
                 source_country_for_interest = rct.issuer_country_code

@@ -427,3 +427,46 @@ def test_b11_a_one_cent_irish_interest_withholding_is_not_credited_either(tmp_pa
     form, gaps = _run([inc, _wht(stock, "0.01", country="IE", linked_to=inc)], resolver)
     assert form.form_line_values.get(Z41, Decimal("0.00")) == Decimal("0.00")
     assert "FOREIGN_WHT_ABOVE_TREATY_RATE" in _codes(gaps)
+
+
+# --------------------------------------------------------------------------- #
+# B12 — a rate applies only to the instrument it covers (maintainer's review, F2)
+# --------------------------------------------------------------------------- #
+# [GT-CREDIT-029]: column C of FR, JP, CA, KR, NL, TW covers a dividend on an ordinary
+# share; the column-F notes take a right or share whose payment the payer deducts out of
+# it. [GT-CREDIT-028]: the store establishes a payment in lieu's treaty character as a
+# dividend for the US only.
+
+def test_b12_a_french_dividend_on_an_instrument_not_classified_aktie_is_not_given_12_8(tmp_path):
+    """A profit-participating right booked by the broker as a dividend: the classification
+    says it is not an Aktie, so column C is not its rate, and the run stops."""
+    from src.domain.enums import AssetCategory
+    resolver = _resolver(tmp_path)
+    right = _stock(resolver, isin="FR0000000GEN")
+    right = resolver.replace_asset_type(right.internal_asset_id, AssetCategory.SONSTIGE_KAPITALFORDERUNG,
+                                        None, "Genussrecht")
+    inc = _income(right, "1000", country="FR")
+    _, gaps = _stopped([inc, _wht(right, "250", country="FR", linked_to=inc)], resolver)
+    assert "FOREIGN_WHT_RATE_NOT_VERIFIED" in _codes(gaps)
+    assert "FOREIGN_WHT_ABOVE_TREATY_RATE" not in _codes(gaps)
+
+
+def test_b12_a_french_payment_in_lieu_is_not_given_the_dividend_rate(tmp_path):
+    """The maintainer's probe: a French payment in lieu through the parser was credited
+    at 12,8 % with status OK. The store has no treaty character for it; it stops."""
+    resolver = _resolver(tmp_path)
+    stock = _stock(resolver, isin="FR0000000AAA")
+    inc = _income(stock, "1000", country="FR")
+    inc.is_payment_in_lieu = True
+    _, gaps = _stopped([inc, _wht(stock, "128", country="FR", linked_to=inc)], resolver)
+    assert "FOREIGN_WHT_RATE_NOT_VERIFIED" in _codes(gaps)
+
+
+def test_b12_a_us_payment_in_lieu_keeps_the_us_rate(tmp_path):
+    """[GT-CREDIT-028] branch A: the US payment in lieu is on the 15 % of Art. 10."""
+    resolver = _resolver(tmp_path)
+    stock = _stock(resolver)
+    inc = _income(stock, "1000")
+    inc.is_payment_in_lieu = True
+    form, _ = _run([inc, _wht(stock, "300", linked_to=inc)], resolver)
+    assert form.form_line_values[Z41] == Decimal("135.00")
