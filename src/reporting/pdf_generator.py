@@ -1716,15 +1716,10 @@ class PdfReportGenerator:
                           for t in shown if t['applied_rate'] is not None and t['creditable'] is not None})
         if applied:
             rule = Paragraph(
-                "<b>Angewandte anrechenbare Sätze.</b> Auf Zeile 41 gehört nur die ausländische Steuer, für die "
-                "im Quellenstaat kein Ermäßigungsanspruch besteht (§ 32d Abs. 5 Satz 1 EStG). Maßgebend ist die "
-                "BZSt-Übersicht „Anrechenbarkeit der Quellensteuer auf Dividenden und Zinsen“, Stand 1. Januar "
-                f"{self.tax_year}: sie nennt je Quellenstaat den Inlandssatz, den Höchstsatz nach dem DBA und als "
-                "Ergebnis den anrechenbaren Satz. Liegt der für den Ertrag geltende Inlandssatz unter dem "
-                "DBA-Höchstsatz, ist er anrechenbar, sonst der DBA-Höchstsatz; von zwei Inlandssätzen gilt der "
-                "niedrigere nur für bestimmte Erträge. Wurde mehr einbehalten, ist die Zeile auf diesen Satz des "
-                "zugeordneten Bruttoertrags gekürzt; der Rest ist im Quellenstaat zu erstatten und in Deutschland "
-                "nicht anrechenbar. Die Höchstbeträge nach § 32d Abs. 5 Sätze 1 und 3 EStG wendet das Finanzamt an.",
+                "<b>Anrechenbare Sätze.</b> Die Sätze stammen aus der BZSt-Übersicht „Anrechenbarkeit der "
+                "Quellensteuer auf Dividenden und Zinsen“, Stand 1. Januar "
+                f"{self.tax_year} (§ 32d Abs. 5 Satz 1 EStG). Wurde mehr einbehalten, ist der Betrag auf "
+                "diesen Satz gekürzt.",
                 self.styles['SmallText'])
             data = [["Land", "Ertragsart", "Inlandssatz Quellenstaat", "DBA-Höchstsatz", "Anrechenbar", "Hinweis"]]
             for country, is_interest, rate in applied:
