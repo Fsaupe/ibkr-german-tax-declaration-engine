@@ -2,7 +2,7 @@
 from dataclasses import dataclass, field, KW_ONLY
 from decimal import Decimal
 import uuid
-from typing import Optional, Dict 
+from typing import Optional, Dict, Tuple
 from collections import defaultdict
 
 import logging 
@@ -31,6 +31,9 @@ class LossOffsettingResult:
     # the withheld tax reduced to its creditable amount ([GT-CREDIT-026]). German KESt
     # rows are absent -- they are not on Zeile 41. For the report's per-row breakdown.
     creditable_foreign_wht_eur: Dict[uuid.UUID, Decimal] = field(default_factory=dict)
+    # For the same rows: the treaty guard's status (WithholdingStatus value) and the
+    # creditable rate it applied (None where it applied none). Why the amount above is what it is.
+    foreign_wht_status: Dict[uuid.UUID, Tuple[str, Optional[Decimal]]] = field(default_factory=dict)
 
 
 @dataclass

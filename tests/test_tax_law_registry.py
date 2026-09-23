@@ -263,3 +263,43 @@ class TestCreditableInterestRatesReferenceConsistency:
 
     def test_the_two_tables_cover_the_same_years(self):
         assert set(registry.CREDITABLE_INTEREST_RATES) == set(registry.CREDITABLE_DIVIDEND_RATES)
+
+
+class TestCreditableRateGroundsReferenceConsistency:
+    """The national rate and DBA ceiling the report prints beside each creditable rate
+    must equal columns A a)/A b) (dividends) and B a)/B b) (interest) of the store's tables.
+    Source: reference/bmf-guidance/bzst-anrechenbare-quellensteuer.md [GT-CREDIT-029], [GT-CREDIT-030]."""
+
+    REFERENCE_DOC = TestCreditableDividendRatesReferenceConsistency.REFERENCE_DOC
+
+    @staticmethod
+    def _parse(text: str, column: str) -> dict[str, tuple[str, str]]:
+        """| Frankreich | FR | 12,8 | 15 | ... under a header naming '<column> a) national'."""
+        grounds: dict[str, tuple[str, str]] = {}
+        in_table = False
+        for line in text.splitlines():
+            if line.startswith("| Source state | Code |"):
+                in_table = f"| {column} a) national |" in line
+                continue
+            m = re.match(r"^\|[^|]+\|\s*([A-Z]{2})\s*\|([^|]+)\|([^|]+)\|", line)
+            if in_table and m:
+                grounds[m.group(1)] = (m.group(2).strip(), m.group(3).strip())
+            elif not line.startswith("|"):
+                in_table = in_table and line.startswith("|---")
+        return grounds
+
+    def test_dividend_grounds_match_the_reference_document(self):
+        parsed = self._parse(self.REFERENCE_DOC.read_text(encoding="utf-8"), "A")
+        assert len(parsed) >= 7, parsed
+        assert registry.CREDITABLE_DIVIDEND_GROUNDS == parsed
+
+    def test_interest_grounds_match_the_reference_document(self):
+        parsed = self._parse(self.REFERENCE_DOC.read_text(encoding="utf-8"), "B")
+        assert parsed, parsed
+        assert registry.CREDITABLE_INTEREST_GROUNDS == parsed
+
+    def test_every_state_with_a_rate_has_its_grounds(self):
+        dividend_states = {s for rates in registry.CREDITABLE_DIVIDEND_RATES.values() for s in rates}
+        interest_states = {s for rates in registry.CREDITABLE_INTEREST_RATES.values() for s in rates}
+        assert dividend_states == set(registry.CREDITABLE_DIVIDEND_GROUNDS)
+        assert interest_states == set(registry.CREDITABLE_INTEREST_GROUNDS)

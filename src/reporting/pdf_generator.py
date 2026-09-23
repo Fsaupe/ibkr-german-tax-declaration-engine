@@ -20,6 +20,7 @@ from src.domain.enums import AssetCategory, InvestmentFundType, FinancialEventTy
 from src.reporting.reporting_utils import _q, _q_price, _q_qty, format_date_german
 from src.reporting.form_rules import get_form_rules, unverified_form_rules_source
 import src.config as app_config 
+from src.tax_law.registry import CREDITABLE_DIVIDEND_GROUNDS, CREDITABLE_INTEREST_GROUNDS
 from src.utils.tax_utils import get_teilfreistellung_rate_for_fund_type
 
 logger = logging.getLogger(__name__)
@@ -1554,8 +1555,10 @@ class PdfReportGenerator:
             tax_amount = wht_event.gross_amount_eur
             # None: not on Zeile 41 (German KESt, see the gap below the table).
             creditable = self.loss_offsetting_result.creditable_foreign_wht_eur.get(wht_event.event_id)
+            status, applied_rate = self.loss_offsetting_result.foreign_wht_status.get(wht_event.event_id, (None, None))
             
             income_subject_to_wht = Decimal(0)
+            income_event = None
             if wht_event.taxed_income_event_id:
                 income_event = next((evt for evt in self.all_financial_events if evt.event_id == wht_event.taxed_income_event_id), None)
                 if income_event and isinstance(income_event, CashFlowEvent) and income_event.gross_amount_eur is not None:
@@ -1582,6 +1585,9 @@ class PdfReportGenerator:
                 'income': income_subject_to_wht,
                 'tax': tax_amount,
                 'creditable': creditable,
+                'status': status,
+                'applied_rate': applied_rate,
+                'is_interest': income_event is not None and income_event.event_type == FinancialEventType.INTEREST_RECEIVED,
                 'taxed_transaction': taxed_transaction_desc,
                 'confidence': linking_confidence,
                 'tax_rate': effective_tax_rate
@@ -1620,7 +1626,7 @@ class PdfReportGenerator:
             # Add individual transactions table first
             if wht_transactions:
                 self.story.append(Paragraph("2.4.1 Einzelne Transaktionen", self.styles['H4']))
-                transaction_data = [["Datum", "Land", "Bruttoeinkünfte (EUR)", "Gezahlte QSt (EUR)", "Anrechenbar (EUR)", "Besteuerte Transaktion", "Steuersatz", "Konfidenz"]]
+                transaction_data = [["Datum", "Land", "Bruttoeinkünfte (EUR)", "Gezahlte QSt (EUR)", "Einbeh. Satz", "Anr. Satz", "Anrechenbar (EUR)", "Besteuerte Transaktion", "Konfidenz"]]
                 
                 for transaction in wht_transactions:
                     if transaction['income'] != Decimal('0.00') or transaction['tax'] != Decimal('0.00'):
@@ -1641,20 +1647,22 @@ class PdfReportGenerator:
                             transaction['country'],
                             self._format_decimal(transaction['income']).replace('.',','),
                             self._format_decimal(transaction['tax']).replace('.',','),
+                            tax_rate_str,
+                            self._format_applied_rate(transaction),
                             self._format_creditable(transaction['creditable']),
                             transaction['taxed_transaction'],
-                            tax_rate_str,
                             confidence_str
                         ])
                 
                 if len(transaction_data) > 1:  # More than just header
-                    transaction_table = self._create_styled_table(transaction_data, col_widths=[2.0*cm, 1.6*cm, 2.3*cm, 2.0*cm, 2.0*cm, 3.2*cm, 1.3*cm, 1.3*cm])
+                    transaction_table = self._create_styled_table(transaction_data, col_widths=[1.8*cm, 1.0*cm, 2.4*cm, 1.9*cm, 1.4*cm, 1.4*cm, 2.0*cm, 3.0*cm, 1.6*cm])
                     self.story.append(transaction_table)
                     self.story.append(Paragraph("", self.styles['BodyText']))  # Add spacing
                     
                     # Add legend for linking information
-                    legend_text = "Anrechenbar: der Betrag dieser Zeile auf Zeile 41 (einbehaltene Steuer, gekürzt auf den anrechenbaren Satz; – = nicht auf Zeile 41) | Besteuerte Transaktion: Art und Details der zugrunde liegenden Einkommenstransaktion | Konfidenz: Sicherheit der Verknüpfung (0-100%)"
+                    legend_text = "Einbeh. Satz: einbehaltene Steuer im Verhältnis zum Ertrag | Anr. Satz: der anrechenbare Satz, auf den die Zeile begrenzt ist (Herleitung unten) | Anrechenbar: der Betrag dieser Zeile auf Zeile 41 | Besteuerte Transaktion: Art und Details der zugrunde liegenden Einkommenstransaktion | Konfidenz: Sicherheit der Verknüpfung (0-100%)"
                     self.story.append(Paragraph(legend_text, self.styles['SmallText']))
+                    self._add_applied_rates(wht_transactions)
                     self.story.append(Paragraph("", self.styles['BodyText']))  # Add spacing
             
             # Add country summary table
@@ -1678,23 +1686,84 @@ class PdfReportGenerator:
                 self.styles['SmallText']))
         else:
             self.story.append(Paragraph("Keine anrechenbaren ausländischen Quellensteuern erfasst.", self.styles['BodyText']))
-        self._add_zeile_41_gaps()
 
     def _format_creditable(self, amount: Optional[Decimal]) -> str:
         return "–" if amount is None else self._format_decimal(amount).replace('.', ',')
 
-    def _add_zeile_41_gaps(self):
-        """Why a withholding row is credited below what was withheld, or not verified, or not
-        on Zeile 41 at all. The console printed these; the PDF, the record a taxpayer keeps,
-        showed a total without them."""
-        gaps = [g for g in self.data_gaps
-                if g.code.startswith("FOREIGN_WHT_") or g.code == "ANLAGE_KAP_GERMAN_KEST_NOT_DECLARABLE"]
-        if not gaps:
-            return
-        self.story.append(Paragraph("2.4.3 Hinweise zu Zeile 41", self.styles['H4']))
-        for gap in gaps:
-            self.story.append(Paragraph(f"• {gap.subject}: {gap.detail}", self.styles['BodyText']))
+    # What a status other than a rate reads as in the "Anr. Satz" column, and why the row
+    # keeps the amount that was withheld (src/tax_law/treaty_withholding.py).
+    _UNRATED_STATUS_TEXT = {
+        "RATE_NOT_VERIFIED": ("ungeprüft", "ungeprüft: für diesen Quellenstaat oder diese Ertragsart ist kein "
+                              "anrechenbarer Satz recherchiert; die einbehaltene Steuer steht unverändert auf "
+                              "Zeile 41 und ist gegen das DBA zu prüfen."),
+        "RATE_YEAR_NOT_RESEARCHED": ("nicht recherchiert", "nicht recherchiert: für dieses Steuerjahr ist die "
+                                     "BZSt-Übersicht nicht eingelesen; Sätze anderer Jahre werden nicht "
+                                     "übernommen, die einbehaltene Steuer steht unverändert auf Zeile 41."),
+        "UNLINKED": ("ungeprüft", "ungeprüft (nicht verknüpft): die Zeile ist keinem Ertrag zugeordnet, der Satz "
+                     "kann nicht geprüft werden; die einbehaltene Steuer steht unverändert auf Zeile 41."),
+    }
 
+    def _format_applied_rate(self, transaction) -> str:
+        if transaction['creditable'] is None:
+            return "–"
+        if transaction['applied_rate'] is not None:
+            return self._format_rate(transaction['applied_rate'])
+        return self._UNRATED_STATUS_TEXT.get(transaction['status'], ("ungeprüft", ""))[0]
+
+    @staticmethod
+    def _format_rate(rate: Decimal) -> str:
+        return f"{(rate * 100).normalize():f} %".replace('.', ',')
+
+    def _add_applied_rates(self, wht_transactions):
+        """Where each "Anr. Satz" comes from: the BZSt table of the tax year, per source state,
+        with the national rate and DBA ceiling it is the result of ([GT-CREDIT-026],
+        [GT-CREDIT-027], [GT-CREDIT-029], [GT-CREDIT-030]). Only the states and kinds the
+        table above uses, and a legend line only for the statuses and rows present."""
+        shown = [t for t in wht_transactions if t['income'] != Decimal('0.00') or t['tax'] != Decimal('0.00')]
+        applied = sorted({(t['country'], t['is_interest'], t['applied_rate'])
+                          for t in shown if t['applied_rate'] is not None and t['creditable'] is not None})
+        if applied:
+            rule = Paragraph(
+                "<b>Angewandte anrechenbare Sätze.</b> Auf Zeile 41 gehört nur die ausländische Steuer, für die "
+                "im Quellenstaat kein Ermäßigungsanspruch besteht (§ 32d Abs. 5 Satz 1 EStG). Maßgebend ist die "
+                "BZSt-Übersicht „Anrechenbarkeit der Quellensteuer auf Dividenden und Zinsen“, Stand 1. Januar "
+                f"{self.tax_year}: sie nennt je Quellenstaat den Inlandssatz, den Höchstsatz nach dem DBA und als "
+                "Ergebnis den anrechenbaren Satz. Liegt der Inlandssatz unter dem DBA-Höchstsatz, ist er "
+                "anrechenbar, sonst der DBA-Höchstsatz. Wurde mehr einbehalten, ist die Zeile auf diesen Satz des "
+                "zugeordneten Bruttoertrags gekürzt; der Rest ist im Quellenstaat zu erstatten und in Deutschland "
+                "nicht anrechenbar. Die Höchstbeträge nach § 32d Abs. 5 Sätze 1 und 3 EStG wendet das Finanzamt an.",
+                self.styles['SmallText'])
+            data = [["Land", "Ertragsart", "Inlandssatz Quellenstaat", "DBA-Höchstsatz", "Anrechenbar", "Hinweis"]]
+            for country, is_interest, rate in applied:
+                grounds = (CREDITABLE_INTEREST_GROUNDS if is_interest else CREDITABLE_DIVIDEND_GROUNDS).get(country, ("", ""))
+                data.append([country, "Zinsen" if is_interest else "Dividenden",
+                             f"{grounds[0]} %" if grounds[0] else "", f"{grounds[1]} %" if grounds[1] else "",
+                             self._format_rate(rate),
+                             Paragraph(self._rate_note(country, is_interest), self.styles['TableCell'])])
+            self.story.append(KeepTogether([rule, self._create_styled_table(data, col_widths=[1.2*cm, 2.0*cm, 2.6*cm, 2.3*cm, 2.1*cm, 6.3*cm])]))
+        for status in sorted({t['status'] for t in shown if t['applied_rate'] is None and t['creditable'] is not None}):
+            text = self._UNRATED_STATUS_TEXT.get(status)
+            if text:
+                self.story.append(Paragraph(text[1], self.styles['SmallText']))
+        if any(t['creditable'] is None for t in shown):
+            # [GT-FORM-007], [GT-CREDIT-022]
+            self.story.append(Paragraph(
+                "–: deutsche Kapitalertragsteuer. Sie gehört nicht auf Zeile 41, sondern mit der "
+                "Steuerbescheinigung in die Zeilen 7/37/38; dieses Programm kann diese Zeilen nicht ausfüllen, "
+                "ohne Steuerbescheinigung wird sie nicht angerechnet.", self.styles['SmallText']))
+
+    @staticmethod
+    def _rate_note(country: str, is_interest: bool) -> str:
+        if is_interest:
+            return ("Das DBA lässt dem Quellenstaat keine Steuer auf Zinsen; Einbehaltenes ist dort zu "
+                    "erstatten." if country == "IE" else "")
+        if country == "US":
+            # [GT-CREDIT-027]: "15, falls keine Befreiung"; Art. 10 Abs. 4 Sätze 2 und 3.
+            return ("Auch für Ausschüttungen von US-Fonds (RIC). 15 %, falls keine Befreiung (bestimmte "
+                    "RIC-Dividenden sind steuerfrei); REIT-Dividenden nur bei Beteiligung bis 10 %.")
+        if country == "FR":
+            return "Inlandssatz unter dem DBA-Höchstsatz: der Inlandssatz ist anrechenbar."
+        return ""
 
     def _add_corporate_actions_summary(self):
         self.story.append(Paragraph("4.1 Verarbeitete Kapitalmaßnahmen", self.styles['H3']))

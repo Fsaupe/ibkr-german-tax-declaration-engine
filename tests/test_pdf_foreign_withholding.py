@@ -4,13 +4,15 @@
 Since the treaty-rate guard ([GT-CREDIT-026], [GT-CREDIT-029], [GT-CREDIT-030]) credits
 less than was withheld on some rows, the section's per-country table summed the
 *withheld* tax under a total that is the *credited* one, and the two disagreed with no
-explanation: the guard's gaps, and the German-KESt gap, reached only the console. A row
-without a source state (interest with BROKER_ENTITY_COUNTRY unset) was left out of the
-table altogether. No declared figure changes here.
+explanation. Each row now shows the creditable rate it was limited to, and the section
+derives each rate from the BZSt table of the year; rows without a rate, and German KESt,
+are explained in one line each. A row without a source state (interest with
+BROKER_ENTITY_COUNTRY unset) was left out of the table altogether. No declared figure
+changes here.
 """
 from decimal import Decimal
 
-from reportlab.platypus import Paragraph, Table
+from reportlab.platypus import KeepTogether, Paragraph, Table
 
 from src.domain.enums import TaxReportingCategory
 from src.reporting.pdf_generator import PdfReportGenerator
@@ -33,8 +35,10 @@ def _section(tmp_path):
         eoy_mismatch_details=None, data_gaps=gaps.gaps)
     generator._prepare_wht_data()
     generator._add_wht_summary()
-    tables = [t._cellvalues for t in generator.story if isinstance(t, Table)]
-    text = "\n".join(p.text for p in generator.story if isinstance(p, Paragraph))
+    flowables = [f for item in generator.story
+                 for f in (item._content if isinstance(item, KeepTogether) else [item])]
+    tables = [t._cellvalues for t in flowables if isinstance(t, Table)]
+    text = "\n".join(p.text for p in flowables if isinstance(p, Paragraph))
     return result, tables, text, gaps.gaps
 
 
@@ -75,11 +79,41 @@ def test_german_kest_is_listed_as_not_creditable_on_zeile_41(tmp_path):
     assert rows["DE"][header.index("Anrechenbar (EUR)")] == "–"
 
 
-def test_the_zeile_41_gaps_reach_the_pdf(tmp_path):
+def _rows_by_country(table):
+    rows = [[_text(c) for c in row] for row in table]
+    return rows[0], {row[1]: row for row in rows[1:]}
+
+
+def test_each_row_shows_the_rate_its_amount_was_limited_to(tmp_path):
+    """The "Anr. Satz" column says why "Anrechenbar" is what it is, row by row."""
+    _, tables, _, _ = _section(tmp_path)
+    header, rows = _rows_by_country(tables[0])
+    rate = header.index("Anr. Satz")
+    assert rows["US"][rate] == "15 %"
+    assert rows["unbekannt"][rate] == "ungeprüft"
+    assert rows["DE"][rate] == "–"
+
+
+def test_the_rates_used_are_derived_from_the_bzst_table_of_the_year(tmp_path):
+    """Below the rows: per state, the national rate and DBA ceiling the rate is the result
+    of ([GT-CREDIT-029]), and the rule that picks between them."""
+    _, tables, text, _ = _section(tmp_path)
+    grounds = [[_text(c) for c in row] for row in tables[1]]
+    assert grounds[0][:5] == ["Land", "Ertragsart", "Inlandssatz Quellenstaat", "DBA-Höchstsatz", "Anrechenbar"]
+    assert grounds[1][:5] == ["US", "Dividenden", "0 / 30 %", "15 %", "15 %"]
+    assert len(grounds) == 2  # only the states the rows above use
+    assert "Stand 1. Januar 2025" in text and "§ 32d Abs. 5 Satz 1" in text
+
+
+def test_the_legend_explains_only_the_unrated_rows_present(tmp_path):
+    _, _, text, _ = _section(tmp_path)
+    assert "ungeprüft: für diesen Quellenstaat" in text          # the row with no state
+    assert "deutsche Kapitalertragsteuer" in text and "7/37/38" in text
+    assert "nicht recherchiert:" not in text and "nicht verknüpft" not in text
+
+
+def test_there_is_no_separate_notes_section(tmp_path):
+    """The per-row rate and its derivation replace the gap texts (they stay on the console)."""
     _, _, text, gaps = _section(tmp_path)
-    codes = {g.code for g in gaps}
-    assert {"FOREIGN_WHT_ABOVE_TREATY_RATE", "FOREIGN_WHT_RATE_NOT_VERIFIED",
-            "ANLAGE_KAP_GERMAN_KEST_NOT_DECLARABLE"} <= codes
-    for gap in gaps:
-        if gap.code.startswith("FOREIGN_WHT_") or gap.code == "ANLAGE_KAP_GERMAN_KEST_NOT_DECLARABLE":
-            assert gap.subject in text and gap.detail in text, gap.code
+    assert "2.4.3" not in text
+    assert not any(g.detail in text for g in gaps)

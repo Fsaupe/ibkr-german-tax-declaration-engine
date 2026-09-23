@@ -428,6 +428,7 @@ class LossOffsettingEngine:
             # moves; measured 0 US rows above the rate VZ 2023–2025 (issue #78).
             foreign_tax_total = self.ctx.add(foreign_tax_total, assessment.creditable_eur)
             result.creditable_foreign_wht_eur[event.event_id] = assessment.creditable_eur
+            result.foreign_wht_status[event.event_id] = (assessment.status.value, assessment.treaty_rate)
             if assessment.status is not WithholdingStatus.OK:
                 treaty_flags[(assessment.status, assessment.source_state or "")].append((event, assessment))
         self._record_german_kest_gap(german_kest_count, german_kest_total)
