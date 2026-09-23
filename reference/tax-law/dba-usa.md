@@ -180,7 +180,7 @@ Ermaessigungsanspruch exists both under US law and *"aufgrund eines DBA"*; the t
 names coincide ([GT-CREDIT-026]). The creditable amount under § 32d Abs. 5 Satz 1 is 15 % of the
 gross.
 
-**The credit on reading B is an open question** (`../research/open-legal-questions.md` Q22). Art. 21
+**The credit on reading B is an open question** (`../research/open-legal-questions.md` Q23). Art. 21
 Abs. 1 gives Germany the exclusive right, while the US, which treats the payment as a dividend under
 its own law (above), refunds only down to 15 %. The two grounds of an Ermaessigungsanspruch then
 diverge:

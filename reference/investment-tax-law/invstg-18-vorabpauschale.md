@@ -438,7 +438,7 @@ Ausschuettung and its foreign tax is *anrechenbare auslaendische Steuer* under Â
 Anlage KAP Zeile 41, reduced by the Ermaessigungsanspruch ([GT-CREDIT-026]); for a US payer the
 creditable rate is 15 % ([GT-CREDIT-027], [GT-CREDIT-028]). On branch B the payment is a substitute
 leistung, the treaty article is Art. 21, and whether any of the US tax is then creditable is open:
-`../research/open-legal-questions.md` Q22.
+`../research/open-legal-questions.md` Q23.
 
 ## [GT-INVSTG-016] Units disposed of during the calendar year
 

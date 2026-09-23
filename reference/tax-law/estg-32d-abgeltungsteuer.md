@@ -113,7 +113,7 @@ below its national 21, the DBA's 0 on Irish interest ([GT-CREDIT-030]). **Open i
 the source state does not apply the DBA's allocation** -- a DBA that would deny the source state any
 tax, applied by a source state that treats the payment under its own law and refunds only to a
 treaty rate. There the extent of the Ermaessigungsanspruch is not settled by any located Tier 1 or
-Tier 2 source: `../research/open-legal-questions.md` Q22.
+Tier 2 source: `../research/open-legal-questions.md` Q23.
 
 **§ 34c Abs. 6 Satz 2 names two limits; § 32d Abs. 5 Satz 1 names one.** For treaty cases outside
 the Abgeltungsteuer, § 34c Abs. 6 Satz 2 applies the credit *"auf die nach dem Abkommen anzurechnende
@@ -123,7 +123,7 @@ from Abgeltungsteuer income: *"das gilt nicht fuer Einkuenfte, auf die § 32d Ab
 anzuwenden ist"* (quoted with Satz 3 at [GT-CREDIT-012]). § 32d Abs. 5 Satz 1 names only the
 Ermaessigungsanspruch, and its Satz 2 applies Satz 1 *entsprechend* in treaty cases. This is the
 textual ground for the reading that § 32d Abs. 5 knows no separate treaty-conformity limit; whether
-the BZSt's *"aufgrund eines DBA"* brings one in through the Ermaessigungsanspruch itself is Q22.
+the BZSt's *"aufgrund eines DBA"* brings one in through the Ermaessigungsanspruch itself is Q23.
 § 34c Abs. 1 is in any case carved out for this income by its own Satz 1 zweiter Halbsatz
 ([GT-CREDIT-012]).
 
