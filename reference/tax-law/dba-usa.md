@@ -128,26 +128,54 @@ The 15 % of Abs. 2 b is conditional twice over: *"falls keine Befreiung"* for a 
 Abs. 4 Satz 3 for a REIT's. Both conditions are facts of US law about the individual dividend, in
 the same sense as the substitute-payment fact above: not German ground truth, quoted because the
 Ermaessigungsanspruch is measured by the source state's law. Retrieved 2026-09-23 via
-law.cornell.edu (US Code mirror).
+law.cornell.edu (US Code mirror): https://www.law.cornell.edu/uscode/text/26/871,
+https://www.law.cornell.edu/uscode/text/26/852, https://www.law.cornell.edu/uscode/text/26/856.
 
-**The RIC exemption is reported per dividend, by the RIC.** 26 U.S.C. § 871(k)(1)(A): *"no tax
-shall be imposed under paragraph (1)(A) of subsection (a) on any interest-related dividend received
-from a regulated investment company which meets the requirements of section 852(a) for the taxable
-year with respect to which the dividend is paid."* § 871(k)(1)(C)(i): *"an interest related dividend
-is any dividend, or part thereof, which is reported by the company as an interest related dividend in
-written statements furnished to its shareholders."* § 871(k)(2)(A) and (C)(i) say the same of a
-*"short-term capital gain dividend"*, *"any dividend, or part thereof, which is reported by the
-company as a short-term capital gain dividend in written statements furnished to its shareholders"*.
-So the exempt part of a RIC dividend is **whatever part of that dividend the RIC reports** as one of
-the two kinds; it can be the whole, a part or nothing, and it is fixed dividend by dividend in the
-RIC's statements, not by the kind of fund. The tax withheld on a dividend does not show it: tax
-withheld on a reported part is wholly subject to an Ermaessigungsanspruch ([GT-CREDIT-026]), and
-the 15 % of Abs. 2 b applies to the unreported part only. Also in the cited unit and not relied on:
-§ 871(k)(1)(B) (no exemption on interest from the holder's own or a 10 %-related debtor's debt, none
-without a statement that the owner is not a US person, none during a period of § 871(h)(6));
-§ 871(k)(2)(B) (no short-term-gain exemption for a nonresident alien taxable under § 871(a)(2),
-i.e. present in the US for 183 days or more in the taxable year); the excess-reported-amount rules
-of § 871(k)(1)(C)(ii)-(iii) and (2)(C)(ii)-(iii).
+**What US law taxes in a RIC's distribution, and what it does not.** 26 U.S.C. § 871(a)(1)(A)
+imposes *"a tax of 30 percent of the amount received from sources within the United States by a
+nonresident alien individual as-- (A) interest ..., dividends, ..."*; Art. 10 Abs. 2 b limits that
+tax to 15 % of the gross dividend. Three kinds of RIC distribution are taken out of it, each by what
+the RIC reports:
+
+- **Interest-related dividend**, § 871(k)(1)(A): *"no tax shall be imposed under paragraph (1)(A)
+  of subsection (a) on any interest-related dividend received from a regulated investment company
+  which meets the requirements of section 852(a) for the taxable year with respect to which the
+  dividend is paid."* § 871(k)(1)(C)(i): *"an interest related dividend is any dividend, or part
+  thereof, which is reported by the company as an interest related dividend in written statements
+  furnished to its shareholders."*
+- **Short-term capital gain dividend**, § 871(k)(2)(A) and (C)(i), in the same terms: *"any
+  dividend, or part thereof, which is reported by the company as a short-term capital gain dividend
+  in written statements furnished to its shareholders"*.
+- **Capital gain dividend**, § 852(b)(3)(B): *"A capital gain dividend shall be treated by the
+  shareholders as a gain from the sale or exchange of a capital asset held for more than 1 year."*
+  § 852(b)(3)(C)(i): *"a capital gain dividend is any dividend, or part thereof, which is reported by
+  the company as a capital gain dividend in written statements furnished to its shareholders."* A
+  capital gain is outside § 871(a)(1); § 871(a)(2) taxes a nonresident alien's capital gains only
+  where he is *"present in the United States for a period or periods aggregating 183 days or more
+  during the taxable year"*.
+
+**Each exemption has conditions of its own, and a report does not establish them.** § 871(k)(1)(A)
+begins *"Except as provided in subparagraph (B)"*, and § 871(k)(1)(B) withholds the interest-related
+exemption (i) *"to the extent such dividend is attributable to interest ... received by such company
+on indebtedness issued by such person or by any corporation or partnership with respect to which
+such person is a 10-percent shareholder"*, (ii) *"unless the person who would otherwise be required to
+deduct and withhold tax from such dividend under chapter 3 receives a statement ... that the
+beneficial owner of such stock is not a United States person"*, and (iii) during a period of
+§ 871(h)(6). § 871(k)(2)(B): the short-term-gain exemption *"shall not apply in the case of any
+nonresident alien individual subject to tax under subsection (a)(2)"*. § 871(k)(1)(C)(ii)-(iii),
+(2)(C)(ii)-(iii) and § 852(b)(3)(C)(ii)-(iii) cut a reported amount down where the RIC's aggregate
+reported amount for its taxable year exceeds its qualified interest income, qualified short-term
+gain or net capital gain. So where a RIC reports part of a distribution as one of the three kinds,
+**how much of that part the US in fact leaves untaxed for a given recipient is not fixed by the
+report**; it turns on the recipient's facts and on the RIC's year-end figures. This store does not
+settle the creditable amount of such a distribution.
+
+**Where the RIC reports no part of a distribution as any of the three kinds**, none of the three
+removals applies to it, whatever the conditions above: they can only take an exemption away, never
+create one. The distribution is then a dividend within § 871(a)(1)(A) as a whole, and the 15 % of
+Art. 10 Abs. 2 b (Abs. 4 Satz 2) applies to all of it. What the RIC reported is a fact of the RIC's
+written statements for that year, not of the tax withheld: the tax withheld on a distribution does
+not show it.
 
 **REIT status is held per taxable year.** 26 U.S.C. § 856(c)(1): *"A corporation, trust, or
 association shall not be considered a real estate investment trust for any taxable year unless— (1)
@@ -158,9 +186,30 @@ year, and the Abs. 4 Satz 3 conditions are facts of the holder's participation i
 permanent property of the instrument. The rest of § 856(c) (the income and asset tests) is not
 relied on.
 
-**Applicable years.** Both sections were read in their current text, which states no expiry for
-either provision. Whether either was amended within the assessment years 2023 to 2026 has not been
-examined; the text quoted is the version in force on 2026-09-23.
+**Applicable years: 2023, 2024 and 2025.** The amendment history was read 2026-09-23 from the
+editorial notes (*Amendments*, *Effective Date of ... Amendment*) and the source credit of each
+section on the same mirror:
+
+- **§ 871:** the source credit ends with *"Pub. L. 115-141, div. U, title IV, § 401(b)(29), Mar. 23,
+  2018"*, which struck the concluding provisions of subsec. (a)(3). The last amendment of subsec. (k)
+  is Pub. L. 114-113 (18.12.2015), striking (k)(1)(C)(v) and (2)(C)(v), the expiry of both kinds for
+  RIC taxable years beginning after 31.12.2014, *"shall apply to taxable years beginning after
+  December 31, 2014"*. Subsec. (a)(1) was last amended by Pub. L. 113-295 (2014), in (a)(1)(B).
+- **§ 852:** the last listed amendments are of 2018 (Pub. L. 115-141, subsec. (a)(1)(B) and
+  (b)(2)(D)) and 2017 (Pub. L. 115-97, subsec. (b)(1)); none of subsec. (b)(3) since.
+- **§ 856:** the last listed amendment is of 2025: *"Subsec. (c)(4)(B)(ii). Pub. L. 119-21
+  substituted '25 percent' for '20 percent'"*, which *"shall apply to taxable years beginning after
+  December 31, 2025"* (Pub. L. 119-21, title VII, § 70439(b), July 4, 2025). It concerns the asset
+  test of subsec. (c)(4), not the election of subsec. (c)(1); the amendments before it are of 2018
+  (subsec. (c)(7), (c)(9), (m)).
+
+So the text quoted above is the text for every taxable year from 2018 on, as far as the mirror
+records. **Limit of this evidence:** the mirror states no date it is current through. It records
+Pub. L. 119-21 of 4 July 2025, so it reflects legislation at least to that date; a law enacted
+after it is not ruled out by it. The official Office of the Law Revision Counsel edition
+(uscode.house.gov) could not be reached on 2026-09-23. On that ground the years for which this
+section is stated are **2023, 2024 and 2025**; for 2026, in which a later law could still take
+effect, it is not stated.
 
 ---
 

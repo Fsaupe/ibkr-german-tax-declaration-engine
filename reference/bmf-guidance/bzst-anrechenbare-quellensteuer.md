@@ -26,9 +26,47 @@ stated here holds for the assessment year of the edition it was read from, and f
 year: a year whose edition has not been read has no rate in this store, even where the
 neighbouring editions agree. Editions read: **2023, 2024, 2025, 2026**.
 
-A change taking effect during a year shows only in the next year's edition. For VZ 2023, 2024
-and 2025 the following edition has been read too and shows the same value for every row below,
-so no such change occurred. For VZ 2026 no later edition exists yet (as of 2026-09-23).
+**What an edition does not show: a change taking effect during its year.** An edition states the
+law at 1 January. For VZ 2023, 2024 and 2025 the following edition has been read too and shows the
+same value for every row below. That establishes that the value was the same at both 1 January
+dates. It does **not** establish that nothing changed in between: a change that took effect during
+the year and was reversed before its end would show in neither edition. For VZ 2026 no later
+edition exists yet (as of 2026-09-23). The two sides of a rate are established differently:
+
+- **The treaty side** (column A b)/B b), the DBA ceiling). The BMF's annual *Stand der
+  Doppelbesteuerungsabkommen* lists, per state, every agreement in force with the date from which
+  it is applied (*"Anwendung grundsaetzlich ab"*), and in section I.2 the treaties modified by the
+  BEPS-MLI with the date of that modification. Read 2026-09-23 (`pdftotext -layout`), Tier 2:
+  BMF-Schreiben vom 20.01.2025, *"Stand ... am 1. Januar 2025"*,
+  https://www.bundesfinanzministerium.de/Content/DE/Downloads/BMF_Schreiben/Internationales_Steuerrecht/Allgemeine_Informationen/2025-01-20-stand-DBA-1-januar-2025.pdf?__blob=publicationFile&v=6 ;
+  BMF-Schreiben vom 07.01.2026, GZ IV B 2 - S 1301/01499/005/004, *"Stand ... am 1. Januar 2026"*,
+  https://www.bundesfinanzministerium.de/Content/DE/Downloads/BMF_Schreiben/Internationales_Steuerrecht/Allgemeine_Informationen/2026-01-07-stand-DBA-1-januar-2026.pdf?__blob=publicationFile&v=3 .
+  For the states of this file, the latest agreement or modification and the date it is applied
+  from, as listed in the 2026 letter (the 2025 letter lists the same, less the three entries
+  dated 2026):
+
+  | State | Latest agreement or modification | Applied from |
+  |---|---|---|
+  | China (ohne Hongkong und Macau) | Abkommen vom 28.03.2014 | 01.01.2017 |
+  | Frankreich | Protokoll vom 31.03.2015; BEPS-MLI modification (section I.2) | 01.01.2016; 01.01.2025 |
+  | Irland | Protokoll vom 19.01.2021 (Neufassung bekannt gemacht 31.03.2025) | 01.01.2022 |
+  | Japan | Abkommen vom 17.12.2015; BEPS-MLI modification (section I.2) | 01.01.2017; 01.01.2026 |
+  | Kanada | Abkommen vom 19.04.2001 | 01.01.2001 |
+  | Korea, Republik | Abkommen vom 10.03.2000 | 01.01.2003 |
+  | Niederlande | Protokoll vom 24.03.2021; Protokoll vom 14.04.2025 | 01.01.2023; 01.01.2026 |
+  | Vereinigte Staaten | Protokoll vom 01.06.2006 | *"01.01.07/01.01.08"* |
+  | Taiwan | Abkommen vom 19. und 28.12.2011 (text of both letters: *"seit 1. Januar 2013 anzuwenden"*) | 01.01.2013 |
+
+  Every change dated inside 2023-2026 is applied from a 1 January, so it is inside the edition of
+  that year; **no treaty change for these states took effect during 2023, 2024 or 2025**. What
+  the three 2025/2026 modifications change is not examined here: each is in the edition of its
+  year, and a rate is taken from that edition only.
+- **The national side** (column A a)/B a), the source state's own rate). Column C and D are the
+  national rate where it is below the DBA ceiling (the Pruefschema, [GT-CREDIT-029]). No source in
+  this store states the national law of the source states between two 1 January dates. **A
+  change of a national rate that took effect during a year and was reversed before its end is not
+  ruled out.** This is a stated limit of the store; the rows below are the law at each 1 January,
+  and the store does not claim more.
 
 The Erlaeuterungen add that paying agents need not apply a change against the previous year's
 edition before 1 July (Rn. 208a of the BMF-Schreiben vom 14.05.2025); that is a
@@ -149,7 +187,8 @@ Ireland's national law levies up to 20 % on interest (B a)); the DBA leaves it n
 paid to a German resident (B b) 0). Whatever Ireland withheld is therefore wholly subject to an
 Ermaessigungsanspruch and **none of it is creditable** ([GT-CREDIT-026]); it is claimed back in
 Ireland. The same values are printed in all four editions, each read separately; for VZ 2023,
-2024 and 2025 the following edition shows no change.
+2024 and 2025 the following edition shows the same value (what that does and does not establish:
+*Applicable tax years*, above).
 
 **What the row also contains:** column E for Irland concerns dividends only (*"keine
 Quellensteuer fuer EU-Buerger und fuer Ansaessige in DBA-Staaten"*, from the 2024 edition on with
