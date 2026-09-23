@@ -320,3 +320,90 @@ def test_the_parser_marks_a_payment_in_lieu_as_one(tmp_path):
     events, _ = _events(tmp_path, rows)
     marks = {e.ibkr_transaction_id: e.is_payment_in_lieu for e in events if isinstance(e, CashFlowEvent)}
     assert marks == {"8001": True, "8002": False}
+
+
+# Issue #77: parse the actual PIL, then use the production distribution collector
+# and both sides of §18. Invented USD cash at 0.90 EUR/USD; position prices in EUR.
+def _parsed_pil_vorabpauschale(tmp_path, year, end_value, amount="100"):
+    from tests.test_vorabpauschale import _FundFixture, _run_vp
+    from tests.support.prior_year_snapshots import snapshot_row
+
+    resolver = _resolver(tmp_path)
+    events = DomainEventFactory(resolver).create_events_from_cash_transactions([
+        _rct(type_="Payment In Lieu Of Dividends",
+             description="TF (US00000FUND1) PAYMENT IN LIEU OF DIVIDEND",
+             amount=Decimal(amount), tx_id="9101", asset_class="FUND",
+             isin="US00000FUND1", symbol="TF", sub_category="ETF",
+             settle=f"{year}-06-16"),
+    ])
+    _enrich_eur(events)
+    assert len(events) == 1
+    asset = resolver.get_asset_by_id(events[0].asset_internal_id)
+    assert isinstance(asset, InvestmentFund)
+    fixture = _FundFixture(
+        asset=asset,
+        prior_soy=snapshot_row(asset.internal_asset_id, quantity=Decimal("100"),
+                               position_value=Decimal("10000"), mark_price=Decimal("100"),
+                               mark_price_currency="EUR"),
+        prior_eoy=snapshot_row(asset.internal_asset_id, quantity=Decimal("100"),
+                               position_value=Decimal(end_value),
+                               mark_price=Decimal(end_value) / Decimal("100"),
+                               mark_price_currency="EUR"),
+    )
+    return events[0], _run_vp(fixture, events=events, vorabpauschale_year=year)
+
+
+@pytest.mark.parametrize("year", [2024, 2025])
+def test_issue77_parsed_fund_pil_enters_the_binding_cap_and_subtraction(tmp_path, year):
+    """GT-INVSTG-059 branch A; GT-INVSTG-010 Sätze 1/3.
+
+    100 units: price growth EUR 50 plus PIL EUR 90 caps the Basisertrag at
+    EUR 140; subtracting the same EUR 90 yields EUR 50. Without the PIL on
+    BOTH sides the final EUR 50 coincides, so asserting that final figure alone
+    would miss the collector defect. Assert the distribution and capped base too.
+    Calibrated against parser branch B, collector omission, cap-only omission
+    and subtraction-only omission.
+    """
+    event, items = _parsed_pil_vorabpauschale(tmp_path, year, "10050")
+    assert event.event_type is FinancialEventType.DISTRIBUTION_FUND
+    assert event.is_payment_in_lieu
+    assert len(items) == 1
+    item = items[0]
+    assert item.vorabpauschale_year == year
+    assert item.distributions_during_year_eur == Decimal("90.00")
+    assert item.calculated_base_return_eur == Decimal("140.00")
+    assert item.gross_vorabpauschale_eur == Decimal("50.00")
+
+
+@pytest.mark.parametrize("year,expected_base,expected_vp", [
+    (2024, "160.30", "70.30"),
+    (2025, "177.10", "87.10"),
+])
+def test_issue77_parsed_fund_pil_reduces_vp_when_the_cap_does_not_bind(
+        tmp_path, year, expected_base, expected_vp):
+    """GT-INVSTG-010/059; annual Basiszins at GT-INVSTG-050/053.
+
+    The year's price gain exceeds the statutory base. The parsed EUR 90 PIL
+    must reach the collector and Satz 1; deleting it now moves the final figure.
+    """
+    event, items = _parsed_pil_vorabpauschale(tmp_path, year, "11000")
+    assert event.event_type is FinancialEventType.DISTRIBUTION_FUND
+    assert len(items) == 1
+    assert items[0].distributions_during_year_eur == Decimal("90.00")
+    assert items[0].calculated_base_return_eur == Decimal(expected_base)
+    assert items[0].gross_vorabpauschale_eur == Decimal(expected_vp)
+
+
+@pytest.mark.parametrize("year", [2024, 2025])
+def test_issue77_negative_fund_pil_remains_a_fee_outside_both_vp_terms(tmp_path, year):
+    """#77 negative control: paying a substitute dividend is not receiving one.
+
+    Existing negative-PIL classification (input_data_spec.md) stays intact;
+    no distribution enters either term of GT-INVSTG-010/059.
+    """
+    event, items = _parsed_pil_vorabpauschale(tmp_path, year, "10050", amount="-100")
+    assert event.event_type is FinancialEventType.FEE_TRANSACTION
+    assert len(items) == 1
+    assert items[0].distributions_during_year_eur == Decimal("0.00")
+    assert items[0].calculated_base_return_eur == Decimal("50.00")
+    assert items[0].gross_vorabpauschale_eur == Decimal("50.00")

@@ -1,0 +1,41 @@
+"""In-process mutation checks; no application file is edited."""
+import inspect
+from pathlib import Path
+import sys
+
+sys.path.insert(0, str(Path.cwd()))
+import pytest
+import src.engine.calculation_engine as calc
+from src.parsers.domain_event_factory import DomainEventFactory
+from src.domain.enums import FinancialEventType
+
+mode = sys.argv[1]
+if mode == 'collector':
+    original = calc._collect_fund_distributions_for_year
+    def broken(events, year, resolver, ctx):
+        return original([e for e in events if 'PAYMENT IN LIEU' not in
+                         (e.ibkr_activity_description or '').upper()], year, resolver, ctx)
+    calc._collect_fund_distributions_for_year = broken
+elif mode in ('cap', 'subtract'):
+    source = inspect.getsource(calc._calculate_vorabpauschale)
+    old, new = {
+        'cap': ('ctx.subtract(eoy_price_eur, soy_price_eur), distribution_per_unit)',
+                'ctx.subtract(eoy_price_eur, soy_price_eur), Decimal("0"))'),
+        'subtract': ('vp_per_unit = ctx.subtract(basisertrag_per_unit, distribution_per_unit)',
+                     'vp_per_unit = basisertrag_per_unit'),
+    }[mode]
+    assert source.count(old) == 1
+    exec(compile(source.replace(old, new), '<issue77-mutation>', 'exec'), calc.__dict__)
+elif mode == 'branch_b':
+    original = DomainEventFactory.create_events_from_cash_transactions
+    def broken(self, rows):
+        events = original(self, rows)
+        for event in events:
+            if (event.event_type is FinancialEventType.DISTRIBUTION_FUND
+                    and 'PAYMENT IN LIEU' in (event.ibkr_activity_description or '').upper()):
+                event.event_type = FinancialEventType.DIVIDEND_CASH
+        return events
+    DomainEventFactory.create_events_from_cash_transactions = broken
+else:
+    raise ValueError(mode)
+raise SystemExit(pytest.main(['-q', '--tb=no', 'tests/test_payment_in_lieu_credit_route.py', '-k', 'issue77']))
