@@ -1,10 +1,12 @@
 # PR review and merge train
 
-**#79 implemented locally as `fbd0def` on `fix-func-79-so-form-lines`.**
+**#79 merged and pushed as `8686b05`; CLOSED/COMPLETED.**
 Official forms establish SO allocation Z54/Z54/Z58 for VZ 2023/2024/2025.
 Clean suite: **1,633 passed/1 skipped**. Real-data amounts unchanged;
 2023/2024 reports identical, 2025 changes only three line labels.
-No publication, merge or closure. [Implementation and verification](issue79-so-form-lines.md).
+The maintainer authorized merge and closure; GitHub confirmed the exact accepted
+candidate tree and closure at 2026-09-23 11:00:42 UTC. No new deferred work.
+[Implementation, verification and completion](issue79-so-form-lines.md).
 
 **#85 merged as `00ba1a7`, pushed, and CLOSED/COMPLETED.**
 The maintainer accepted the measured 6/6/3 declaration changes for VZ 2023–2025

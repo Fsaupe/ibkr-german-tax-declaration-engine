@@ -1,9 +1,16 @@
 # Issue #79 — annual Anlage SO allocation lines
 
-Implemented locally on 2026-09-23. Category: **fix-func**.
+**Completed 2026-09-23:** the maintainer accepted the reported result and
+instructed merge and issue closure. Merged and pushed as **`8686b05`**;
+GitHub confirmed that main's tree exactly matches accepted candidate `4e5e736`
+(`d929c47547784c3648aa4a1e1d595e68a612375c`). Issue #79 is
+**CLOSED/COMPLETED**, confirmed at **11:00:42 UTC**. No implementation
+question or new deferred work remains for this issue.
+
+Implementation prepared on 2026-09-23. Category: **fix-func**.
 Branch: `fix-func-79-so-form-lines`, based on refreshed GitHub main
 `282ac4f`. Implementation: **`fbd0def`**. Store-first commits:
-`6ddd72d` and `5722770`. No publication, merge or issue closure.
+`6ddd72d` and `5722770`. The verification below preceded the authorized merge.
 
 The isolated checkout is `/private/tmp/issue79.Jq6X4e/work`.
 The original issue #76 workspace and its unrelated edits are preserved.
