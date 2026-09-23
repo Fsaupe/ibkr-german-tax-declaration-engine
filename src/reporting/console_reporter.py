@@ -363,7 +363,7 @@ def generate_console_tax_report(
     else:
         print("  Keine kritischen Differenzen bei der End-of-Year Mengenvalidierung festgestellt (basierend auf Log-Analyse).")
 
-    print("  Zeile 41 trägt die anrechenbare ausländische Steuer: bei US-Quellensteuer auf den DBA-Satz (15%) begrenzt, sonst die einbehaltene Steuer. Über dem DBA-Satz Einbehaltenes und ungeprüfte Quellenstaaten werden unten als Hinweis ausgewiesen. Die §32d-Abs.5-Höchstbeträge wendet das Finanzamt an.")
+    print("  Zeile 41 trägt die anrechenbare ausländische Steuer: bei Dividenden aus US, CA, FR, JP, KR, NL und TW auf den anrechenbaren Satz begrenzt, sonst (andere Staaten, Zinsen) die einbehaltene Steuer. Über dem anrechenbaren Satz Einbehaltenes und ungeprüfte Quellenstaaten werden unten als Hinweis ausgewiesen. Die §32d-Abs.5-Höchstbeträge wendet das Finanzamt an.")
     print("  Verlustvorträge über Steuerjahre hinweg sind nicht implementiert.")
     print("  Die endgültige Steuerlast (Sparer-Pauschbetrag, Steuersätze, Soli, KiSt) wird nicht berechnet.")
     print("  Alle Angaben ohne Gewähr. Bitte überprüfen Sie alle Zahlen sorgfältig und konsultieren Sie ggf. einen Steuerberater.")

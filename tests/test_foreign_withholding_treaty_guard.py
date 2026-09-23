@@ -193,13 +193,13 @@ def test_b3_the_gap_aggregates_the_years_us_rows_into_one(tmp_path):
 # --------------------------------------------------------------------------- #
 
 def test_b4_a_source_state_with_no_treaty_rate_is_not_defaulted(tmp_path):
-    """A TW dividend withheld at 21 %: the store has no DBA-TW rate. Zeile 41 keeps the
-    withheld amount (EUR 189), a WARNING gap says the rate is not verified — NOT
-    FAIL_FAST, since most real rows are non-US, and NOT capped to 15 %."""
+    """A dividend from Takatukaland, withheld at 21 %: a made-up source state, so the
+    store will never have a rate for it. Zeile 41 keeps the withheld amount (EUR 189), a
+    WARNING gap says the rate is not verified — NOT FAIL_FAST, and NOT capped to 15 %."""
     resolver = _resolver(tmp_path)
-    stock = _stock(resolver, isin="TW0000000AAA")
-    inc = _income(stock, "1000", country="TW")
-    form, gaps = _run([inc, _wht(stock, "210", country="TW", linked_to=inc)], resolver)
+    stock = _stock(resolver, isin="XX0000000AAA")
+    inc = _income(stock, "1000", country="TAKATUKALAND")
+    form, gaps = _run([inc, _wht(stock, "210", country="TAKATUKALAND", linked_to=inc)], resolver)
 
     assert form.form_line_values[Z41] == Decimal("189.00"), "as withheld, not capped to 135"
     g = [x for x in gaps.gaps if x.code == "FOREIGN_WHT_RATE_NOT_VERIFIED"]
@@ -267,3 +267,55 @@ def test_b8_two_tax_rows_on_one_dividend_are_measured_together(tmp_path):
     form, gaps = _run([inc, first, second], resolver)
     assert form.form_line_values[Z41] == Decimal("135.00")
     assert "FOREIGN_WHT_ABOVE_TREATY_RATE" in _codes(gaps)
+
+
+# --------------------------------------------------------------------------- #
+# B9 — the BZSt creditable rates for the other states in the exports
+# --------------------------------------------------------------------------- #
+# [GT-CREDIT-029], BZSt column C, identical in the Stand 1.1.2023 to 1.1.2026 editions:
+# Frankreich 12,8 (the national rate, below the DBA's 15), Japan 15, Taiwan 10. Share
+# dividends only: the table's "Dividenden" are distributions of Kapitalgesellschaften.
+
+def test_b9_a_french_dividend_withheld_at_25_percent_is_credited_at_12_8(tmp_path):
+    resolver = _resolver(tmp_path)
+    stock = _stock(resolver, isin="FR0000000AAA")
+    inc = _income(stock, "1000", country="FR")
+    form, gaps = _run([inc, _wht(stock, "250", country="FR", linked_to=inc)], resolver)
+    assert form.form_line_values[Z41] == Decimal("115.20")      # 128 USD x 0.90
+    g = [x for x in gaps.gaps if x.code == "FOREIGN_WHT_ABOVE_TREATY_RATE"]
+    assert len(g) == 1 and "12.8%" in g[0].detail
+
+
+def test_b9_a_french_dividend_withheld_at_12_8_percent_is_credited_in_full(tmp_path):
+    resolver = _resolver(tmp_path)
+    stock = _stock(resolver, isin="FR0000000AAA")
+    inc = _income(stock, "1000", country="FR")
+    form, gaps = _run([inc, _wht(stock, "128", country="FR", linked_to=inc)], resolver)
+    assert form.form_line_values[Z41] == Decimal("115.20")
+    assert not [x for x in gaps.gaps if x.code.startswith("FOREIGN_WHT_")]
+
+
+def test_b9_a_taiwanese_dividend_withheld_at_21_percent_is_credited_at_10(tmp_path):
+    resolver = _resolver(tmp_path)
+    stock = _stock(resolver, isin="US8740391003")
+    inc = _income(stock, "1000", country="TW")
+    form, _ = _run([inc, _wht(stock, "210", country="TW", linked_to=inc)], resolver)
+    assert form.form_line_values[Z41] == Decimal("90.00")
+
+
+def test_b9_a_japanese_dividend_at_15_315_percent_is_credited_at_15(tmp_path):
+    resolver = _resolver(tmp_path)
+    stock = _stock(resolver, isin="JP0000000AAA")
+    inc = _income(stock, "1000", country="JP")
+    form, _ = _run([inc, _wht(stock, "153.15", country="JP", linked_to=inc)], resolver)
+    assert form.form_line_values[Z41] == Decimal("135.00")
+
+
+def test_b9_a_french_fund_distribution_is_not_given_the_share_dividend_rate(tmp_path):
+    """Outside the table's Dividenden: kept as withheld and reported, not capped."""
+    resolver = _resolver(tmp_path)
+    fund = _fund(resolver, isin="FR00000FUND1")
+    inc = _income(fund, "1000", kind=FinancialEventType.DISTRIBUTION_FUND, country="FR")
+    form, gaps = _run([inc, _wht(fund, "250", country="FR", linked_to=inc)], resolver)
+    assert form.form_line_values[Z41] == Decimal("225.00")
+    assert "FOREIGN_WHT_RATE_NOT_VERIFIED" in _codes(gaps)

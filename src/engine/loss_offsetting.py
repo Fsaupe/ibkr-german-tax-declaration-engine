@@ -210,14 +210,15 @@ class LossOffsettingEngine:
                 rate = rows[0][1].treaty_rate
                 detail = (
                     f"{len(rows)} Quellensteuerzeile(n) aus {state_label} wurden ÜBER dem "
-                    f"DBA-Satz ({rate:.0%}) einbehalten. Nur die Steuer bis zum DBA-Satz ist "
+                    f"anrechenbaren Satz ({(rate * 100).normalize():f}%) einbehalten. Nur die Steuer "
+                    f"bis zu diesem Satz ist "
                     f"anrechenbar (§ 32d Abs. 5 Satz 1, Ermäßigungsanspruch): von einbehaltenen "
                     f"EUR {withheld.quantize(self.TWO_PLACES, context=self.ctx)} sind EUR "
                     f"{creditable.quantize(self.TWO_PLACES, context=self.ctx)} auf Zeile 41 "
                     f"angerechnet; EUR {excess.quantize(self.TWO_PLACES, context=self.ctx)} sind "
                     f"in Deutschland NICHT anrechenbar und im Quellenstaat zu erstatten (für die "
                     f"USA über das IRS-Erstattungsverfahren). Nachweis der einbehaltenen Steuer und "
-                    f"des DBA-Satzes ist erforderlich (§ 90 Abs. 2 AO). Zeilen: {_rowlist(rows)}."
+                    f"des anrechenbaren Satzes ist erforderlich (§ 90 Abs. 2 AO). Zeilen: {_rowlist(rows)}."
                 )
             elif status is WithholdingStatus.RATE_NOT_VERIFIED:
                 detail = (
