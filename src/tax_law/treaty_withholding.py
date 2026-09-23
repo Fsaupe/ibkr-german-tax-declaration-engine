@@ -21,7 +21,7 @@ the caller (loss_offsetting) stops the run, naming every such row.
 Scope (issue #78): dividends, and interest where the store has a rate (Irland, 0 %:
 [GT-CREDIT-030]). The rates are per assessment year, from that year's
 BZSt edition ([GT-CREDIT-029]), held in `src/tax_law/registry.py`; a year whose edition
-has not been read has no rates and every row is reported, never given another year's
+has not been read has no rates and every row stops the run, never given another year's
 rate. The US rate covers a US fund's distribution too (the treaty covers RICs); the
 others cover share dividends only -- the table's "Dividenden" are distributions of
 Kapitalgesellschaften. Measured 2026-09-22: 28 dividend/PIL withholding
@@ -30,7 +30,7 @@ paired income. The source state is read from `source_country_code`: IssuerCountr
 or where that is blank (11 dividend/PIL withholding rows, all VZ 2023) the broker's
 "- XX Tax" suffix, filled in by the parser. A row with neither is
 rate-not-verified, never guessed. Every other source state, and interest from a state without a rate, are not in the
-store, so such a row is rate-not-verified, not capped. Adding another state or interest is a store
+store, so such a row is rate-not-verified and stops the run, not capped. Adding another state or interest is a store
 extension plus a table row, not a code change here.
 """
 from dataclasses import dataclass
@@ -108,13 +108,15 @@ def assess_withholdings(whts: List[WithholdingTaxEvent],
     if not creditable_rates_researched(tax_year):
         return _each(WithholdingStatus.RATE_YEAR_NOT_RESEARCHED)
 
-    rates = {creditable_rate(tax_year, state, income_event.event_type, income_asset_category,
-                             income_event.is_payment_in_lieu) for state in states}
-    rate = rates.pop() if len(rates) == 1 else None
+    if len(set(states)) != 1:
+        # One dividend has one source state; rows naming different states cannot all be
+        # its tax, even where their rates agree. No creditable amount; the caller stops.
+        return _each(WithholdingStatus.RATE_NOT_VERIFIED)
+    rate = creditable_rate(tax_year, states[0], income_event.event_type, income_asset_category,
+                           income_event.is_payment_in_lieu)
     if rate is None:
-        # No treaty rate in the store for this (state, income kind), or rows naming
-        # different states: no creditable amount, and the caller stops. Never default
-        # to a rate.
+        # No treaty rate in the store for this (state, income kind): no creditable
+        # amount, and the caller stops. Never default to a rate.
         return _each(WithholdingStatus.RATE_NOT_VERIFIED)
 
     # The rate holds only where its conditions do ([GT-CREDIT-027]): facts the export

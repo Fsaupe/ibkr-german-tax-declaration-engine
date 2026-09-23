@@ -312,6 +312,23 @@ def test_b8_two_tax_rows_on_one_dividend_are_measured_together(tmp_path):
     assert "FOREIGN_WHT_ABOVE_TREATY_RATE" in _codes(gaps)
 
 
+@pytest.mark.parametrize("order", [("CA", "US"), ("US", "CA")])
+def test_b8_rows_naming_two_states_on_one_dividend_stop_in_either_order(tmp_path, order):
+    """One dividend has one source state ([GT-CREDIT-027]: the limit is on the tax of the
+    state where the paying company is resident). Two rows naming different states cannot
+    both be that state's tax, so neither rate applies and the run stops. CA and US share
+    the 15 %, so comparing rates does not see it; with the CA row first the US REIT
+    question was skipped and both rows were credited in full (review of PR #102, 2026-09-23)."""
+    resolver = _resolver(tmp_path)
+    stock = _stock(resolver)
+    stock.withholding_facts.clear()   # the US condition is unanswered
+    inc = _income(stock, "1000")
+    rows = [_wht(stock, "100", country=order[0], linked_to=inc),
+            _wht(stock, "50", country=order[1], linked_to=inc)]
+    _, gaps = _stopped([inc, *rows], resolver)
+    assert "FOREIGN_WHT_RATE_NOT_VERIFIED" in _codes(gaps)
+
+
 # --------------------------------------------------------------------------- #
 # B9 — the BZSt creditable rates for the other states in the exports
 # --------------------------------------------------------------------------- #
