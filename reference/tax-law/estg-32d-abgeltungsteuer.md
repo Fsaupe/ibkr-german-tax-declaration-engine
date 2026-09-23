@@ -90,19 +90,30 @@ vollstaendige Erstattung der auslaendischen Steuer besteht. Besteht lediglich de
 teilweise Erstattung, kann der Steuerpflichtige die Anrechnung im Wege der Veranlagung gemaess § 32d
 Absatz 4 EStG beantragen. In diesen Faellen hat er dem zustaendigen Finanzamt die Hoehe der
 moeglichen Erstattung im auslaendischen Staat nachzuweisen ..."* Rn. 207a names a refund claim
-*"nach dem Recht dieses [Quellen-]Staates"*. The BZSt, for the Veranlagung
-(`../bmf-guidance/abgeltungsteuer-einzelfragen.md` pointer; BZSt Erlaeuterungen 2026), names **two**
-grounds: *"Es ist nur die auslaendische Steuer anrechenbar, die festgesetzt und gezahlt worden ist
+*"nach dem Recht dieses [Quellen-]Staates"*. The BZSt, in the Erlaeuterungen to its table of
+creditable rates (`../bmf-guidance/bzst-anrechenbare-quellensteuer.md`; Erlaeuterungen 2026,
+page 1), names **two** grounds. The table is written for the credit the paying agent gives in the
+Steuerabzug -- *"die Anrechnung auslaendischer Quellensteuer durch die fuer die Erhebung der
+Abgeltungsteuer zustaendigen Stellen, in der Regel Kreditinstitute"* -- not for the Veranlagung; the
+rule it states is § 32d Abs. 5 Satz 1, which the Veranlagung applies as well (Rn. 207a above sends the
+partial-refund case there under § 32d Abs. 4). The sentence: *"Es ist nur die auslaendische Steuer anrechenbar, die festgesetzt und gezahlt worden ist
 und fuer die im Quellenstaat -- nach dessen nationalem Recht oder aufgrund eines DBA -- kein
 Ermaessigungsanspruch geltend gemacht werden kann (§ 43a Abs. 3 Satz 1 in Verbindung mit § 32d
 Abs. 5 EStG)."* An Ermaessigungsanspruch therefore exists where either the source state's own law
 **or a DBA** grants a reduction. Where both point to the same rate -- a dividend within DBA Art. 10,
 which the source state applies -- the creditable amount is the withheld tax capped at that treaty
 rate; for a US dividend, including a payment in lieu on lent units whose attribution stays with the
-lender, that rate is 15 % ([GT-CREDIT-027], [GT-CREDIT-028]). Where the two grounds diverge -- a DBA
-that would deny the source state any tax, applied by a source state that refunds only to a treaty
-rate -- the extent of the Ermaessigungsanspruch is not settled by any located Tier 1 or Tier 2 source:
-`../research/open-legal-questions.md` Q22.
+lender, that rate is 15 % ([GT-CREDIT-027], [GT-CREDIT-028]). Where the two grounds give different
+rates and the source state applies the DBA, each is a reduction claimable there, so the
+Ermaessigungsanspruch is the larger one and the creditable rate the lower. That is how the BZSt
+derives its creditable rate, national rate first, then *"Wird die Hoehe des unter Nr. 1 ermittelten
+Quellensteuersatzes durch das DBA begrenzt/abgesenkt?"*, a higher tax giving an *"Entlastungsanspruch"*
+in the source state ([GT-CREDIT-029]): France's national 12,8 below the DBA's 15, Taiwan's DBA 10
+below its national 21, the DBA's 0 on Irish interest ([GT-CREDIT-030]). **Open is only the case where
+the source state does not apply the DBA's allocation** -- a DBA that would deny the source state any
+tax, applied by a source state that treats the payment under its own law and refunds only to a
+treaty rate. There the extent of the Ermaessigungsanspruch is not settled by any located Tier 1 or
+Tier 2 source: `../research/open-legal-questions.md` Q22.
 
 **§ 34c Abs. 6 Satz 2 names two limits; § 32d Abs. 5 Satz 1 names one.** For treaty cases outside
 the Abgeltungsteuer, § 34c Abs. 6 Satz 2 applies the credit *"auf die nach dem Abkommen anzurechnende

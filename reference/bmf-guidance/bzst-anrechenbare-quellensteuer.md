@@ -74,9 +74,22 @@ Kapitalanlagegesellschaften"*; the treaty basis, and the exemption's consequence
 because the treaty itself puts RIC dividends on the dividend rate (Art. 10 Abs. 4 Satz 2); for
 the other rows only share dividends are within the table's *Dividenden*.
 
-Where the national rate is below the DBA ceiling (Frankreich), the national rate is what is
-creditable: the source state's own law already grants the reduction down to it. Where it is above
-(the others), the DBA ceiling is; the difference is claimed back in the source state.
+**How column C is derived** (Erlaeuterungen, page 2 in each of the four editions, re-read
+2026-09-23): *"Die Ermittlung erfolgte nach folgendem Pruefschema: 1. Wird eine Quellensteuer nach
+nationalem Recht erhoben, wenn ja, mit welchem Steuersatz? 2. Wird die Hoehe des unter Nr. 1
+ermittelten Quellensteuersatzes durch das DBA begrenzt/abgesenkt? 3. Enthaelt ein DBA eine
+Vorschrift ueber die Anrechnung fiktiver Steuern, die ueber dem nach Nr. 2 ermittelten Satz liegt?"*
+Step 3 does not arise for the states above (no *fiktive* Quellensteuer). So where the national rate
+is below the DBA ceiling (Frankreich), the national rate is what is creditable: the DBA does not
+lower it. Where it is above (the others), the DBA ceiling is; the difference is claimed back in the
+source state.
+
+**Two national rates in A a)** (Japan *15 / 20*, Vereinigte Staaten *0 / 30*): *"Einige Staaten
+kennen Steuerbefreiungen oder verschiedene Steuersaetze"* (Erlaeuterungen, page 2); column E says
+which income the lower rate is for -- Japan's 15 for *"qualifizierte Dividenden aus boersennotierten
+Gesellschaften"*, the US 0 for the exempt RIC dividends. The comparison with the DBA ceiling is made
+with the rate that applies to the dividend in question: for a US dividend that is not exempt, 30
+against 15, so 15.
 
 **What the cited unit also contains** (Validation Protocol item 2), none of it relied on here:
 
