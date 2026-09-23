@@ -119,11 +119,13 @@ def assess_withholdings(whts: List[WithholdingTaxEvent],
 
     # The rate holds only where its conditions do ([GT-CREDIT-027]): facts the export
     # does not carry, stated by the taxpayer per instrument and year.
-    met, _ = verdict(states[0], income_asset_category, facts)
+    met, _, stated_rate = verdict(states[0], income_asset_category, facts)
     if met is Verdict.UNANSWERED:
         return _each(WithholdingStatus.FACTS_UNANSWERED)
     if met is Verdict.NOT_MET:
         return _each(WithholdingStatus.CONDITION_NOT_MET)
+    if stated_rate is not None:
+        rate = stated_rate   # e.g. China's 0 % on a dividend its own law exempts ([GT-CREDIT-031])
 
     income_foreign = _abs(income_event.gross_amount_foreign_currency)
     withheld_foreign = [_abs(w.gross_amount_foreign_currency) for w in whts]

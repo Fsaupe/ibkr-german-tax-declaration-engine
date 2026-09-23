@@ -140,6 +140,18 @@ CREDITABLE_DIVIDEND_RATES: dict[int, dict[str, Decimal]] = {
            "TW": Decimal("0.10")},
 }
 
+# [GT-CREDIT-031]: China, column C "0 / 10" in each edition 2023-2026. The 10 % holds for
+# a mainland-resident company that is not an Art. 10 Abs. 2 b investment vehicle, and
+# 0 % where China's own law exempts the dividend -- facts the taxpayer states
+# (src/tax_law/withholding_conditions.py). Kept apart from the single-valued table above,
+# which is checked against the GT-CREDIT-029 table of the store.
+CONDITIONAL_DIVIDEND_RATES: dict[int, dict[str, Decimal]] = {
+    2023: {"CN": Decimal("0.10")},
+    2024: {"CN": Decimal("0.10")},
+    2025: {"CN": Decimal("0.10")},
+    2026: {"CN": Decimal("0.10")},
+}
+
 # The income kinds a state's dividend rate governs. The table's "Dividenden" are
 # distributions of Kapitalgesellschaften, so share dividends only; the US treaty puts a
 # RIC's distribution on the dividend rate too (Art. 10 Abs. 4 Satz 2).
@@ -148,6 +160,7 @@ CREDITABLE_DIVIDEND_KINDS: dict[str, frozenset] = {
     "US": frozenset({FinancialEventType.DIVIDEND_CASH, FinancialEventType.DISTRIBUTION_FUND}),
     "FR": _SHARE_DIVIDEND, "JP": _SHARE_DIVIDEND, "CA": _SHARE_DIVIDEND,
     "KR": _SHARE_DIVIDEND, "NL": _SHARE_DIVIDEND, "TW": _SHARE_DIVIDEND,
+    "CN": _SHARE_DIVIDEND,
 }
 
 # The instrument class each dividend kind requires. Column C holds for a dividend on an
@@ -213,6 +226,8 @@ def creditable_dividend_rate(tax_year: int, source_state: Optional[str],
         return None
     state = source_state.strip().upper()
     rate = CREDITABLE_DIVIDEND_RATES.get(tax_year, {}).get(state)
+    if rate is None:
+        rate = CONDITIONAL_DIVIDEND_RATES.get(tax_year, {}).get(state)
     if rate is None or income_kind not in CREDITABLE_DIVIDEND_KINDS.get(state, frozenset()):
         return None
     return rate
