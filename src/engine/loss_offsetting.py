@@ -175,24 +175,23 @@ class LossOffsettingEngine:
 
     def _record_treaty_withholding_gaps(self, treaty_flags: Dict[tuple, List[tuple]]) -> None:
         """Surface every foreign withholding row the treaty-rate guard could not credit
-        in full: one gap per (status, source state), listing the rows.
+        in full: one WARNING gap per (status, source state), listing the rows.
 
         legal_basis: [GT-CREDIT-026] (Ermäßigungsanspruch), [GT-CREDIT-027] (US 15 %),
-        [GT-CREDIT-029] (other states' dividend rates), [GT-CREDIT-030] (Irish interest).
-        An over-treaty-rate row is capped and reported (WARNING): Zeile 41 carries the
-        creditable amount and the report says what to reclaim abroad. A row with no
-        supported creditable amount -- no linked income, no rate for its state or income
-        kind, no researched edition for the year -- is itemised here as a WARNING and
-        then stops the run: one FAIL_FAST gap names every such row, so one run lists the
-        whole problem (maintainer's review of PR #102, F1). Neither the withheld amount
-        nor zero may stand in for the credit.
+        [GT-CREDIT-029] (other states' dividend rates), [GT-CREDIT-030] (Irish interest),
+        [GT-CREDIT-031] (China).
+        An over-treaty-rate row is capped: Zeile 41 carries the creditable amount and the
+        report says what to reclaim abroad. A row with no supported creditable amount -- no
+        linked income, no rate for its state, income kind or year, a fact unanswered or
+        leaving the rate unsettled -- is not credited: it is listed as unresolved, with
+        what is open, and the rest of the declaration stands (maintainer's second review
+        of PR #102: an unresolved credit may be left unclaimed, never claimed under a
+        warning). The listing says it is not a finding that nothing is creditable, nor a
+        refund claim.
         """
-        unsupported = {k: v for k, v in treaty_flags.items() if k[0] in UNSUPPORTED}
         if self.data_gap_collector is None:
             for (status, state), rows in treaty_flags.items():
                 logger.warning("Data gap [FOREIGN_WHT_%s] %s (%d rows)", status.value, state or "unknown", len(rows))
-            if unsupported:
-                raise ProcessingError(self._unsupported_credit_detail(unsupported))
             return
 
         def _rowlist(rows):
@@ -225,64 +224,52 @@ class LossOffsettingEngine:
                     f"des anrechenbaren Satzes ist erforderlich (§ 90 Abs. 2 AO). Zeilen: {_rowlist(rows)}."
                 )
             else:
-                detail = f"{self._unsupported_reason(status, state, rows)} Zeilen: {_rowlist(rows)}."
+                withheld = sum((a.withheld_eur for _, a in rows), Decimal("0"))
+                reasons = "; ".join(sorted({a.reason for _, a in rows if a.reason}))
+                detail = (
+                    f"{len(rows)} Quellensteuerzeile(n) aus {state_label}, einbehalten EUR "
+                    f"{withheld.quantize(self.TWO_PLACES, context=self.ctx)}: NICHT auf Zeile 41 "
+                    f"angerechnet (ungeklärt). Offen: {self.unresolved_reason(status, state, reasons)} "
+                    f"Das ist keine Feststellung, dass nichts anrechenbar oder dass die Steuer im "
+                    f"Quellenstaat erstattbar ist; ist der offene Punkt geklärt, kann die Anrechnung "
+                    f"nachgeholt werden.{self._isins(rows)} Zeilen: {_rowlist(rows)}."
+                )
             self.data_gap_collector.record(
                 code=f"FOREIGN_WHT_{status.value}",
                 subject=f"Anlage KAP Zeile 41 / {state_label} ({self.tax_year})",
                 detail=detail,
                 severity=GapSeverity.WARNING,
             )
-        if unsupported:
-            self.data_gap_collector.record(
-                code="FOREIGN_WHT_CREDIT_UNSUPPORTED",
-                subject=f"Anlage KAP Zeile 41 ({self.tax_year})",
-                detail=self._unsupported_credit_detail(unsupported),
-                severity=GapSeverity.FAIL_FAST,
-            )
 
-    def _unsupported_reason(self, status: WithholdingStatus, state: str, rows) -> str:
-        """Why these rows have no supported creditable amount, and what resolves it."""
-        count = len(rows)
-        reasons = "; ".join(sorted({a.reason for _, a in rows if a.reason}))
-        state_label = state or "unbekannter Quellenstaat"
+    def unresolved_reason(self, status: WithholdingStatus, state: str, reasons: str) -> str:
+        """What is open for a row that is not credited, and what would resolve it."""
         if status is WithholdingStatus.RATE_NOT_VERIFIED and not state:
-            return (f"{count} Quellensteuerzeile(n) ohne Quellenstaat: der Export nennt keinen. "
-                    f"Bei Quellensteuer auf Habenzinsen ist es das Land der IBKR-Gesellschaft, die "
-                    f"die Zinsen zahlt: BROKER_ENTITY_COUNTRY in src/config.py setzen (siehe README).")
+            return ("der Export nennt keinen Quellenstaat. Bei Quellensteuer auf Habenzinsen ist es das "
+                    "Land der IBKR-Gesellschaft, die die Zinsen zahlt: BROKER_ENTITY_COUNTRY in "
+                    "src/config.py setzen (siehe README).")
         if status is WithholdingStatus.RATE_NOT_VERIFIED:
-            return (f"{count} Quellensteuerzeile(n) aus {state_label}: für diesen Quellenstaat bzw. "
-                    f"diese Ertragsart ist im Referenzbestand kein anrechenbarer Satz hinterlegt. "
-                    f"Den Satz in reference/ recherchieren (docs/knowledge-store.md), dann ergänzen.")
+            return (f"für {state} bzw. diese Ertragsart ist im Referenzbestand kein anrechenbarer Satz "
+                    f"hinterlegt (oder die Zeilen eines Ertrags nennen verschiedene Quellenstaaten). Den "
+                    f"Satz in reference/ recherchieren (docs/knowledge-store.md), dann ergänzen.")
         if status is WithholdingStatus.RATE_YEAR_NOT_RESEARCHED:
-            return (f"{count} Quellensteuerzeile(n) aus {state_label}: für das Steuerjahr "
-                    f"{self.tax_year} ist die BZSt-Übersicht (Stand 1. Januar {self.tax_year}) nicht "
-                    f"eingelesen; Sätze anderer Jahre werden nicht übernommen.")
+            return (f"für das Steuerjahr {self.tax_year} ist die BZSt-Übersicht (Stand 1. Januar "
+                    f"{self.tax_year}) nicht eingelesen; Sätze anderer Jahre werden nicht übernommen.")
+        if status is WithholdingStatus.CONDITIONS_YEAR_NOT_RESEARCHED:
+            return (f"das US-Recht, von dem der Satz von 15 % abhängt (26 U.S.C. §§ 871, 852, 856), ist "
+                    f"im Referenzbestand für {self.tax_year} nicht festgestellt ([GT-CREDIT-027]).")
         if status is WithholdingStatus.FACTS_UNANSWERED:
-            return (f"{count} Quellensteuerzeile(n) aus {state_label}: der anrechenbare Satz hängt von "
-                    f"Angaben ab, die der Export nicht enthält. Offen: {reasons} Im interaktiven Lauf "
-                    f"beantworten (--interactive) oder in cache/withholding_facts.json eintragen "
-                    f"(siehe README).")
-        if status is WithholdingStatus.CONDITION_NOT_MET:
-            return (f"{count} Quellensteuerzeile(n) aus {state_label}: nach Ihren Angaben gilt der "
-                    f"anrechenbare Satz nicht ({reasons}); der anrechenbare Betrag ist nicht ermittelbar.")
-        return (f"{count} Quellensteuerzeile(n) konnten keinem Ertrag desselben Kontos zugeordnet "
-                f"werden, sodass der einbehaltene Satz nicht gegen den anrechenbaren Satz geprüft "
-                f"werden kann.")
+            return (f"der anrechenbare Satz hängt von Angaben ab, die der Export nicht enthält: {reasons} "
+                    f"Im interaktiven Lauf beantworten (--interactive) oder in "
+                    f"cache/withholding_facts.json eintragen (siehe README).")
+        if status is WithholdingStatus.CONDITION_UNRESOLVED:
+            return f"nach Ihren Angaben ist der anrechenbare Satz nicht geklärt: {reasons}."
+        return ("die Zeile konnte keinem Ertrag desselben Kontos zugeordnet werden, sodass der "
+                "einbehaltene Satz nicht gegen den anrechenbaren Satz geprüft werden kann.")
 
     def _isins(self, rows) -> str:
         isins = sorted({getattr(self.asset_resolver.get_asset_by_id(ev.asset_internal_id), "ibkr_isin", None) or "—"
                         for ev, _ in rows})
         return " (ISIN: " + ", ".join(isins) + ")"
-
-    def _unsupported_credit_detail(self, unsupported: Dict[tuple, List[tuple]]) -> str:
-        """The one fatal message naming every row with no supported creditable amount."""
-        parts = [self._unsupported_reason(status, state, rows)
-                 + " Transaktionen: " + ", ".join(ev.ibkr_transaction_id or "—" for ev, _ in rows)
-                 + self._isins(rows) + "."
-                 for (status, state), rows in sorted(unsupported.items(), key=lambda kv: (kv[0][0].value, kv[0][1]))]
-        return ("Für Anlage KAP Zeile 41 ist nicht jede ausländische Quellensteuer belegbar anrechenbar. "
-                "Weder der einbehaltene Betrag noch null darf an ihre Stelle treten; es werden keine "
-                "Zahlen ausgegeben. " + " ".join(parts))
 
     def calculate_reporting_figures(self) -> LossOffsettingResult:
         result = LossOffsettingResult()
@@ -441,7 +428,7 @@ class LossOffsettingEngine:
         income_by_id = self._income_event_by_event_id()
         # Rows the treaty-rate guard could not credit in full, grouped for one gap per
         # (status, source state). A capped row is reported; a row with no supported
-        # creditable amount stops the run once all are collected (F1).
+        # creditable amount is not credited and is listed as unresolved.
         treaty_flags: Dict[tuple, List[tuple]] = defaultdict(list)
         # The treaty limits all the tax on one income ([GT-CREDIT-027]), so the foreign
         # rows are assessed per linked income; a row with no income in this year stands alone.
@@ -476,6 +463,9 @@ class LossOffsettingEngine:
                 foreign_tax_total = self.ctx.add(foreign_tax_total, assessment.creditable_eur)
             result.creditable_foreign_wht_eur[event.event_id] = assessment.creditable_eur
             result.foreign_wht_status[event.event_id] = (assessment.status.value, assessment.treaty_rate)
+            if assessment.status in UNSUPPORTED:
+                result.foreign_wht_not_credited[event.event_id] = self.unresolved_reason(
+                    assessment.status, assessment.source_state or "", assessment.reason)
             if assessment.status is not WithholdingStatus.OK:
                 treaty_flags[(assessment.status, assessment.source_state or "")].append((event, assessment))
         self._record_german_kest_gap(german_kest_count, german_kest_total)

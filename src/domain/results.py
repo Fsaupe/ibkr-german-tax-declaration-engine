@@ -61,6 +61,9 @@ class LossOffsettingResult:
     # For the same rows: the treaty guard's status (WithholdingStatus value) and the
     # creditable rate it applied (None where it applied none). Why the amount above is what it is.
     foreign_wht_status: Dict[uuid.UUID, Tuple[str, Optional[Decimal]]] = field(default_factory=dict)
+    # For the rows among them that are not credited (no supported creditable amount):
+    # what is open, for the report's list of unresolved withholding.
+    foreign_wht_not_credited: Dict[uuid.UUID, str] = field(default_factory=dict)
 
 
 @dataclass

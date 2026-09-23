@@ -120,11 +120,14 @@ def teilfreistellung_rate(fund_type: Optional[InvestmentFundType]) -> Decimal:
 # carried from a neighbouring year, even where the editions agree; research the
 # edition and add the year. Fractions, not percent.
 #
-# US ([GT-CREDIT-027]): the 15 % holds only on the part of a RIC dividend the RIC did not
-# report as exempt, and for a REIT dividend only where the holder meets Art. 10 Abs. 4
-# Satz 3. Neither is in the export; the conditions and the exempt share are taken from the
+# US ([GT-CREDIT-027]): the 15 % holds on a RIC distribution only where the RIC reported no
+# part of it as other than an ordinary dividend, and on a REIT dividend only where the
+# holder meets Art. 10 Abs. 4 Satz 3. Neither is in the export; both are taken from the
 # taxpayer's stated answers (src/tax_law/withholding_conditions.py), and without them the
-# rate does not apply.
+# rate does not apply. The US law those conditions rest on (26 U.S.C. §§ 871, 852, 856) is
+# stated for the years below only; in any other year a US dividend row is not credited,
+# whatever the year's edition says.
+US_CONDITIONS_STATED_YEARS = frozenset({2023, 2024, 2025})
 
 CREDITABLE_DIVIDEND_RATES: dict[int, dict[str, Decimal]] = {
     2023: {"US": Decimal("0.15"), "FR": Decimal("0.128"), "JP": Decimal("0.15"),
@@ -142,9 +145,10 @@ CREDITABLE_DIVIDEND_RATES: dict[int, dict[str, Decimal]] = {
 }
 
 # [GT-CREDIT-031]: China, column C "0 / 10" in each edition 2023-2026. The 10 % holds for
-# a mainland-resident company that is not an Art. 10 Abs. 2 b investment vehicle, and
-# 0 % where China's own law exempts the dividend -- facts the taxpayer states
-# (src/tax_law/withholding_conditions.py). Kept apart from the single-valued table above,
+# a mainland-resident company that is not an Art. 10 Abs. 2 b investment vehicle -- facts
+# the taxpayer states (src/tax_law/withholding_conditions.py). The 0 % applies where China's
+# own law exempts a dividend; which dividends those are is not captured, so a year with one
+# is left unresolved rather than given 0 %. Kept apart from the single-valued table above,
 # which is checked against the GT-CREDIT-029 table of the store.
 CONDITIONAL_DIVIDEND_RATES: dict[int, dict[str, Decimal]] = {
     2023: {"CN": Decimal("0.10")},

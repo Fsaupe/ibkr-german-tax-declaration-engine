@@ -1,11 +1,14 @@
 # tests/test_withholding_facts.py
 """The US 15 % is credited only where the facts it depends on have been stated.
 
-[GT-CREDIT-027]: the 15 % holds "falls keine Befreiung" for a RIC dividend -- the exempt
-part is what the RIC reports under 26 U.S.C. § 871(k) -- and for a REIT dividend only under
-DBA-USA Art. 10 Abs. 4 Satz 3 (for a natural person, at most 10 % of the REIT). Neither
-fact is in the export; the taxpayer states them per instrument and year (maintainer's
-review of PR #102, F2). An unanswered question or a failed condition stops the run.
+[GT-CREDIT-027]: the 15 % holds "falls keine Befreiung" for a RIC distribution -- US law
+leaves untaxed what the RIC reports as an interest-related, short-term capital gain
+(26 U.S.C. § 871(k)) or capital gain dividend (§ 852(b)(3)), under conditions the report
+does not establish, so the 15 % is settled only where the RIC reported no part as other
+than an ordinary dividend -- and for a REIT dividend only under DBA-USA Art. 10 Abs. 4
+Satz 3. Neither fact is in the export; the taxpayer states them per payer and year. An
+unanswered question, or an answer that leaves the rate unsettled, means the rows are not
+credited and are listed as unresolved (maintainer's second review of PR #102).
 
 Currency: USD at 0.90 EUR/USD (helpers from the treaty-guard tests).
 """
@@ -20,7 +23,7 @@ from src.domain.enums import FinancialEventType
 from src.processing.withholding_facts import (
     WithholdingFacts, WithholdingFactsStore, resolve_withholding_facts)
 from tests.test_foreign_withholding_treaty_guard import (
-    Z41, _codes, _fund, _income, _resolver, _run, _stock, _stopped, _wht)
+    Z41, _codes, _fund, _income, _not_credited, _resolver, _run, _stock, _wht)
 
 
 def _us_dividend(tmp_path, facts, usd_tax="150"):
@@ -47,9 +50,9 @@ def _us_fund(tmp_path, facts):
 # The rule
 # --------------------------------------------------------------------------- #
 
-def test_a_us_dividend_with_no_stated_facts_stops_and_names_the_isin(tmp_path):
+def test_a_us_dividend_with_no_stated_facts_is_not_credited_and_names_the_isin(tmp_path):
     events, resolver, stock = _us_dividend(tmp_path, None)
-    message, gaps = _stopped(events, resolver)
+    message, gaps = _not_credited(events, resolver)
     assert "FOREIGN_WHT_FACTS_UNANSWERED" in _codes(gaps)
     assert stock.ibkr_isin in message and "withholding_facts.json" in message
 
@@ -67,103 +70,82 @@ def test_a_reit_held_at_no_more_than_10_percent_is_credited_at_15(tmp_path):
     assert form.form_line_values[Z41] == Decimal("135.00")
 
 
-def test_a_reit_held_above_10_percent_stops(tmp_path):
+def test_a_reit_held_above_10_percent_is_unresolved_not_without_a_ceiling(tmp_path):
+    """Above 10 % Buchst. a fails, but Buchst. b (an exchange-traded class, at most 5 %) and
+    c (a diversified REIT) are independent alternatives, not examined here. The reason
+    says so; it does not say the treaty sets no ceiling (second review, R5)."""
     events, resolver, _ = _us_dividend(tmp_path, {"us_reit": True, "us_reit_holding_at_most_10pct": False})
-    message, gaps = _stopped(events, resolver)
-    assert "FOREIGN_WHT_CONDITION_NOT_MET" in _codes(gaps) and "REIT" in message
+    message, gaps = _not_credited(events, resolver)
+    assert "FOREIGN_WHT_CONDITION_UNRESOLVED" in _codes(gaps)
+    assert "Buchst. b" in message and "keinen Höchstsatz" not in message
 
 
-def test_a_reit_without_the_holding_answer_stops_as_unanswered(tmp_path):
+def test_a_reit_without_the_holding_answer_is_unanswered(tmp_path):
     events, resolver, _ = _us_dividend(tmp_path, {"us_reit": True})
-    _, gaps = _stopped(events, resolver)
+    _, gaps = _not_credited(events, resolver)
     assert "FOREIGN_WHT_FACTS_UNANSWERED" in _codes(gaps)
 
 
-def test_a_us_fund_with_no_exempt_part_is_credited_at_15(tmp_path):
-    events, resolver = _us_fund(tmp_path, {"us_ric_exempt_part": False})
+def test_a_us_fund_with_no_non_ordinary_part_is_credited_at_15(tmp_path):
+    events, resolver = _us_fund(tmp_path, {"us_ric_non_ordinary_part": False})
     form, _ = _run(events, resolver)
     assert form.form_line_values[Z41] == Decimal("135.00")
 
 
-def test_a_us_fund_that_reported_an_exempt_part_without_its_share_stops(tmp_path):
-    """Tax withheld on the exempt part is not creditable; without the share of each
-    distribution the creditable amount is unknown: no figure."""
-    events, resolver = _us_fund(tmp_path, {"us_ric_exempt_part": True})
-    message, gaps = _stopped(events, resolver)
-    assert "FOREIGN_WHT_FACTS_UNANSWERED" in _codes(gaps) and "RIC" in message
+def test_a_us_fund_that_reported_a_non_ordinary_part_is_not_credited(tmp_path):
+    """Whatever part the RIC reported, how much of it the US leaves untaxed for this
+    recipient turns on § 871(k)(1)(B), (2)(B) and the excess-reported-amount rules, which
+    the report does not establish (second review, R2). Not credited, not a stated 0 %."""
+    events, resolver = _us_fund(tmp_path, {"us_ric_non_ordinary_part": True})
+    message, gaps = _not_credited(events, resolver)
+    assert "FOREIGN_WHT_CONDITION_UNRESOLVED" in _codes(gaps)
+    assert "871(k)(1)(B)" in message and "852(b)(3)" in message
 
 
-# The exempt part as the RIC reports it, per distribution ([GT-CREDIT-027]: "the 15 % of
-# Abs. 2 b applies to the unreported part only"; tax withheld on the reported part is
-# wholly an Ermaessigungsanspruch). 1000 USD at 0.90 EUR, 25 % reported exempt: 15 % of
-# the other 750 USD = 112.50 USD = EUR 101.25 is creditable.
-
-def _exempt(percent):
-    return {"us_ric_exempt_part": True, "us_ric_exempt_percent:2025-06-16": Decimal(percent)}
-
-
-def test_a_us_fund_with_an_exempt_share_is_credited_at_15_percent_of_the_rest(tmp_path):
-    events, resolver = _us_fund(tmp_path, _exempt("25"))
-    form, gaps = _run(events, resolver)
-    assert form.form_line_values[Z41] == Decimal("101.25")
-    assert "FOREIGN_WHT_ABOVE_TREATY_RATE" in _codes(gaps)
-
-
-def test_tax_withheld_only_on_the_taxable_part_is_credited_in_full(tmp_path):
-    events, resolver = _us_fund(tmp_path, _exempt("25"))
-    events[1].gross_amount_foreign_currency = Decimal("112.50")
-    events[1].gross_amount_eur = Decimal("112.50") * Decimal("0.90")
-    form, gaps = _run(events, resolver)
-    assert form.form_line_values[Z41] == Decimal("101.25")
-    assert not [c for c in _codes(gaps) if c.startswith("FOREIGN_WHT_")]
-
-
-def test_a_wholly_exempt_distribution_credits_nothing(tmp_path):
-    events, resolver = _us_fund(tmp_path, _exempt("100"))
-    form, _ = _run(events, resolver)
-    assert form.form_line_values.get(Z41, Decimal("0.00")) == Decimal("0.00")
-
-
-def test_the_share_is_asked_per_distribution_after_the_exempt_answer(tmp_path):
+def test_one_answer_per_fund_and_year_covers_every_distribution(tmp_path):
+    """The question is about what the RIC reported for its year, the same for every
+    account and payment; nothing is asked per distribution or keyed by date (R3)."""
     events, resolver = _us_fund(tmp_path, None)
+    fund = next(iter(resolver.assets_by_internal_id.values()))
+    second = _income(fund, "500", kind=FinancialEventType.DISTRIBUTION_FUND)   # same date
+    events += [second, _wht(fund, "75", linked_to=second)]
     asked = []
-    answers = {"us_ric_exempt_part": True, "us_ric_exempt_percent:2025-06-16": Decimal("25")}
-
-    def ask(asset, year, question):
-        asked.append(question.key)
-        return answers[question.key]
-
-    store = WithholdingFactsStore(str(tmp_path / "facts.json"))
-    left = resolve_withholding_facts(resolver.assets_by_internal_id.values(), events, 2025, store, True, ask)
-    assert asked == ["us_ric_exempt_part", "us_ric_exempt_percent:2025-06-16"] and left == []
-    saved = WithholdingFactsStore(store.cache_file_path).get(
-        next(iter(resolver.assets_by_internal_id.values())).get_classification_key(), 2025)
-    assert saved.answers["us_ric_exempt_percent:2025-06-16"] == Decimal("25")
-
-
-def test_a_share_left_blank_stays_unanswered(tmp_path):
-    events, resolver = _us_fund(tmp_path, None)
-    answers = {"us_ric_exempt_part": True, "us_ric_exempt_percent:2025-06-16": None}
     left = resolve_withholding_facts(resolver.assets_by_internal_id.values(), events, 2025,
                                      WithholdingFactsStore(str(tmp_path / "facts.json")), True,
-                                     lambda asset, year, q: answers[q.key])
+                                     lambda asset, year, q: asked.append(q.key) or False)
+    assert asked == ["us_ric_non_ordinary_part"] and left == []
+    form, _ = _run(events, resolver)
+    assert form.form_line_values[Z41] == Decimal("202.50")
+
+
+def test_a_question_left_blank_stays_unanswered(tmp_path):
+    events, resolver = _us_fund(tmp_path, None)
+    left = resolve_withholding_facts(resolver.assets_by_internal_id.values(), events, 2025,
+                                     WithholdingFactsStore(str(tmp_path / "facts.json")), True,
+                                     lambda asset, year, q: None)
     assert len(left) == 1
+    _, gaps = _not_credited(events, resolver)
+    assert "FOREIGN_WHT_FACTS_UNANSWERED" in _codes(gaps)
 
 
-@pytest.mark.parametrize("value", ["120", "-1", "abc", True])
-def test_an_exempt_share_outside_0_to_100_is_unreadable(tmp_path, value):
+@pytest.mark.parametrize("key,value", [("us_ric_exempt_part", False),
+                                       ("us_ric_exempt_percent:2025-06-16", "25"),
+                                       ("cn_exempt_dividend:2025-06-16", True)])
+def test_an_answer_to_a_retired_question_is_refused(tmp_path, key, value):
+    """'us_ric_exempt_part' asked about the § 871(k) kinds only, so its 'no' does not
+    answer the question that replaced it; the per-date answers are no longer asked. A file
+    holding them raises, naming them, rather than being read as a current answer."""
     path = tmp_path / "facts.json"
-    path.write_text(json.dumps({"ISIN:X|2025": {
-        "answers": {"us_ric_exempt_part": True, "us_ric_exempt_percent:2025-06-16": value},
-        "date_set": "2026-09-23", "source": "x"}}), encoding="utf-8")
-    with pytest.raises(ProcessingError):
+    path.write_text(json.dumps({"ISIN:X|2025": {"answers": {key: value}, "date_set": "2026-09-23",
+                                                "source": "x"}}), encoding="utf-8")
+    with pytest.raises(ProcessingError, match=key.split(":")[0]):
         WithholdingFactsStore(str(path))
 
 
 def test_the_answer_of_another_year_is_not_used(tmp_path):
     events, resolver, stock = _us_dividend(tmp_path, None)
     stock.withholding_facts[2024] = {"us_reit": False}
-    _, gaps = _stopped(events, resolver)
+    _, gaps = _not_credited(events, resolver)
     assert "FOREIGN_WHT_FACTS_UNANSWERED" in _codes(gaps)
 
 

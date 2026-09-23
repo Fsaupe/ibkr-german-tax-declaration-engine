@@ -43,7 +43,7 @@ def test_a_config_written_before_the_setting_existed_is_read_as_unanswered(monke
     """The maintainer's config.py has no BROKER_ENTITY_COUNTRY, and every run aborted with
     an AttributeError before any calculation (review of PR #102). A missing setting is the
     same as None, not given: the parser assumes no state, and only a credit-interest
-    withholding row then stops the run, naming the setting (FOREIGN_WHT_CREDIT_UNSUPPORTED)."""
+    withholding row is then not credited and is listed, naming the setting."""
     import pytest
     import src.config as config
     import src.pipeline_runner as pipeline_runner

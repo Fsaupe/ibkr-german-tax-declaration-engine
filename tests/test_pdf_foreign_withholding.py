@@ -6,9 +6,10 @@ less than was withheld on some rows, the section's per-country table summed the
 *withheld* tax under a total that is the *credited* one, and the two disagreed with no
 explanation. Each row now shows the creditable rate it was limited to, and the section
 derives each rate from the BZSt table of the year; German KESt is explained in one line.
-A row without a source state was left out of the table altogether; since PR #102 F1 a
-foreign row without one stops the run, so the one that reaches the report is German KESt
-found by its rate. No declared figure changes here.
+A row without a source state was left out of the table altogether; the one in the fixture
+below is German KESt found by its rate. A foreign row with no supported creditable amount
+is not credited: it is marked in the table and listed with what is open (maintainer's second
+review of PR #102). No declared figure changes here.
 """
 from decimal import Decimal
 
@@ -28,6 +29,10 @@ def _section(tmp_path):
     events = [us_div, _wht(us, "30", linked_to=us_div),                    # capped: 30 -> 15 USD
               de_div, _wht(de, "26.375", country="DE", linked_to=de_div),  # German KESt, not Zeile 41
               xx_div, _wht(xx, "26.375", country="", linked_to=xx_div)]    # KESt by its rate, no state
+    return _render(events, resolver)
+
+
+def _render(events, resolver):
     result, gaps = _run(events, resolver)
     generator = PdfReportGenerator(
         loss_offsetting_result=result, all_financial_events=events, realized_gains_losses=[],
@@ -108,8 +113,8 @@ def test_the_rates_used_are_derived_from_the_bzst_table_of_the_year(tmp_path):
 
 
 def test_the_legend_explains_german_kest_and_no_unrated_status(tmp_path):
-    """Changed for PR #102 F1 (approved): an unrated row stops the run, so no
-    'ungeprüft' / 'nicht recherchiert' legend is left to show."""
+    """Changed for PR #102 F1 (approved): no 'ungeprüft' / 'nicht recherchiert' legend.
+    An unrated row is marked 'ungeklärt' and listed instead (second review)."""
     _, _, text, _ = _section(tmp_path)
     assert "deutsche Kapitalertragsteuer" in text and "7/37/38" in text
     assert "ungeprüft" not in text and "nicht recherchiert" not in text
@@ -120,3 +125,36 @@ def test_there_is_no_separate_notes_section(tmp_path):
     _, _, text, gaps = _section(tmp_path)
     assert "2.4.3" not in text
     assert not any(g.detail in text for g in gaps)
+
+
+# --------------------------------------------------------------------------- #
+# A foreign row with no supported creditable amount: marked and listed, not "–"
+# --------------------------------------------------------------------------- #
+
+def _unresolved(tmp_path):
+    """A capped US row beside a Takatukaland row: no rate in the store, so not credited."""
+    resolver = _resolver(tmp_path)
+    us, xx = _stock(resolver, "US0000000AAA"), _stock(resolver, "XX0000000BBB")
+    us_div, xx_div = _income(us, "100"), _income(xx, "100", country="TAKATUKALAND")
+    xx_wht = _wht(xx, "21", country="TAKATUKALAND", linked_to=xx_div)
+    return _render([us_div, _wht(us, "30", linked_to=us_div), xx_div, xx_wht], resolver), xx_wht
+
+
+def test_an_unresolved_row_is_marked_not_credited_not_as_german_kest(tmp_path):
+    (result, tables, text, _), _ = _unresolved(tmp_path)
+    header, rows = _rows_by_country(tables[0])
+    assert rows["TAKATUKALAND"][header.index("Anr. Satz")] == "ungeklärt"
+    assert rows["TAKATUKALAND"][header.index("Anrechenbar (EUR)")] == "nicht angerechnet"
+    c_header, c_rows, total = _country_rows(tables)
+    assert c_rows["TAKATUKALAND"][c_header.index("Anrechenbar (EUR)")] == "nicht angerechnet"
+    assert _eur(total[c_header.index("Anrechenbar (EUR)")]) == result.form_line_values[Z41] == Decimal("13.50")
+    assert "deutsche Kapitalertragsteuer" not in text
+
+
+def test_an_unresolved_row_is_listed_with_what_is_open(tmp_path):
+    """Not a finding of zero, not a refund claim: the listing says so and names the open point."""
+    (_, tables, text, _), wht = _unresolved(tmp_path)
+    listing = next([_text(c) for c in row] for t in tables for row in t[1:] if _text(t[0][0]) == "Datum"
+                   and len(t[0]) == 5 and _text(row[3]) == wht.ibkr_transaction_id)
+    assert listing[1] == "TAKATUKALAND" and "kein anrechenbarer Satz" in listing[4]
+    assert "Nicht angerechnete Quellensteuer (ungeklärt)" in text and "keine Feststellung" in text

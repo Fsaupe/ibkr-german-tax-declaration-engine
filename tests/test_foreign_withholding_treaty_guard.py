@@ -10,8 +10,9 @@ source states and Irish interest follow the same route ([GT-CREDIT-029], [GT-CRE
 unknown source state, and it compares in the row's own currency to the cent so a
 rounded 15 % on a sub-unit gross is not read as an over-withholding. A row with no
 supported creditable amount (no linked income, no rate for its state, income kind or
-year) stops the run, every such row named in one FAIL_FAST gap: neither the withheld
-amount nor zero may stand in for the credit (maintainer's review of PR #102, F1).
+year) is not credited: it is not on Zeile 41, and it is listed as unresolved with what
+is open, while the rest of the declaration stands (maintainer's second review of PR #102:
+an unresolved credit may be left unclaimed, never claimed under a warning).
 
 Measured incidence of a US row above the treaty rate is 0 of 28 US-suffixed
 dividend/PIL withholding rows VZ 2023–2025 (2026-09-22); these fixtures are the hypothetical the issue named (a lapsed W-8BEN
@@ -29,7 +30,7 @@ from decimal import Decimal
 import pytest
 
 from src.engine.loss_offsetting import LossOffsettingEngine
-from src.processing.data_gaps import DataGapCollector, DataGapError, GapSeverity
+from src.processing.data_gaps import DataGapCollector, GapSeverity
 from src.identification.asset_resolver import AssetResolver
 from src.classification.asset_classifier import AssetClassifier
 from src.domain.assets import InvestmentFund
@@ -49,7 +50,7 @@ def _resolver(tmp_path):
 
 
 # The taxpayer's answers the US 15 % depends on ([GT-CREDIT-027]; test_withholding_facts.py):
-# the fixtures' share is not a REIT and the fund reported no exempt part, in every year
+# the fixtures' share is not a REIT and the fund reported no non-ordinary part, in every year
 # the tests use. A test of the facts themselves clears them.
 _YEARS = range(2020, 2031)
 
@@ -65,7 +66,7 @@ def _stock(resolver, isin="US0000000AAA"):
 def _fund(resolver, isin="US00000FUND1"):
     fund = InvestmentFund(fund_type=InvestmentFundType.AKTIENFONDS, description="TF ETF",
                           currency="USD", ibkr_isin=isin, ibkr_symbol="TF")
-    fund.withholding_facts.update({y: {"us_ric_exempt_part": False} for y in _YEARS})
+    fund.withholding_facts.update({y: {"us_ric_non_ordinary_part": False} for y in _YEARS})
     resolver.assets_by_internal_id[fund.internal_asset_id] = fund
     return fund
 
@@ -107,18 +108,22 @@ def _codes(gaps):
     return [g.code for g in gaps.gaps]
 
 
-def _stopped(events, resolver, tax_year=2025):
-    """Run expecting the stop; return the fatal message and the itemised gaps."""
-    gaps = DataGapCollector()
-    engine = LossOffsettingEngine(
-        realized_gains_losses=[], vorabpauschale_items=[],
-        current_year_financial_events=events, asset_resolver=resolver,
-        tax_year=tax_year, data_gap_collector=gaps)
-    with pytest.raises(DataGapError) as stop:
-        engine.calculate_reporting_figures()
-    fatal = [g for g in gaps.gaps if g.code == "FOREIGN_WHT_CREDIT_UNSUPPORTED"]
-    assert len(fatal) == 1 and fatal[0].severity is GapSeverity.FAIL_FAST
-    return str(stop.value), gaps
+def _not_credited(events, resolver, tax_year=2025, z41="0.00"):
+    """Run expecting the unsupported rows to be left off Zeile 41 and listed, not a stop:
+    the run completes, every gap is a WARNING, Zeile 41 is `z41` (the supported rows
+    only), and each unsupported row carries what is open. Return the listing's text
+    and the gaps."""
+    form, gaps = _run(events, resolver, tax_year)
+    assert all(g.severity is GapSeverity.WARNING for g in gaps.gaps)
+    assert form.form_line_values.get(Z41, Decimal("0.00")) == Decimal(z41)
+    listed = form.foreign_wht_not_credited
+    assert listed and all(listed.values())
+    for e in events:
+        if isinstance(e, WithholdingTaxEvent) and e.event_id in listed:
+            assert form.creditable_foreign_wht_eur[e.event_id] is None
+    message = " ".join(g.detail for g in gaps.gaps if "NICHT auf Zeile 41" in g.detail)
+    assert "keine Feststellung" in message   # not a finding of zero, nor a refund claim
+    return message, gaps
 
 
 # --------------------------------------------------------------------------- #
@@ -216,34 +221,34 @@ def test_b3_the_gap_aggregates_the_years_us_rows_into_one(tmp_path):
 
 
 # --------------------------------------------------------------------------- #
-# B4 / B5 — no default for an unknown or absent source state: the run stops
+# B4 / B5 — no default for an unknown or absent source state: not credited
 # --------------------------------------------------------------------------- #
 
-def test_b4_a_source_state_with_no_treaty_rate_stops_the_run(tmp_path):
+def test_b4_a_source_state_with_no_treaty_rate_is_not_credited(tmp_path):
     """A dividend from Takatukaland, withheld at 21 %: a made-up source state, so the
     store will never have a rate for it. No figure: not the withheld EUR 189, not a
-    15 % cap, not zero. The row is itemised and the stop names its transaction."""
+    15 % cap. Not credited, and the listing names its transaction."""
     resolver = _resolver(tmp_path)
     stock = _stock(resolver, isin="XX0000000AAA")
     inc = _income(stock, "1000", country="TAKATUKALAND")
     wht = _wht(stock, "210", country="TAKATUKALAND", linked_to=inc)
-    message, gaps = _stopped([inc, wht], resolver)
+    message, gaps = _not_credited([inc, wht], resolver)
 
     assert "FOREIGN_WHT_RATE_NOT_VERIFIED" in _codes(gaps)
     assert "TAKATUKALAND" in message and wht.ibkr_transaction_id in message
 
 
-def test_b5_a_row_without_a_country_code_is_not_given_a_state_and_stops(tmp_path):
+def test_b5_a_row_without_a_country_code_is_not_given_a_state_and_not_credited(tmp_path):
     """A US-ISIN row withheld at 30 % but with no issuer country code: the guard must
     NOT infer the state from the currency or the ISIN prefix and cap at the US rate."""
     resolver = _resolver(tmp_path)
     fund = _fund(resolver)
     inc = _income(fund, "1000", kind=FinancialEventType.DISTRIBUTION_FUND, country=None)
-    message, gaps = _stopped([inc, _wht(fund, "300", country=None, linked_to=inc)], resolver)
+    message, gaps = _not_credited([inc, _wht(fund, "300", country=None, linked_to=inc)], resolver)
 
     assert "FOREIGN_WHT_RATE_NOT_VERIFIED" in _codes(gaps)
     assert "FOREIGN_WHT_ABOVE_TREATY_RATE" not in _codes(gaps)
-    assert "ohne Quellenstaat" in message
+    assert "keinen Quellenstaat" in message
 
 
 # --------------------------------------------------------------------------- #
@@ -252,31 +257,30 @@ def test_b5_a_row_without_a_country_code_is_not_given_a_state_and_stops(tmp_path
 
 def test_b6_interest_withholding_is_outside_the_dividend_ceiling(tmp_path):
     """A US interest withholding is not measured against the dividend rate (the store
-    carries no US interest rate): no 15 % cap, and no figure -- the run stops."""
+    carries no US interest rate): no 15 % cap, and not credited."""
     resolver = _resolver(tmp_path)
     stock = _stock(resolver)
     inc = _income(stock, "1000", kind=FinancialEventType.INTEREST_RECEIVED)
-    _, gaps = _stopped([inc, _wht(stock, "300", linked_to=inc)], resolver)
+    _, gaps = _not_credited([inc, _wht(stock, "300", linked_to=inc)], resolver)
 
     assert "FOREIGN_WHT_RATE_NOT_VERIFIED" in _codes(gaps)
     assert "FOREIGN_WHT_ABOVE_TREATY_RATE" not in _codes(gaps)
 
 
-def test_b7_a_withholding_row_the_linker_could_not_attach_stops_the_run(tmp_path):
+def test_b7_a_withholding_row_the_linker_could_not_attach_is_not_credited(tmp_path):
     """A withholding with no income row to measure against has no creditable amount:
-    a rate check needs a denominator. Itemised as unlinked, and the run stops."""
+    a rate check needs a denominator. Listed as unlinked, not credited."""
     resolver = _resolver(tmp_path)
     stock = _stock(resolver)
-    message, gaps = _stopped([_wht(stock, "300", linked_to=None)], resolver)
+    message, gaps = _not_credited([_wht(stock, "300", linked_to=None)], resolver)
 
     assert "FOREIGN_WHT_UNLINKED" in _codes(gaps)
     assert "keinem Ertrag" in message
 
 
-def test_b7_every_unsupported_row_is_named_in_one_stop(tmp_path):
-    """Collect first, then stop: an unlinked row, an unknown state and a capped row in
-    one run -- the fatal message names both unsupported rows, and the capped row is
-    still itemised, so one run shows the whole problem."""
+def test_b7_every_unsupported_row_is_listed_and_the_supported_one_credited(tmp_path):
+    """An unlinked row, an unknown state and a capped row in one run: both unsupported
+    rows are listed and left off Zeile 41, and the capped row is credited at 15 %."""
     resolver = _resolver(tmp_path)
     stock = _stock(resolver)
     unlinked = _wht(stock, "300", linked_to=None)
@@ -284,7 +288,8 @@ def test_b7_every_unsupported_row_is_named_in_one_stop(tmp_path):
     inc_x = _income(other, "1000", country="TAKATUKALAND")
     unknown = _wht(other, "210", country="TAKATUKALAND", linked_to=inc_x)
     inc_us = _income(stock, "1000")
-    message, gaps = _stopped([unlinked, inc_x, unknown, inc_us, _wht(stock, "300", linked_to=inc_us)], resolver)
+    message, gaps = _not_credited([unlinked, inc_x, unknown, inc_us, _wht(stock, "300", linked_to=inc_us)],
+                                  resolver, z41="135.00")
 
     assert unlinked.ibkr_transaction_id in message and unknown.ibkr_transaction_id in message
     assert {"FOREIGN_WHT_UNLINKED", "FOREIGN_WHT_RATE_NOT_VERIFIED",
@@ -313,10 +318,10 @@ def test_b8_two_tax_rows_on_one_dividend_are_measured_together(tmp_path):
 
 
 @pytest.mark.parametrize("order", [("CA", "US"), ("US", "CA")])
-def test_b8_rows_naming_two_states_on_one_dividend_stop_in_either_order(tmp_path, order):
+def test_b8_rows_naming_two_states_on_one_dividend_are_not_credited_in_either_order(tmp_path, order):
     """One dividend has one source state ([GT-CREDIT-027]: the limit is on the tax of the
     state where the paying company is resident). Two rows naming different states cannot
-    both be that state's tax, so neither rate applies and the run stops. CA and US share
+    both be that state's tax, so neither rate applies and neither row is credited. CA and US share
     the 15 %, so comparing rates does not see it; with the CA row first the US REIT
     question was skipped and both rows were credited in full (review of PR #102, 2026-09-23)."""
     resolver = _resolver(tmp_path)
@@ -325,7 +330,7 @@ def test_b8_rows_naming_two_states_on_one_dividend_stop_in_either_order(tmp_path
     inc = _income(stock, "1000")
     rows = [_wht(stock, "100", country=order[0], linked_to=inc),
             _wht(stock, "50", country=order[1], linked_to=inc)]
-    _, gaps = _stopped([inc, *rows], resolver)
+    _, gaps = _not_credited([inc, *rows], resolver)
     assert "FOREIGN_WHT_RATE_NOT_VERIFIED" in _codes(gaps)
 
 
@@ -372,11 +377,11 @@ def test_b9_a_japanese_dividend_at_15_315_percent_is_credited_at_15(tmp_path):
 
 
 def test_b9_a_french_fund_distribution_is_not_given_the_share_dividend_rate(tmp_path):
-    """Outside the table's Dividenden: not capped at 12,8, and no figure -- it stops."""
+    """Outside the table's Dividenden: not capped at 12,8, and not credited."""
     resolver = _resolver(tmp_path)
     fund = _fund(resolver, isin="FR00000FUND1")
     inc = _income(fund, "1000", kind=FinancialEventType.DISTRIBUTION_FUND, country="FR")
-    _, gaps = _stopped([inc, _wht(fund, "250", country="FR", linked_to=inc)], resolver)
+    _, gaps = _not_credited([inc, _wht(fund, "250", country="FR", linked_to=inc)], resolver)
     assert "FOREIGN_WHT_RATE_NOT_VERIFIED" in _codes(gaps)
     assert "FOREIGN_WHT_ABOVE_TREATY_RATE" not in _codes(gaps)
 
@@ -392,18 +397,37 @@ def test_b10_a_year_without_a_researched_edition_is_not_given_another_year_s_rat
     resolver = _resolver(tmp_path)
     stock = _stock(resolver)
     inc = _income(stock, "1000")
-    message, gaps = _stopped([inc, _wht(stock, "300", linked_to=inc)], resolver, tax_year=tax_year)
+    message, gaps = _not_credited([inc, _wht(stock, "300", linked_to=inc)], resolver, tax_year=tax_year)
     g = [x for x in gaps.gaps if x.code == "FOREIGN_WHT_RATE_YEAR_NOT_RESEARCHED"]
     assert len(g) == 1 and str(tax_year) in g[0].detail and str(tax_year) in message
     assert "FOREIGN_WHT_ABOVE_TREATY_RATE" not in _codes(gaps)
 
 
-@pytest.mark.parametrize("tax_year", [2023, 2024, 2025, 2026])
+@pytest.mark.parametrize("tax_year", [2023, 2024, 2025])
 def test_b10_each_researched_year_caps_with_its_own_rate(tmp_path, tax_year):
     resolver = _resolver(tmp_path)
     stock = _stock(resolver)
     inc = _income(stock, "1000")
     form, _ = _run([inc, _wht(stock, "300", linked_to=inc)], resolver, tax_year=tax_year)
+    assert form.form_line_values[Z41] == Decimal("135.00")
+
+
+def test_b10_a_us_row_in_a_year_the_us_law_is_not_stated_for_is_not_credited(tmp_path):
+    """[GT-CREDIT-027] states the US law the 15 % turns on for 2023-2025 only. VZ 2026 has
+    a BZSt edition with 15 %, which alone does not establish it (second review, R1)."""
+    resolver = _resolver(tmp_path)
+    stock = _stock(resolver)
+    inc = _income(stock, "1000")
+    message, gaps = _not_credited([inc, _wht(stock, "150", linked_to=inc)], resolver, tax_year=2026)
+    assert "FOREIGN_WHT_CONDITIONS_YEAR_NOT_RESEARCHED" in _codes(gaps) and "2026" in message
+
+
+def test_b10_a_non_us_row_in_2026_keeps_its_edition_rate(tmp_path):
+    """The US gate is on the US only: a Japanese dividend in 2026 keeps column C's 15 %."""
+    resolver = _resolver(tmp_path)
+    stock = _stock(resolver, isin="JP0000000AAA")
+    inc = _income(stock, "1000", country="JP")
+    form, _ = _run([inc, _wht(stock, "300", country="JP", linked_to=inc)], resolver, tax_year=2026)
     assert form.form_line_values[Z41] == Decimal("135.00")
 
 
@@ -428,18 +452,18 @@ def test_b11_irish_interest_withholding_is_not_credited(tmp_path):
     assert len(g) == 1 and "(0%)" in g[0].detail
 
 
-def test_b11_interest_withholding_with_no_configured_state_stops_and_names_the_setting(tmp_path):
+def test_b11_interest_withholding_with_no_configured_state_is_not_credited_and_names_the_setting(tmp_path):
     resolver = _resolver(tmp_path)
     inc, wht = _interest_pair(resolver, None)
-    message, gaps = _stopped([inc, wht], resolver)
+    message, gaps = _not_credited([inc, wht], resolver)
     assert "FOREIGN_WHT_RATE_NOT_VERIFIED" in _codes(gaps)
     assert "BROKER_ENTITY_COUNTRY" in message
 
 
-def test_b11_irish_interest_in_an_unresearched_year_stops(tmp_path):
+def test_b11_irish_interest_in_an_unresearched_year_is_not_credited(tmp_path):
     resolver = _resolver(tmp_path)
     inc, wht = _interest_pair(resolver, "IE")
-    _, gaps = _stopped([inc, wht], resolver, tax_year=2027)
+    _, gaps = _not_credited([inc, wht], resolver, tax_year=2027)
     assert "FOREIGN_WHT_RATE_YEAR_NOT_RESEARCHED" in _codes(gaps)
 
 
@@ -465,26 +489,26 @@ def test_b11_a_one_cent_irish_interest_withholding_is_not_credited_either(tmp_pa
 
 def test_b12_a_french_dividend_on_an_instrument_not_classified_aktie_is_not_given_12_8(tmp_path):
     """A profit-participating right booked by the broker as a dividend: the classification
-    says it is not an Aktie, so column C is not its rate, and the run stops."""
+    says it is not an Aktie, so column C is not its rate, and it is not credited."""
     from src.domain.enums import AssetCategory
     resolver = _resolver(tmp_path)
     right = _stock(resolver, isin="FR0000000GEN")
     right = resolver.replace_asset_type(right.internal_asset_id, AssetCategory.SONSTIGE_KAPITALFORDERUNG,
                                         None, "Genussrecht")
     inc = _income(right, "1000", country="FR")
-    _, gaps = _stopped([inc, _wht(right, "250", country="FR", linked_to=inc)], resolver)
+    _, gaps = _not_credited([inc, _wht(right, "250", country="FR", linked_to=inc)], resolver)
     assert "FOREIGN_WHT_RATE_NOT_VERIFIED" in _codes(gaps)
     assert "FOREIGN_WHT_ABOVE_TREATY_RATE" not in _codes(gaps)
 
 
 def test_b12_a_french_payment_in_lieu_is_not_given_the_dividend_rate(tmp_path):
     """The maintainer's probe: a French payment in lieu through the parser was credited
-    at 12,8 % with status OK. The store has no treaty character for it; it stops."""
+    at 12,8 % with status OK. The store has no treaty character for it; not credited."""
     resolver = _resolver(tmp_path)
     stock = _stock(resolver, isin="FR0000000AAA")
     inc = _income(stock, "1000", country="FR")
     inc.is_payment_in_lieu = True
-    _, gaps = _stopped([inc, _wht(stock, "128", country="FR", linked_to=inc)], resolver)
+    _, gaps = _not_credited([inc, _wht(stock, "128", country="FR", linked_to=inc)], resolver)
     assert "FOREIGN_WHT_RATE_NOT_VERIFIED" in _codes(gaps)
 
 

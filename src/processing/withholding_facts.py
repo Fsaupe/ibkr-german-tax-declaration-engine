@@ -1,25 +1,26 @@
 # src/processing/withholding_facts.py
 """Facts about a payer that a creditable withholding rate depends on, per instrument and year.
 
-The US rate of 15 % holds only for the part of a RIC dividend the RIC did not report as
-exempt, and for a REIT dividend only where the holder meets the treaty's holding condition
-([GT-CREDIT-027]); China's rate turns on where the payer is resident, what it is and whether
-China exempts the dividend ([GT-CREDIT-031]). The questions are in
+The US rate of 15 % holds for a RIC distribution only where the RIC reported no part of it
+as other than an ordinary dividend, and for a REIT dividend only where the holder meets the
+treaty's holding condition ([GT-CREDIT-027]); China's rate turns on where the payer is
+resident, what it is and whether China exempts its dividends ([GT-CREDIT-031]). The questions are in
 src/tax_law/withholding_conditions.py. The export carries none of these facts, so the
 taxpayer states them.
 
 Fourth instance of the pattern `AssetClassifier`, `FundPriceStore` and
 `VorabpauschaleDeclarationStore` follow: a JSON file of answers to something nothing can
 derive, keyed by classification key and year. Per year, not per instrument, because the
-facts are facts of a year or of a single dividend: a RIC reports its exempt part dividend
-by dividend, REIT status is elected per taxable year, and China's exemption of a dividend
-turns on that dividend ([GT-CREDIT-031]). A question about one dividend is keyed by the
-income's date within the year's entry. An answer is never carried to another year.
+facts are facts of a year: a RIC reports its distributions for its taxable year, REIT
+status is elected per taxable year. Every question is about the payer or the taxpayer's
+holding as a whole, so one answer holds for every account and payment; nothing is asked
+per payment. An answer is never carried to another year.
 
 - **Written only from an answer**, with where it came from and when.
 - **Nothing is inferred.** An absent entry is not a "no"; the rate then does not apply and
-  the run stops, naming the instrument.
-- **A file that cannot be read raises** rather than starting empty.
+  the rows are not credited, listed as unresolved with the open question.
+- **A file that cannot be read raises** rather than starting empty, and so does an answer
+  to a retired question: its meaning differs from the current one.
 
 Asked at the start of the run, after classification -- the same phase as the fund type and
 the Vorabpauschale price -- and only for an instrument that has a tax row in the tax year
@@ -30,35 +31,19 @@ import logging
 import os
 from dataclasses import dataclass
 from datetime import date
-from decimal import Decimal, InvalidOperation
-from typing import Callable, Dict, Iterable, List, Optional, Union
+from typing import Callable, Dict, Iterable, List, Optional
 
 from src.domain.assets import Asset
-from src.domain.events import CashFlowEvent, FinancialEvent, WithholdingTaxEvent
+from src.domain.events import FinancialEvent, WithholdingTaxEvent
 from src.domain.exceptions import ProcessingError
-from src.tax_law.withholding_conditions import US_RIC_EXEMPT_PERCENT_PREFIX, Question, questions
+from src.tax_law.withholding_conditions import RETIRED_KEY_PREFIXES, RETIRED_KEYS, Question, questions
 
 logger = logging.getLogger(__name__)
 
 
-Answer = Union[bool, Decimal]   # a percent answer is a Decimal from 0 to 100
-
-
-def _percent(value) -> Decimal:
-    if isinstance(value, bool) or not isinstance(value, (str, int)):
-        raise TypeError("a percent must be a number from 0 to 100, written as a string")
-    try:
-        percent = Decimal(str(value))
-    except InvalidOperation:
-        raise ValueError(f"{value!r} is not a number")
-    if not Decimal("0") <= percent <= Decimal("100"):
-        raise ValueError(f"{value!r} is outside 0 to 100")
-    return percent
-
-
 @dataclass(frozen=True)
 class WithholdingFacts:
-    answers: Dict[str, Answer]
+    answers: Dict[str, bool]
     date_set: date
     source: str
 
@@ -92,16 +77,24 @@ class WithholdingFactsStore:
                 f"The withholding facts store at {self.cache_file_path} could not be read: {e}. "
                 "It holds the taxpayer's answers on which a Zeile 41 credit depends; treating it "
                 "as empty would discard them silently. Fix or remove the file.") from e
+        retired = sorted(f"{key}: {k}" for key, entry in raw.items()
+                         for k in (entry.get("answers") if isinstance(entry, dict) and isinstance(entry.get("answers"), dict) else {})
+                         if k in RETIRED_KEYS or k.startswith(RETIRED_KEY_PREFIXES))
+        if retired:
+            raise ProcessingError(
+                f"The withholding facts store at {self.cache_file_path} holds answers to retired "
+                f"questions: {'; '.join(retired)}. 'us_ric_exempt_part' asked about the § 871(k) kinds "
+                "only; its successor 'us_ric_non_ordinary_part' also covers capital gain dividends and "
+                "any other non-ordinary part, so a 'no' to the old question does not answer it. Per-date "
+                "answers ('us_ric_exempt_percent:', 'cn_exempt_dividend:') are no longer asked. Remove "
+                "those entries and answer again (README, 'Facts the US and Chinese withholding credit depends on').")
         for key, entry in raw.items():
             try:
                 answers = {}
                 for k, v in entry["answers"].items():
-                    if k.startswith(US_RIC_EXEMPT_PERCENT_PREFIX):
-                        answers[k] = _percent(v)
-                    elif isinstance(v, bool):
-                        answers[k] = v
-                    else:
+                    if not isinstance(v, bool):
                         raise TypeError(f"answer {k!r} must be true or false")
+                    answers[k] = v
                 self._entries[key] = WithholdingFacts(
                     answers=answers, date_set=date.fromisoformat(entry["date_set"]),
                     source=entry["source"])
@@ -120,28 +113,21 @@ class WithholdingFactsStore:
         directory = os.path.dirname(self.cache_file_path)
         if directory:
             os.makedirs(directory, exist_ok=True)
-        payload = {key: {"answers": {k: str(v) if isinstance(v, Decimal) else v for k, v in f.answers.items()},
+        payload = {key: {"answers": dict(f.answers),
                          "date_set": f.date_set.isoformat(), "source": f.source}
                    for key, f in sorted(self._entries.items())}
         with open(self.cache_file_path, "w", encoding="utf-8") as fh:
             json.dump(payload, fh, indent=2, ensure_ascii=False)
 
 
-def _ask(asset: Asset, year: int, question: Question) -> Optional[Answer]:
-    """Ask one question. A percent left blank returns None: not answered."""
+def _ask(asset: Asset, year: int, question: Question) -> Optional[bool]:
+    """Ask one question. Left blank returns None: not answered."""
     print(f"\n--- Angabe zur Quellensteuer: {asset.ibkr_symbol} ({asset.ibkr_isin}), {asset.description}, {year}")
     print(f"  {question.text}")
-    if question.kind == "percent":
-        while True:
-            answer = input("  Prozent (0-100): ").strip().replace(",", ".")
-            if not answer:
-                return None
-            try:
-                return _percent(answer)
-            except (TypeError, ValueError):
-                print("  Bitte eine Zahl von 0 bis 100 eingeben, oder leer lassen.")
     while True:
-        answer = input("  j/n: ").strip().lower()
+        answer = input("  j/n (leer: unbekannt): ").strip().lower()
+        if not answer:
+            return None
         if answer in ("j", "ja", "y", "yes"):
             return True
         if answer in ("n", "nein", "no"):
@@ -151,38 +137,32 @@ def _ask(asset: Asset, year: int, question: Question) -> Optional[Answer]:
 
 def resolve_withholding_facts(assets: Iterable[Asset], events: Iterable[FinancialEvent], tax_year: int,
                               store: WithholdingFactsStore, interactive: bool,
-                              ask: Optional[Callable[[Asset, int, Question], Optional[Answer]]] = None) -> List[Asset]:
+                              ask: Optional[Callable[[Asset, int, Question], Optional[bool]]] = None) -> List[Asset]:
     """Attach to each asset the answers the rate of its tax rows in `tax_year` depends on.
 
     Asks for what is missing in an interactive run and saves the answers. Returns the
-    assets left with a question unanswered; the engine stops on their tax rows."""
+    assets left with a question unanswered; the engine does not credit their tax rows."""
     ask = ask or _ask
-    events = list(events)
-    income_dates = {e.event_id: e.event_date for e in events if isinstance(e, CashFlowEvent)}
     states_by_asset: Dict[object, set] = {}
-    dates_by_asset: Dict[object, set] = {}
     for e in events:
         if isinstance(e, WithholdingTaxEvent) and e.event_date[:4] == str(tax_year):
             states_by_asset.setdefault(e.asset_internal_id, set()).add(
                 (e.source_country_code or "").strip().upper())
-            if e.taxed_income_event_id in income_dates:
-                dates_by_asset.setdefault(e.asset_internal_id, set()).add(income_dates[e.taxed_income_event_id])
     unanswered: List[Asset] = []
     changed = False
     for asset in assets:
-        dates = sorted(dates_by_asset.get(asset.internal_asset_id, ()))
         for state in sorted(states_by_asset.get(asset.internal_asset_id, ())):
             key = asset.get_classification_key()
             stored = store.get(key, tax_year)
             answers = dict(stored.answers) if stored else {}
             before = dict(answers)
             while True:
-                missing = [q for q in questions(state, asset.asset_category, answers, dates)
+                missing = [q for q in questions(state, asset.asset_category, answers)
                            if q.key not in answers]
                 if not missing or not interactive:
                     break
                 value = ask(asset, tax_year, missing[0])
-                if value is None:   # left blank: stays unanswered, and the engine stops
+                if value is None:   # left blank: stays unanswered, and the rows are not credited
                     break
                 answers[missing[0].key] = value
             if answers != before:
@@ -191,7 +171,7 @@ def resolve_withholding_facts(assets: Iterable[Asset], events: Iterable[Financia
                     source="Angabe des Steuerpflichtigen im interaktiven Lauf"))
                 changed = True
             asset.withholding_facts[tax_year] = answers
-            if any(q.key not in answers for q in questions(state, asset.asset_category, answers, dates)):
+            if any(q.key not in answers for q in questions(state, asset.asset_category, answers)):
                 unanswered.append(asset)
     if changed:
         store.save()

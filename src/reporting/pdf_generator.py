@@ -26,6 +26,8 @@ from src.reporting.reporting_utils import (
 from src.reporting.form_rules import get_form_rules, unverified_form_rules_source
 from src.tax_law.registry import get_section23_form_line, section23_form_warning
 import src.config as app_config 
+
+_NOT_CREDITED = "nicht angerechnet"
 from src.utils.tax_utils import get_teilfreistellung_rate_for_fund_type
 
 logger = logging.getLogger(__name__)
@@ -1661,7 +1663,7 @@ class PdfReportGenerator:
                 continue
 
             # A row with no source state is listed, not dropped (German KESt found by its
-            # rate can carry none; a foreign row without one stops the run before this).
+            # rate can carry none; a foreign row without one is listed as not credited).
             country = wht_event.source_country_code or "unbekannt"
             tax_amount = wht_event.gross_amount_eur
             # None: not on Zeile 41 (German KESt, see the gap below the table).
@@ -1697,18 +1699,24 @@ class PdfReportGenerator:
                 'creditable': creditable,
                 'status': status,
                 'applied_rate': applied_rate,
+                # Not credited, with what is open: an unresolved foreign row, not German KESt.
+                'not_credited': self.loss_offsetting_result.foreign_wht_not_credited.get(wht_event.event_id),
+                'transaction_id': wht_event.ibkr_transaction_id,
                 'is_interest': income_event is not None and income_event.event_type == FinancialEventType.INTEREST_RECEIVED,
                 'taxed_transaction': taxed_transaction_desc,
                 'tax_rate': effective_tax_rate
             })
             
             if country not in wht_by_country_data:
-                wht_by_country_data[country] = {"income": Decimal(0), "tax": Decimal(0), "creditable": None}
+                wht_by_country_data[country] = {"income": Decimal(0), "tax": Decimal(0), "creditable": None,
+                                                 "not_credited": False}
 
             wht_by_country_data[country]["income"] += income_subject_to_wht
             wht_by_country_data[country]["tax"] += tax_amount
             if creditable is not None:
                 wht_by_country_data[country]["creditable"] = (wht_by_country_data[country]["creditable"] or Decimal(0)) + creditable
+            if wht_individual_transactions[-1]['not_credited'] is not None:
+                wht_by_country_data[country]["not_credited"] = True
         
         self.prepared_wht_details_for_table = wht_by_country_data
         self.prepared_wht_individual_transactions = sorted(wht_individual_transactions, key=lambda x: x['date'])
@@ -1753,7 +1761,8 @@ class PdfReportGenerator:
                             self._format_decimal(transaction['tax']).replace('.',','),
                             tax_rate_str,
                             self._format_applied_rate(transaction),
-                            self._format_creditable(transaction['creditable']),
+                            _NOT_CREDITED if transaction['not_credited'] is not None
+                            else self._format_creditable(transaction['creditable']),
                             transaction['taxed_transaction']
                         ])
                 
@@ -1777,7 +1786,8 @@ class PdfReportGenerator:
                         country_code, 
                         self._format_decimal(amounts["income"]).replace('.',','),
                         self._format_decimal(amounts["tax"]).replace('.',','),
-                        self._format_creditable(amounts["creditable"])
+                        _NOT_CREDITED if amounts["creditable"] is None and amounts["not_credited"]
+                        else self._format_creditable(amounts["creditable"])
                     ])
 
             data.append([Paragraph("Summe anrechenbare Quellensteuern (für KAP Z. 41):", self.styles['TableHeader']), "", "", Paragraph(self._format_decimal(total_anrechenbare_ausl_steuern).replace('.',','), self.styles['TableCellRight'])])
@@ -1794,8 +1804,10 @@ class PdfReportGenerator:
         return "–" if amount is None else self._format_decimal(amount).replace('.', ',')
 
     def _format_applied_rate(self, transaction) -> str:
-        # Every foreign row that reaches the report has a rate: a row without one stops
-        # the run (src/engine/loss_offsetting.py, FOREIGN_WHT_CREDIT_UNSUPPORTED).
+        # A foreign row without a supported rate is not credited and is listed below the
+        # table (src/engine/loss_offsetting.py); "–" is German KESt.
+        if transaction['not_credited'] is not None:
+            return "ungeklärt"
         if transaction['creditable'] is None:
             return "–"
         return self._format_rate(transaction['applied_rate'])
@@ -1823,12 +1835,33 @@ class PdfReportGenerator:
                 data.append([country, "Zinsen" if is_interest else "Dividenden", self._format_rate(rate),
                              Paragraph(self._rate_note(country, is_interest), self.styles['TableCell'])])
             self.story.append(KeepTogether([rule, self._create_styled_table(data, col_widths=[1.2*cm, 2.0*cm, 3.0*cm, 10.3*cm])]))
-        if any(t['creditable'] is None for t in shown):
+        self._add_not_credited(shown)
+        if any(t['creditable'] is None and t['not_credited'] is None for t in shown):
             # [GT-FORM-007], [GT-CREDIT-022]
             self.story.append(Paragraph(
                 "–: deutsche Kapitalertragsteuer. Sie gehört nicht auf Zeile 41, sondern mit der "
                 "Steuerbescheinigung in die Zeilen 7/37/38; dieses Programm kann diese Zeilen nicht ausfüllen, "
                 "ohne Steuerbescheinigung wird sie nicht angerechnet.", self.styles['SmallText']))
+
+    def _add_not_credited(self, shown):
+        """The foreign rows not credited because their creditable amount is unresolved, each
+        with what is open ([GT-CREDIT-026]). Not a finding that nothing is creditable, nor a
+        refund claim: the credit can be claimed once the open point is settled."""
+        rows = [t for t in shown if t['not_credited'] is not None]
+        if not rows:
+            return
+        intro = Paragraph(
+            "<b>Nicht angerechnete Quellensteuer (ungeklärt).</b> Für diese Zeilen ist der anrechenbare "
+            "Betrag nicht belegt; sie sind nicht in Zeile 41 enthalten. Das ist keine Feststellung, dass "
+            "nichts anrechenbar oder dass die Steuer im Quellenstaat erstattbar ist; ist der offene Punkt "
+            "geklärt, kann die Anrechnung nachgeholt werden.", self.styles['SmallText'])
+        data = [["Datum", "Land", "Gezahlte QSt (EUR)", "Transaktion", "Offen"]]
+        for t in rows:
+            data.append([format_date_german(t['date']), t['country'],
+                         self._format_decimal(t['tax']).replace('.', ','), t['transaction_id'] or "—",
+                         Paragraph(escape(t['not_credited']), self.styles['TableCell'])])
+        self.story.append(intro)
+        self.story.append(self._create_styled_table(data, col_widths=[1.8*cm, 1.0*cm, 2.4*cm, 2.2*cm, 9.1*cm]))
 
     @staticmethod
     def _rate_note(country: str, is_interest: bool) -> str:

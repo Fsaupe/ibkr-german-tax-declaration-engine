@@ -22,7 +22,7 @@ from src.domain.events import CashFlowEvent, WithholdingTaxEvent
 from src.domain.enums import FinancialEventType
 from src.engine.loss_offsetting import LossOffsettingEngine
 from src.identification.asset_resolver import AssetResolver
-from src.processing.data_gaps import DataGapCollector, DataGapError, GapSeverity
+from src.processing.data_gaps import DataGapCollector, GapSeverity
 
 
 ZEILE_41 = TaxReportingCategory.ANLAGE_KAP_FOREIGN_TAX_PAID
@@ -81,13 +81,13 @@ def _zeile_41(events, resolver, collector=None):
 
 def _stays_foreign(events, resolver, code):
     """The row is treated as foreign, not as German KESt. With no source state or no
-    linked income a foreign row has no supported creditable amount, so the run stops
-    (PR #102, F1) -- the stop itself shows the row was not excluded as KESt."""
+    linked income a foreign row has no supported creditable amount, so it is not
+    credited and is listed as unresolved foreign withholding (PR #102, second review)
+    -- the foreign gap, and no KESt gap, show the row was not excluded as KESt."""
     collector = DataGapCollector()
-    with pytest.raises(DataGapError):
-        _zeile_41(events, resolver, collector)
+    assert _zeile_41(events, resolver, collector) == Decimal("0.00")
     codes = {g.code for g in collector.gaps}
-    assert code in codes and "FOREIGN_WHT_CREDIT_UNSUPPORTED" in codes
+    assert code in codes
     assert "ANLAGE_KAP_GERMAN_KEST_NOT_DECLARABLE" not in codes
 
 
@@ -120,7 +120,8 @@ class TestRateCompositeFallback:
         """The detector narrows Zeile 41 and must never widen it: anything it
         cannot identify as German stays a foreign row. Changed for PR #102 (F1,
         approved): such a row with no source state no longer reaches Zeile 41 as
-        withheld; the run stops. It was asserted as Zeile 41 == tax."""
+        withheld; it is listed as unresolved foreign withholding. It was asserted as
+        Zeile 41 == tax."""
         div = _dividend(asset, gross)
         _stays_foreign([div, _wht(asset, tax, country=None, linked_to=div)], resolver,
                        "FOREIGN_WHT_RATE_NOT_VERIFIED")
@@ -128,7 +129,8 @@ class TestRateCompositeFallback:
     def test_unlinked_withholding_stays_foreign(self, resolver, asset):
         """No linked income event means no rate to test. Defaulting to German
         would silently drop a foreign credit. Changed for PR #102 (F1, approved):
-        asserted as Zeile 41 == 26.38; an unlinked foreign row now stops the run."""
+        asserted as Zeile 41 == 26.38; an unlinked foreign row is now listed as
+        unresolved foreign withholding, not credited."""
         _stays_foreign([_wht(asset, "26.375", country=None, linked_to=None)], resolver,
                        "FOREIGN_WHT_UNLINKED")
 

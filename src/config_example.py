@@ -24,7 +24,7 @@ ECB_RATES_CACHE_FILE_PATH = "cache/ecb_exchange_rates.json"
 # classification cache, nothing recomputes this file.
 FUND_PRICE_CACHE_FILE_PATH = "cache/user_fund_prices.json"
 # The taxpayer's answers on which a creditable withholding rate depends (a US REIT
-# holding, an exempt part of a US fund's distribution), per instrument and year. Asked
+# holding, a non-ordinary part of a US fund's distributions), per instrument and year. Asked
 # in an interactive run; like the classifications, nothing recomputes this file.
 WITHHOLDING_FACTS_STORE_PATH = "cache/withholding_facts.json"
 
@@ -58,8 +58,8 @@ ACCOUNT_ID = "U1234567"      # Update with your IBKR account ID
 # and is credited at that country's rate for interest. The export names no country for
 # these rows, and their "@ n%" is not always the rate actually withheld: this setting is
 # the answer, not something to re-derive from the data. One value for every year processed.
-# None: no country is assumed, and a year with such a row stops before any figure is
-# produced, naming the rows and this setting.
+# None: no country is assumed; such a row is not credited on Zeile 41 and is listed as
+# unresolved, naming this setting.
 BROKER_ENTITY_COUNTRY = None
 
 # Interactive mode for asset classification

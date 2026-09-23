@@ -124,9 +124,9 @@ def run_core_processing_pipeline(
         asset_classifier=asset_classifier,
         interactive_classification=interactive_classification_mode,
         # A config.py written before this setting existed lacks it. That is the same
-        # answer as None -- not given -- and a credit-interest withholding row then
-        # stops the run naming the setting (FOREIGN_WHT_CREDIT_UNSUPPORTED); a year
-        # without such rows needs no answer.
+        # answer as None -- not given -- and a credit-interest withholding row is then
+        # not credited and is listed as unresolved, naming the setting; a year without
+        # such rows needs no answer.
         broker_entity_country=getattr(config, "BROKER_ENTITY_COUNTRY", None),
     )
 
@@ -247,9 +247,10 @@ def run_core_processing_pipeline(
         )
 
         # Facts a creditable withholding rate depends on and no export carries (a US
-        # REIT holding, the exempt share of a US fund's distribution, a Chinese payer's
+        # REIT holding, whether a US fund reported any non-ordinary part, a Chinese payer's
         # residence and exemption), per instrument and year. Asked here, with the fund type and the fund price, in an interactive run;
-        # an unanswered one stops the run at Zeile 41. See src/processing/withholding_facts.py.
+        # left unanswered, the rows it decides are not credited and are listed as unresolved.
+        # See src/processing/withholding_facts.py.
         resolve_withholding_facts(
             assets=list(orchestrator.asset_resolver.assets_by_internal_id.values()),
             events=financial_events_enriched, tax_year=tax_year_to_process,
