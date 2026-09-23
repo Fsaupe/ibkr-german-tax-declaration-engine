@@ -72,7 +72,7 @@ CN_EXEMPT = Question(
 def us_ric_exempt_percent(income_date: str) -> Question:
     """Asked per distribution once US_RIC_EXEMPT_PART is answered yes ([GT-CREDIT-027])."""
     return Question(f"{US_RIC_EXEMPT_PERCENT_PREFIX}{income_date}",
-                    f"Welcher Anteil (in %) der Ausschüttung vom {income_date} wurde als "
+                    f"Welcher Anteil (in %) der Ausschüttung vom {income_date} wurde vom Fonds (RIC) als "
                     "'interest-related dividend' oder 'short-term capital gain dividend' ausgewiesen "
                     "(Steuerbescheinigung des Fonds bzw. Form 1042-S)? Leer lassen, wenn unbekannt.",
                     kind="percent")

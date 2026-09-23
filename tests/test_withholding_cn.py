@@ -158,3 +158,17 @@ def test_the_per_dividend_question_is_asked_only_after_an_exemption_is_stated(tm
 def test_no_exempt_dividend_needs_no_per_dividend_answer(tmp_path):
     form, _ = _run(*_two_dividends(tmp_path, MAINLAND))
     assert form.form_line_values[Z41] == Decimal("180.00")
+
+
+# --------------------------------------------------------------------------- #
+# The stop names the Chinese question or reason, not the US ones
+# --------------------------------------------------------------------------- #
+
+def test_the_unanswered_stop_names_the_chinese_question(tmp_path):
+    message, _ = _stopped(*_cn(tmp_path, {"cn_mainland_resident": True}))
+    assert "Investmentvehikel" in message and "REIT" not in message
+
+
+def test_the_condition_stop_names_the_chinese_reason(tmp_path):
+    message, _ = _stopped(*_cn(tmp_path, {"cn_mainland_resident": False}))
+    assert "Festland" in message and "REIT" not in message

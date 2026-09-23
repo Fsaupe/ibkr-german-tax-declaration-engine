@@ -225,7 +225,7 @@ class LossOffsettingEngine:
                     f"des anrechenbaren Satzes ist erforderlich (§ 90 Abs. 2 AO). Zeilen: {_rowlist(rows)}."
                 )
             else:
-                detail = f"{self._unsupported_reason(status, state, len(rows))} Zeilen: {_rowlist(rows)}."
+                detail = f"{self._unsupported_reason(status, state, rows)} Zeilen: {_rowlist(rows)}."
             self.data_gap_collector.record(
                 code=f"FOREIGN_WHT_{status.value}",
                 subject=f"Anlage KAP Zeile 41 / {state_label} ({self.tax_year})",
@@ -240,8 +240,10 @@ class LossOffsettingEngine:
                 severity=GapSeverity.FAIL_FAST,
             )
 
-    def _unsupported_reason(self, status: WithholdingStatus, state: str, count: int) -> str:
-        """Why `count` rows have no supported creditable amount, and what resolves it."""
+    def _unsupported_reason(self, status: WithholdingStatus, state: str, rows) -> str:
+        """Why these rows have no supported creditable amount, and what resolves it."""
+        count = len(rows)
+        reasons = "; ".join(sorted({a.reason for _, a in rows if a.reason}))
         state_label = state or "unbekannter Quellenstaat"
         if status is WithholdingStatus.RATE_NOT_VERIFIED and not state:
             return (f"{count} Quellensteuerzeile(n) ohne Quellenstaat: der Export nennt keinen. "
@@ -257,13 +259,12 @@ class LossOffsettingEngine:
                     f"eingelesen; Sätze anderer Jahre werden nicht übernommen.")
         if status is WithholdingStatus.FACTS_UNANSWERED:
             return (f"{count} Quellensteuerzeile(n) aus {state_label}: der anrechenbare Satz hängt von "
-                    f"Angaben ab, die der Export nicht enthält (REIT; steuerbefreiter Teil einer "
-                    f"RIC-Ausschüttung). Im interaktiven Lauf beantworten (--interactive) oder in "
-                    f"cache/withholding_facts.json eintragen (siehe README).")
+                    f"Angaben ab, die der Export nicht enthält. Offen: {reasons} Im interaktiven Lauf "
+                    f"beantworten (--interactive) oder in cache/withholding_facts.json eintragen "
+                    f"(siehe README).")
         if status is WithholdingStatus.CONDITION_NOT_MET:
             return (f"{count} Quellensteuerzeile(n) aus {state_label}: nach Ihren Angaben gilt der "
-                    f"anrechenbare Satz nicht (REIT-Beteiligung über 10 % oder steuerbefreiter Teil "
-                    f"einer RIC-Ausschüttung); der anrechenbare Betrag ist nicht ermittelbar.")
+                    f"anrechenbare Satz nicht ({reasons}); der anrechenbare Betrag ist nicht ermittelbar.")
         return (f"{count} Quellensteuerzeile(n) konnten keinem Ertrag desselben Kontos zugeordnet "
                 f"werden, sodass der einbehaltene Satz nicht gegen den anrechenbaren Satz geprüft "
                 f"werden kann.")
@@ -275,7 +276,7 @@ class LossOffsettingEngine:
 
     def _unsupported_credit_detail(self, unsupported: Dict[tuple, List[tuple]]) -> str:
         """The one fatal message naming every row with no supported creditable amount."""
-        parts = [self._unsupported_reason(status, state, len(rows))
+        parts = [self._unsupported_reason(status, state, rows)
                  + " Transaktionen: " + ", ".join(ev.ibkr_transaction_id or "—" for ev, _ in rows)
                  + self._isins(rows) + "."
                  for (status, state), rows in sorted(unsupported.items(), key=lambda kv: (kv[0][0].value, kv[0][1]))]

@@ -71,6 +71,7 @@ class WithholdingAssessment:
     withheld_eur: Decimal        # what was actually withheld
     source_state: Optional[str]  # the taxing authority, "" if the broker gave none
     treaty_rate: Optional[Decimal] = None
+    reason: str = ""             # for FACTS_UNANSWERED / CONDITION_NOT_MET: what is open or fails
 
     @property
     def excess_eur(self) -> Decimal:
@@ -98,9 +99,9 @@ def assess_withholdings(whts: List[WithholdingTaxEvent],
     withheld = [_abs(w.gross_amount_eur) for w in whts]
     states = [(w.source_country_code or "").strip().upper() for w in whts]
 
-    def _each(status, rate=None, creditable=None):
+    def _each(status, rate=None, creditable=None, reason=""):
         return [WithholdingAssessment(status, creditable[i] if creditable else None,
-                                      withheld[i], states[i] or None, rate)
+                                      withheld[i], states[i] or None, rate, reason)
                 for i in range(len(whts))]
 
     if income_event is None:
@@ -121,11 +122,11 @@ def assess_withholdings(whts: List[WithholdingTaxEvent],
 
     # The rate holds only where its conditions do ([GT-CREDIT-027]): facts the export
     # does not carry, stated by the taxpayer per instrument and year.
-    met, _, stated_rate = verdict(states[0], income_asset_category, facts, income_event.event_date)
+    met, reason, stated_rate = verdict(states[0], income_asset_category, facts, income_event.event_date)
     if met is Verdict.UNANSWERED:
-        return _each(WithholdingStatus.FACTS_UNANSWERED)
+        return _each(WithholdingStatus.FACTS_UNANSWERED, reason=reason)
     if met is Verdict.NOT_MET:
-        return _each(WithholdingStatus.CONDITION_NOT_MET)
+        return _each(WithholdingStatus.CONDITION_NOT_MET, reason=reason)
     if stated_rate is not None:
         rate = stated_rate   # e.g. China's 0 % on a dividend its own law exempts ([GT-CREDIT-031])
     # A US fund's reported exempt part carries no creditable tax; the rate applies to the
