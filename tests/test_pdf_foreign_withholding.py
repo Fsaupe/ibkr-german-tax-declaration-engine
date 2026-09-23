@@ -95,12 +95,12 @@ def test_each_row_shows_the_rate_its_amount_was_limited_to(tmp_path):
 
 
 def test_the_rates_used_are_derived_from_the_bzst_table_of_the_year(tmp_path):
-    """Below the rows: per state, the national rate and DBA ceiling the rate is the result
-    of ([GT-CREDIT-029]), and the rule that picks between them."""
+    """Below the rows: per state and income kind, the rate the BZSt table of the year makes
+    creditable ([GT-CREDIT-029]), and where it comes from."""
     _, tables, text, _ = _section(tmp_path)
     grounds = [[_text(c) for c in row] for row in tables[1]]
-    assert grounds[0][:5] == ["Land", "Ertragsart", "Inlandssatz Quellenstaat", "DBA-Höchstsatz", "Anrechenbar"]
-    assert grounds[1][:5] == ["US", "Dividenden", "0 / 30 %", "15 %", "15 %"]
+    assert grounds[0] == ["Land", "Ertragsart", "Anrechenbar bis zu", "Hinweis"]
+    assert grounds[1][:3] == ["US", "Dividenden", "15 %"]
     assert len(grounds) == 2  # only the states the rows above use
     assert "Stand 1. Januar 2025" in text and "§ 32d Abs. 5 Satz 1" in text
 

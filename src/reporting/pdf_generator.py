@@ -20,7 +20,6 @@ from src.domain.enums import AssetCategory, InvestmentFundType, FinancialEventTy
 from src.reporting.reporting_utils import _q, _q_price, _q_qty, format_date_german
 from src.reporting.form_rules import get_form_rules, unverified_form_rules_source
 import src.config as app_config 
-from src.tax_law.registry import CREDITABLE_DIVIDEND_GROUNDS, CREDITABLE_INTEREST_GROUNDS
 from src.utils.tax_utils import get_teilfreistellung_rate_for_fund_type
 
 logger = logging.getLogger(__name__)
@@ -1707,9 +1706,8 @@ class PdfReportGenerator:
         return f"{(rate * 100).normalize():f} %".replace('.', ',')
 
     def _add_applied_rates(self, wht_transactions):
-        """Where each "Anr. Satz" comes from: the BZSt table of the tax year, per source state,
-        with the national rate and DBA ceiling it is the result of ([GT-CREDIT-026],
-        [GT-CREDIT-027], [GT-CREDIT-029], [GT-CREDIT-030]). Only the states and kinds the
+        """Where each "Anr. Satz" comes from: the BZSt table of the tax year, per source state
+        and income kind ([GT-CREDIT-026], [GT-CREDIT-027], [GT-CREDIT-029], [GT-CREDIT-030]). Only the states and kinds the
         table above uses, and a legend line only for the statuses and rows present."""
         shown = [t for t in wht_transactions if t['income'] != Decimal('0.00') or t['tax'] != Decimal('0.00')]
         applied = sorted({(t['country'], t['is_interest'], t['applied_rate'])
@@ -1721,14 +1719,11 @@ class PdfReportGenerator:
                 f"{self.tax_year} (§ 32d Abs. 5 Satz 1 EStG). Wurde mehr einbehalten, ist der Betrag auf "
                 "diesen Satz gekürzt.",
                 self.styles['SmallText'])
-            data = [["Land", "Ertragsart", "Inlandssatz Quellenstaat", "DBA-Höchstsatz", "Anrechenbar", "Hinweis"]]
+            data = [["Land", "Ertragsart", "Anrechenbar bis zu", "Hinweis"]]
             for country, is_interest, rate in applied:
-                grounds = (CREDITABLE_INTEREST_GROUNDS if is_interest else CREDITABLE_DIVIDEND_GROUNDS).get(country, ("", ""))
-                data.append([country, "Zinsen" if is_interest else "Dividenden",
-                             f"{grounds[0]} %" if grounds[0] else "", f"{grounds[1]} %" if grounds[1] else "",
-                             self._format_rate(rate),
+                data.append([country, "Zinsen" if is_interest else "Dividenden", self._format_rate(rate),
                              Paragraph(self._rate_note(country, is_interest), self.styles['TableCell'])])
-            self.story.append(KeepTogether([rule, self._create_styled_table(data, col_widths=[1.2*cm, 2.0*cm, 2.6*cm, 2.3*cm, 2.1*cm, 6.3*cm])]))
+            self.story.append(KeepTogether([rule, self._create_styled_table(data, col_widths=[1.2*cm, 2.0*cm, 3.0*cm, 10.3*cm])]))
         for status in sorted({t['status'] for t in shown if t['applied_rate'] is None and t['creditable'] is not None}):
             text = self._UNRATED_STATUS_TEXT.get(status)
             if text:
@@ -1745,13 +1740,6 @@ class PdfReportGenerator:
         if is_interest:
             return ("Das DBA lässt dem Quellenstaat keine Steuer auf Zinsen; Einbehaltenes ist dort zu "
                     "erstatten." if country == "IE" else "")
-        if country == "US":
-            # [GT-CREDIT-027]: "15, falls keine Befreiung"; Art. 10 Abs. 4 Sätze 2 und 3.
-            return ("Auch für Ausschüttungen von US-Fonds (RIC). 15 %, falls keine Befreiung (bestimmte "
-                    "RIC-Dividenden sind steuerfrei, Inlandssatz 0 %; sonst 30 %); REIT-Dividenden nur bei "
-                    "Beteiligung bis 10 %.")
-        if country == "FR":
-            return "Inlandssatz unter dem DBA-Höchstsatz: der Inlandssatz ist anrechenbar."
         return ""
 
     def _add_corporate_actions_summary(self):

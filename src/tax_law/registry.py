@@ -174,20 +174,6 @@ CREDITABLE_INTEREST_RATES: dict[int, dict[str, Decimal]] = {
 }
 
 
-# What each creditable rate is the result of, as the BZSt prints it: the source state's
-# national rate (column A a) / B a)) and the DBA ceiling (A b) / B b)). Where the national
-# rate that applies to the income is below the ceiling it is what is creditable, otherwise
-# the ceiling is; of two national rates (JP, US) the lower is for particular income only
-# ([GT-CREDIT-029], [GT-CREDIT-030]). The same in each edition 2023-2026 (store); check
-# the new edition when a year is added above. For the report only: the rates above
-# decide every figure.
-CREDITABLE_DIVIDEND_GROUNDS: dict[str, tuple[str, str]] = {
-    "FR": ("12,8", "15"), "JP": ("15 / 20", "15"), "CA": ("25", "15"),
-    "KR": ("20", "15"), "NL": ("15", "15"), "TW": ("21", "10"), "US": ("0 / 30", "15"),
-}
-CREDITABLE_INTEREST_GROUNDS: dict[str, tuple[str, str]] = {"IE": ("0 / 20", "0")}
-
-
 def creditable_rates_researched(tax_year: int) -> bool:
     """Whether the BZSt edition for `tax_year` has been read for dividends and interest."""
     return (creditable_dividend_rates_researched(tax_year)
