@@ -12,6 +12,11 @@ tagged on the headings here. See the Purity Rule in docs/knowledge-store.md.
 
 ## Tax Law (EStG)
 
+- [Physical option delivery and fund underlyings](tax-law/estg-20-option-underlyings.md)
+  -- paid holder costs enter the delivered asset; writer premiums remain separate,
+  including fund underlyings [GT-ESTG20-075]. Receipt and negative-income detail
+  is recorded at [GT-ESTG20-004].
+
 - [Securities short sales and disclosed assessment positions](tax-law/estg-20-leerverkaeufe.md) -- BMF 14.05.2025
   Rn. 196: original disposal and later covering costs [GT-ESTG20-071]; the
   withholding-only scope of the substitute basis [GT-ESTG20-072]; unresolved

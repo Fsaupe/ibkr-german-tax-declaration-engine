@@ -227,27 +227,37 @@ replay. It preserves option-ledger chronology and currency-affecting transaction
 order, adds validated option-to-stock dependencies and coordinates transfer sides.
 An exercise cannot be moved ahead of its opening purchase by event-type priority.
 
-**Existing premium treatment (not a legal acceptance statement):** The formulas
-below describe the retained implementation. Assignment premium netting conflicts
-with GT-ESTG20-004; historical and fund-underlying premium handling also remain
-separate pre-existing gaps. See the legal implementation map and PR #88 review.
-PM-005 corrects identity, ownership and allocation, without choosing new treatment.
+**Option premium treatment:** GT-ESTG20-004 separates writer income from
+the underlying. GT-ESTG20-070/075 carries paid holder costs into physical
+delivery, for both stocks and funds and in current/historical processing.
+PM-005's account ownership, chronology and exact allocation safeguards apply.
 
 - **When the Stock Trade is a Purchase (event types `TRADE_BUY_LONG` or `TRADE_BUY_SHORT_COVER`):**
   - **If due to Long Call Exercise:** The premium *paid* for the call option effectively increases the cost basis of the stock purchased (or increases the cost to cover an existing short stock position).
     - `Adjusted Stock Cost (EUR) = Original Stock Cost (EUR) + Option Premium Paid (EUR)`
-  - **If due to Short Put Assignment:** The premium *received* for the put option effectively decreases the cost basis of the stock purchased (or decreases the cost to cover an existing short stock position).
-    - `Adjusted Stock Cost (EUR) = Original Stock Cost (EUR) - Option Premium Received (EUR)`
+  - **If due to Short Put Assignment:** The stock cost is unchanged by the
+    received premium, which was separate income when the option was opened.
 
 - **When the Stock Trade is a Sale (event types `TRADE_SELL_LONG` or `TRADE_SELL_SHORT_OPEN`):**
-  - **If due to Short Call Assignment:** The premium *received* for the call option effectively increases the proceeds from the stock sold (or increases the proceeds recognized from opening a new short stock position).
-    - `Adjusted Stock Proceeds (EUR) = Original Stock Proceeds (EUR) + Option Premium Received (EUR)`
+  - **If due to Short Call Assignment:** Stock proceeds are unchanged by the
+    received premium, which was separate income when the option was opened.
   - **If due to Long Put Exercise:** The premium *paid* for the put option effectively decreases the proceeds from the stock sold (or decreases the proceeds recognized from opening a new short stock position).
     - `Adjusted Stock Proceeds (EUR) = Original Stock Proceeds (EUR) - Option Premium Paid (EUR)`
 
 The `net_proceeds_or_cost_basis_eur` field of the stock `TradeEvent` shall be updated to reflect this adjusted economic value. The original (unadjusted) value is derived from the stock trade's price and quantity, plus commissions. The adjustment then modifies this net value. The temporary storage for the premium is cleared after use.
 
-It must realize gains/losses on worthless option expirations (`FinancialEventType.OPTION_EXPIRATION_WORTHLESS`). The `RealizedGainLoss` object will have `RealizationType.OPTION_EXPIRED_LONG` or `RealizationType.OPTION_EXPIRED_SHORT`. These G/L contribute to `derivative_gains_gross` or `derivative_losses_abs` (Sec 2.7).
+Written option openings create `OPTION_PREMIUM_RECEIPT` for the net premium.
+The existing trade-date and per-leg EUR conversion convention is retained by
+maintainer instruction. Writer transactions in the last five calendar days of
+the current or preceding year produce a non-blocking receipt-year warning;
+the warning changes no date or figure.
+
+Short expiry only closes the lot: its premium is not recognised a second time.
+Long expiry creates `OPTION_EXPIRED_LONG` and the derivative loss. Writer
+buybacks create negative Nr. 11 income (`OPTION_TRADE_CLOSE_SHORT`) independently
+of the earlier premium; they enter the other-loss component. Writer cash
+settlement is instead a separate derivative loss. The year-specific form
+rules determine the destination of these distinct components.
 
 Correctly calculate gains/losses from covering short stock positions (`FinancialEventType.TRADE_BUY_SHORT_COVER`) using FIFO principles, reported in Anlage KAP (with `RealizationType.SHORT_POSITION_COVER`). These G/L contribute to `stock_gains_gross` or `stock_losses_abs` (Sec 2.7).
 
@@ -323,7 +333,13 @@ The system must distinguish between taxable dividends and tax-free capital repay
 - Stückzinsen *paid* (`FinancialEventType.INTEREST_PAID_STUECKZINSEN`, with `event_date` in current tax year) are negative income.
 - The net sum of Stückzinsen (`stueckzinsen_net = stueckzinsen_received - stueckzinsen_paid`, considering only current tax year events) is calculated. If `stueckzinsen_net > 0`, it contributes to `kap_other_income_positive`. If `stueckzinsen_net < 0`, its absolute value contributes to `kap_other_losses_abs`.
 
-**Option Premiums:** Realized premiums from short option positions (e.g., from `FinancialEventType.OPTION_EXPIRATION_WORTHLESS` resulting in `RealizationType.OPTION_EXPIRED_SHORT`, or closing short option trades resulting in `RealizationType.OPTION_TRADE_CLOSE_SHORT`, all with `event_date` in current tax year) are gains from Termingeschäfte. Stored in `RealizedGainLoss` with the `is_stillhalter_income` flag set to `True`. These contribute to `derivative_gains_gross`. Losses from closing long option positions or worthless long expirations (with `event_date` in current tax year) contribute to `derivative_losses_abs`.
+**Option Premiums:** Writer openings create `OPTION_PREMIUM_RECEIPT`; buybacks
+create negative income in `OPTION_TRADE_CLOSE_SHORT`. Both set
+`is_stillhalter_income=True`. Positive premium income shares the Z21 reporting
+component with derivative gains where that line exists; negative premium
+income enters `kap_other_losses_abs`, not `derivative_losses_abs`.
+Short expiry creates no additional income. Purchased-option losses and writer
+cash-settlement losses remain derivative losses (GT-ESTG20-004).
 
 ### 2.7. Aggregation into Declaration-Specific Categories (Tax Form Line Items for 2023 - NO ALT-ANTEILE)
 
@@ -649,17 +665,20 @@ Summed net income/G/L per tax pot after local calculations and Finanzamt-style o
       - For `BOND` and `SONSTIGE_KAPITALFORDERUNG` sales/covers, G/L contributes to `kap_other_income_positive` or `kap_other_losses_abs`.
       - For `INVESTMENT_FUND` sales, calculate Teilfreistellung on G/L. The `net_gain_loss_after_teilfreistellung_eur` contributes to `fund_income_net_taxable` (for internal calculations only, not included in Anlage KAP Zeile 19).
       - For `PRIVATE_SALE_ASSET`, check holding period for taxability and G/L contributes to Anlage SO.
-      - Stock trades linked to option events will have their economics adjusted by the option premium before FIFO processing (using the `option_delivery_links` link).
+      - Stock/fund deliveries carry paid holder costs before FIFO processing;
+        writer assignment allocations carry zero premium adjustment.
     - **`CashFlowEvent`:** Record gross income.
       - For fund distributions, calculate Teilfreistellung; the net taxable amount contributes to `fund_income_net_taxable` (for internal calculations only, not included in Anlage KAP Zeile 19).
       - For non-fund dividends, interest, Stückzinsen, these contribute to `kap_other_income_positive` or `kap_other_losses_abs` (after netting for Stückzinsen).
     - **`OptionLifecycleEvent` subtypes:** Process these events.
       - For exercises/assignments, this involves:
         1. Consuming the option lots from the option's FIFO ledger.
-        2. Calculating the total EUR premium of the consumed option leg.
-        3. Storing this premium in a temporary context (e.g., `OptionPremiumBook`) associated with the option event's ID, for later use by the linked stock `TradeEvent`.
-        4. The linked stock `TradeEvent` (processed separately via `TradeProcessor`) will then retrieve this premium to adjust its own economic basis/proceeds (as detailed in Section 2.4).
-      - For expirations or closing option trades not resulting in stock delivery, generate `RealizedGainLoss` for option premiums with the correct `RealizationType`. These G/L contribute to `derivative_gains_gross` or `derivative_losses_abs`.
+        2. Calculating the consumed holder cost; writer assignment carries zero adjustment.
+        3. Recording the amount and delivery quantity in the account-owned `OptionPremiumBook`.
+        4. Applying each allocation once to the linked stock/fund trade, identically
+           in current-year processing and historical replay.
+      - Premium receipt, negative closing income, long expiry and cash settlement
+        follow the separate event and reporting rules in Section 2.4.
     - Calculate gross and net Vorabpauschale (€0 for current tax year), creating `VorabpauschaleData`. The net Vorabpauschale contributes to `fund_income_net_taxable` (as €0).
 
 14. Perform EOY Quantity Validation (as per Section 2.4): Compare calculated EOY quantities in FIFO ledgers against the closing snapshot (from `POSITIONS_END_FILE_PATH`, read through `person_snapshot()`) using a small numerical tolerance. Report any errors.

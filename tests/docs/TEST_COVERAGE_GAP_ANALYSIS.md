@@ -126,7 +126,7 @@ This document analyzes the test suite's coverage of typical pitfalls in complex 
 
 **What Could Go Wrong:**
 - Call exercise: Premium not added to stock cost basis
-- Put assignment: Premium not added to stock cost basis
+- Put assignment: Writer premium incorrectly folded into stock cost basis
 - Option lot not consumed when exercised
 - Multiplier (100 shares/contract) miscalculated
 
@@ -144,7 +144,7 @@ This document analyzes the test suite's coverage of typical pitfalls in complex 
 ```yaml
 # Example test cases needed:
 - OPT_CALL_EXERCISE_001: Long call exercise, premium added to stock cost
-- OPT_PUT_ASSIGN_001: Short put assigned, premium reduces stock cost
+- OPT_PUT_ASSIGN_001: Short put assigned, premium remains separate from stock cost
 - OPT_EXPIRE_001: Worthless expiration realizes full loss
 - OPT_CLOSE_001: Closing trade with FIFO lot matching
 ```

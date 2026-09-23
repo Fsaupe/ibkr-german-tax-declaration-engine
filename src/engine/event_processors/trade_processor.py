@@ -1,5 +1,6 @@
 # src/engine/event_processors/trade_processor.py
 import logging
+from src.engine.option_income import writer_premium_receipt
 from typing import List, Dict, Any, Optional, Tuple, TYPE_CHECKING
 import uuid
 from decimal import Decimal
@@ -66,19 +67,10 @@ class TradeProcessor(EventProcessor):
             asset_symbol = f"UNKNOWN_ASSET_ID_{event.asset_internal_id}"
 
 
-        # Ownership/allocation is independent of tax treatment. Preserve the existing
-        # call/put adjustment here; the separate assignment-treatment conflict with
-        # GT-ESTG20-004 is recorded in the legal implementation map and PR88 review.
+        # Shared with historical replay: holder costs only; writer allocations
+        # carry zero but retain exact single-use delivery ownership.
         if event.option_delivery_links:
-            if event.net_proceeds_or_cost_basis_eur is None:
-                raise ProcessingError("Missing net stock value for option delivery")
-            premiums = context.get('option_premiums')
-            if premiums is None:
-                raise ProcessingError("Missing account-owned option premium book")
-            allocations = premiums.consume(event)
-            adjustment = sum((amount if option_type == 'C' else -amount
-                              for amount, option_type in allocations), Decimal('0'))
-            event.net_proceeds_or_cost_basis_eur += adjustment
+            context['option_premiums'].adjust_delivery(event)
 
         # Proceed with FIFO ledger operations using the (potentially adjusted) event
         try:
@@ -89,6 +81,8 @@ class TradeProcessor(EventProcessor):
                 realized_gains_losses.extend(new_rgls)
             elif event.event_type == FinancialEventType.TRADE_SELL_SHORT_OPEN:
                 ledger.add_short_lot(event)
+                if ledger.asset_category == AssetCategory.OPTION:
+                    realized_gains_losses.append(writer_premium_receipt(event, ledger.ctx))
             elif event.event_type == FinancialEventType.TRADE_BUY_SHORT_COVER:
                 new_rgls = ledger.consume_short_lots_for_cover(event)
                 realized_gains_losses.extend(new_rgls)
@@ -111,6 +105,7 @@ class TradeProcessor(EventProcessor):
                               realized_gains_losses.extend(new_rgls)
                          else: # No long position, or already short; this is opening/adding to short.
                               ledger.add_short_lot(event)
+                              realized_gains_losses.append(writer_premium_receipt(event, ledger.ctx))
                 else:
                     raise ProcessingError(f"TradeProcessor: unexpected event type {event.event_type.name} for asset category {ledger.asset_category.name} (Event ID: {event.event_id}).")
 

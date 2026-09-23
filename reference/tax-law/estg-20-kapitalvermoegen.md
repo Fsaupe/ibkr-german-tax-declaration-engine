@@ -141,6 +141,44 @@ Key rules:
   Nr. 3 Buchstabe a** -- BMF 14.05.2025 Rz. 26 states that pinpoint expressly, citing **BFH-Urteil
   vom 20.10.2016 - VIII R 55/13, BStBl II 2017 S. 264**
 
+#### Receipt, negative income and the separate underlying transaction
+
+Re-read 2026-09-22 against BMF 14.05.2025, GZ IV C 1 - S 2252/00075/016/070,
+printed pages 11–14, Rn. 25–26 and 33–35 (Tier 2; source linked at
+[GT-ESTG20-070]). Rn. 324 applies this guidance to all open cases, including
+VZ 2023–2025; the general capital-income regime floor is VZ 2009.
+
+- Rn. 25 Absatz 1 Saetze 1–2 identifies the premium as consideration for
+  granting the option, taxable under § 20 Abs. 1 Nr. 11. Absatz 2 Satz 1
+  expressly places withholding at receipt. Receipt is not deferred until
+  closing, exercise or expiry. Section 11 Abs. 1 Satz 1 EStG governs the
+  income year; the contract date for a disposal under Abs. 2 is a distinct rule.
+- Rn. 25 Absatz 2 Satz 2 and Rn. 33 Satz 3 call the paid closing premium and
+  associated expenses a **negative Kapitalertrag at payment**. Satz 3 of the
+  former and Satz 4 of the latter also recognise the expenses associated with
+  receipt. These are Nr. 11 income/negative income, not an Abs. 2 Satz 1
+  Nr. 3 derivative gain/loss obtained by netting an option's full lifecycle.
+  The judicial timing counterposition remains recorded in Q4 below.
+- Rn. 26 Saetze 1–2 governs the call writer's delivered underlying and Rn. 33
+  Saetze 1–2 the put writer's acquired underlying. Both expressly exclude
+  the received premium from the underlying's disposal result. Closing the
+  option through physical delivery does not tax that same premium again.
+- Rn. 26 Satz 3 and Rn. 34 instead classify a cash settlement paid by the
+  writer as a derivative loss. It is separate from the premium receipt.
+- Rn. 35's worked spread example separately taxes the written premium and
+  purchased-option disposal, although the written call expires. Expiry itself
+  adds no further writer income after the premium was taxed on receipt.
+
+The distinction determines declaration categories as well as dates: the
+negative Nr. 11 income is not within the instruction that derivative losses
+are entered exclusively in the separate derivative-loss field for VZ 2023/2024
+([GT-FORM-002], [GT-FORM-012]). VZ 2025 has the combined loss presentation
+([GT-FORM-011]); that form change does not reclassify the substantive income.
+
+The rules concern the actual receipt/payment. A transaction's conclusion and
+its cash availability or debit need not coincide. Neither this guidance nor
+the contractual-date rules [GT-ESTG20-039/040] establish that they always do.
+
 > **Correction, 2026-08-03.** The Barausgleich bullet previously cited *"Abs. 2 Satz 1 Nr. 3a"*.
 > **There is no Nr. 3a in Abs. 2** -- see [GT-ESTG20-007]. The BFH decision was also cited by file
 > number alone, with no date and no Fundstelle, so it could not be checked. Both taken from BMF

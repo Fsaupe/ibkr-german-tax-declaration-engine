@@ -21,6 +21,11 @@ have is worse than one with a visible hole.
 
 ## Taxable Events
 
+Physical option delivery, including fund units: [GT-ESTG20-075] in
+`tax-law/estg-20-option-underlyings.md` distinguishes holder acquisition costs
+from writer premiums. Receipt/payment and separate writer cash-settlement
+classification are specified at [GT-ESTG20-004].
+
 | Event | Primary Law | Paragraph | Form Line | Covered In |
 |-------|-------------|-----------|-----------|------------|
 | Stock sale (long) | EStG | 20 Abs. 2 Nr. 1 | KAP Z20 | estg-20-kapitalvermoegen.md |

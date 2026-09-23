@@ -486,7 +486,7 @@ class DomainEventFactory:
                         f"got {trade_event.gross_amount_foreign_currency}. Direction is encoded in event_type."
                     )
 
-                if isinstance(asset, Stock) and rt.notes_codes:
+                if isinstance(asset, (Stock, InvestmentFund)) and rt.notes_codes:
                     notes_codes_parts_stock = {part.strip() for part in (rt.notes_codes or "").upper().split(';') if part.strip()}
                     # Exclude "IA" codes which are Internalized + Automatically Allocated (not option assignments)
                     if ('A' in notes_codes_parts_stock or 'EX' in notes_codes_parts_stock) and 'IA' not in notes_codes_parts_stock:

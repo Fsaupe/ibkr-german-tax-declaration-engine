@@ -155,12 +155,21 @@ tests:
       # SSO: gross=400/0.80=500, comm=1/0.80=1.25, proceeds=498.75
       # BSC: gross=100/1.25=80, comm=1/1.25=0.80, cost=80.80
       rgls:
+        - realization_type: OPTION_PREMIUM_RECEIPT
+          realization_date: "2023-01-15"
+          quantity: 1
+          total_cost_basis_eur: "0.00"
+          total_proceeds_eur: "498.75"
+          gain_loss_eur: "498.75"
+          tax_category: ANLAGE_KAP_TERMIN_GEWINN
+          is_stillhalter_income: true
         - realization_type: OPTION_TRADE_CLOSE_SHORT
           quantity: 1
           total_cost_basis_eur: "80.80"
-          total_proceeds_eur: "498.75"
-          gain_loss_eur: "417.95"
-          tax_category: ANLAGE_KAP_TERMIN_GEWINN
+          total_proceeds_eur: "0.00"
+          gain_loss_eur: "-80.80"
+          tax_category: ANLAGE_KAP_SONSTIGE_VERLUSTE
+          is_stillhalter_income: true
       option_eoy_quantity: 0
       stock_eoy_quantity: 0
       errors: 0

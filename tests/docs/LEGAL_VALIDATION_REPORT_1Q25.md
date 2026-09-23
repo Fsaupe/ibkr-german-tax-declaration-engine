@@ -1941,6 +1941,18 @@ When a single sale consumes shares from multiple lots, the sale commission must 
 
 ## Group 8: Options Lifecycle
 
+> **Historical findings withdrawn for writer premiums (issue #85, 2026-09-23).**
+> This section preserves the earlier review's examples and claimed outcomes as
+> an audit trail, not as current requirements. Its writer-assignment netting,
+> recognition at expiry/closing, classification of buyback payments as derivative
+> losses, and associated “CORRECT” / “COMPLIANT” conclusions were wrong.
+> Writer premiums are separate income at opening; buybacks are separate negative
+> Nr. 11 income; assignment/expiry do not recognise the premium again. Only paid
+> holder costs enter the delivered stock/fund calculation. The authoritative
+> requirements are GT-ESTG20-004/070/075 in `reference/`; current verification
+> is in `docs/reviews/issue85-option-premiums.md`. The quoted former statutory
+> wording and several BMF paragraph numbers below are likewise superseded.
+
 **Test File:** `tests/specs/group8_options.yaml`
 **PRD Coverage:** §2.9 (Options Processing), §5.12 (OptionLifecycleEvent)
 **Revision:** 2026-01-11
@@ -3430,9 +3442,9 @@ Private sales under § 23 EStG are correctly kept separate from capital income:
 
 | Source | Reference | Content |
 |--------|-----------|---------|
-| BMF-Schreiben 2025-05-14 Rz. 8-12 | Official guidance | Call/Put exercise for holders |
-| BMF-Schreiben 2025-05-14 Rz. 13-17 | Official guidance | Call/Put assignment for writers |
-| BMF-Schreiben 2025-05-14 Rz. 35-40 | Official guidance | Worthless expiration treatment |
+| BMF-Schreiben 2025-05-14 Rn. 21–22 / 28–29 | Official guidance | Call/put physical exercise by holders |
+| BMF-Schreiben 2025-05-14 Rn. 25–26 / 33–34 | Official guidance | Separate writer premium, assignment and cash settlement |
+| BMF-Schreiben 2025-05-14 Rn. 27 / 32 | Official guidance | Purchased-option worthless expiry |
 
 ### JStG 2024 Impact on Options
 

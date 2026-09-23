@@ -16,7 +16,7 @@ same obligations, not additional TODOs.
 | PM-003 | #86 R3 | Explicit currency boundaries | Open | Unassigned / not yet scheduled | None |
 | PM-004 | #86 R4 | Behavioral boundary tests | Open | Unassigned / not yet scheduled | None |
 | PM-005 | #87 PR87-P1; brought into #88 by the maintainer | Account-scoped option linking and premium adjustments | Done | #88, implementation `b8b5b11` | Original reproduction: 3 passed; account-pooling mutations: 8 linker failures / 1 premium-book failure; VZ 2023–2025 parity |
-| PM-006 | #88 review; pre-existing behavior | Option premium tax treatment across assignment, historical replay and fund underlyings | Open | Separate figure-changing correction | Reference conflict recorded; correction and measured impact pending |
+| PM-006 | #88 review; pre-existing behavior | Option premium tax treatment across assignment, historical replay and fund underlyings | Implemented locally; acceptance pending | Issue #85, `fix/issue85-option-premiums` | 26 dedicated regressions; VZ 2023–2025 measured; no merge/publication |
 
 ## PM-001 — Account-scoped snapshot input
 
@@ -113,6 +113,14 @@ VZ 2023–2025 comparisons. The maintainer's current one-account exports cannot
 exercise the cross-account collision.
 
 ## PM-006 — Pre-existing option premium tax treatment
+
+**2026-09-23 checkpoint:** [Issue #85](issue85-option-premiums.md) corrects
+writer receipt/buyback/assignment/expiry/cash-settlement treatment and preserves
+holder costs through historical and fund deliveries. The maintainer retained
+trade dates with a boundary warning and approved the eight fixture corrections.
+Measured changes affect 6/6/3 declaration entries for VZ 2023/2024/2025; FX and
+fund results are unchanged. Acceptance/merge is pending; this item stays open.
+The exposure description below records the originating defect.
 
 **Origin:** discovered while verifying PM-005; [PR #88 review](pr-88-review.md).
 Status: **Open**. This is separate from the completed stock-link ownership repair.
