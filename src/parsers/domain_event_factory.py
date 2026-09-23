@@ -738,6 +738,14 @@ class DomainEventFactory:
 
             elif "WITHHOLDING TAX" in event_type_str_upper or self.wht_on_interest_pattern.match(rct.description or ""):
                 source_country_for_wht: Optional[str] = rct.issuer_country_code
+                # A blank IssuerCountryCode (all 11 dividend/PIL withholding rows of 2023) is
+                # filled from the broker's own "- XX Tax" suffix, the taxing state the treaty-rate
+                # guard needs ([GT-CREDIT-026]). Assumed, not checked, that the two never
+                # disagree: measured 2026-09-23 on Cash_Transactions-{2022..2025}, they agree on
+                # all 49 rows where both are set.
+                if not source_country_for_wht:
+                    match_tax_suffix = re.search(r"-\s*([A-Z]{2})\s+TAX\s*$", desc_upper)
+                    if match_tax_suffix: source_country_for_wht = match_tax_suffix.group(1)
                 if self.wht_on_interest_pattern.match(rct.description or "") and not source_country_for_wht:
                     match_country_in_desc = re.search(r"\b([A-Z]{2})\b\s*\(DETAILS\)", desc_upper) # Example pattern
                     if match_country_in_desc: source_country_for_wht = match_country_in_desc.group(1)

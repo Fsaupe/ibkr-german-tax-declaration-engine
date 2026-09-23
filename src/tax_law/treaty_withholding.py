@@ -25,10 +25,10 @@ rate. The US rate covers a US fund's distribution too (the treaty covers RICs); 
 others cover share dividends only -- the table's "Dividenden" are distributions of
 Kapitalgesellschaften. Measured 2026-09-22: 28 dividend/PIL withholding
 rows VZ 2023-2025 carry the "- US TAX" suffix, 0 of them above 15 % + 1 cent of their
-paired income. The source state is read from `source_country_code` (IssuerCountryCode),
-which is blank on 11 dividend/PIL withholding rows, all VZ 2023 (7 US, 3 CA, 1 FR by
-their suffix): they are reported rate-not-verified and kept as withheld, never guessed.
-Every other source state, and interest from a state without a rate, are not in the
+paired income. The source state is read from `source_country_code`: IssuerCountryCode,
+or where that is blank (11 dividend/PIL withholding rows, all VZ 2023) the broker's
+"- XX Tax" suffix, filled in by the parser. A row with neither is reported
+rate-not-verified and kept as withheld, never guessed. Every other source state, and interest from a state without a rate, are not in the
 store, so such a row is reported as rate-not-verified, not capped. Adding another state or interest is a store
 extension plus a table row, not a code change here.
 """
