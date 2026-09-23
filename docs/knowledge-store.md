@@ -347,6 +347,9 @@ engine and the store relate, which no file inside may do.
   Authenticate each year by its printed `202xAnlSO133NET` identifier. The
   calculation line and the taxpayer allocation line are distinct. A bare
   navigation POST without the hidden fields returns no usable sheet.
+  The VZ 2021/2022 entries (`034029_21`, `_22`) have two sheets: request
+  `Seite2` and check `202xAnlSO132NET`. These source checks do not authorize
+  real-data assessment runs before VZ 2023.
 
 Hard-won and otherwise rediscovered each time. None of this changes what counts as a source —
 only how to get at one.

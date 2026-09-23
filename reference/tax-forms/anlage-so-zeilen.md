@@ -14,7 +14,7 @@
 > each official annual sheet, including its accessible labels and printed text.
 > The previous table was unsourced and incorrectly separated the two dates onto
 > different lines. The annual allocation lines are verified for VZ 2023–2025;
-> no earlier form is established here.
+> historical allocation destinations for VZ 2021/2022 are also verified below.
 
 ---
 
@@ -71,8 +71,15 @@ disposals reported by separate schedule have their own line, 55 / 59; do not
 enter the same gain twice. The form requests a separate explanation of the gain
 calculation. Neither a form label nor the transfer changes its amount.
 
-Applicable verified years: VZ 2023, VZ 2024 and VZ 2025. These sources do not
-establish earlier-year mappings. A later form must be checked for changes;
+Historical allocation destinations, independently retrieved 2026-09-23:
+
+| VZ | Exact source | Sheet identifier | Printed calculation / allocation text |
+|---|---|---|---|
+| 2021 | [FMS 034029_21](https://www.formulare-bfinv.de/ffw/action/invoke.do?id=034029_21) | 2021AnlSO132NET, sheet 2 | Z47: "Gewinn / Verlust (zu uebertragen nach Zeile 48)"; Z48: "Zurechnung des Betrags aus Zeile 47" |
+| 2022 | [FMS 034029_22](https://www.formulare-bfinv.de/ffw/action/invoke.do?id=034029_22) | 2022AnlSO132NET, sheet 2 | Z47: "Gewinn / Verlust (zu uebertragen nach Zeile 48)"; Z48: "Zurechnung des Betrags aus Zeile 47" |
+
+Applicable verified allocation years: VZ 2021–2025. These sources do not
+establish earlier mappings. A later form must be checked for changes;
 an unverified forward carry must not be presented as annual verification.
 
 A disposal outside the Jahresfrist is not reported at all: it is not a
