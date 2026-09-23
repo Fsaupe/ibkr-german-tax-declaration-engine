@@ -18,7 +18,7 @@ Sources of truth mirrored here (machine-readable side of `reference/`):
 - Teilfreistellung: reference/investment-tax-law/invstg-20-teilfreistellung.md
 - Form structure:   reference/tax-law/estg-20-abs6-verlustverrechnung.md,
                     reference/tax-forms/anlage-kap-zeilen.md
-- Creditable foreign dividend withholding: reference/bmf-guidance/bzst-anrechenbare-quellensteuer.md
+- Creditable foreign withholding (dividends, interest): reference/bmf-guidance/bzst-anrechenbare-quellensteuer.md
 `tests/test_tax_law_registry.py` pins registry <-> reference consistency.
 """
 import logging
@@ -125,6 +125,11 @@ def teilfreistellung_rate(fund_type: Optional[InvestmentFundType]) -> Decimal:
 # nothing is creditable, and this table would still let 15 % through. Nothing in the
 # export marks a RIC exemption. Measured 2026-09-22: of the 28 US-suffixed withholding
 # rows VZ 2023-2025, 0 are paired to income described as exempt.
+# Also assumed, not checked: a US REIT dividend is on the 15 % only where the holder
+# meets Art. 10 Abs. 4 Satz 3 (for a natural person, at most 10 % of the REIT);
+# otherwise the treaty sets no ceiling and 15 % would under-credit. The export carries
+# no holding percentage. Measured 2026-09-23: the 30 "- US TAX" withholding rows of
+# 2022-2025 come from five payers, none a REIT.
 
 CREDITABLE_DIVIDEND_RATES: dict[int, dict[str, Decimal]] = {
     2023: {"US": Decimal("0.15"), "FR": Decimal("0.128"), "JP": Decimal("0.15"),
@@ -144,7 +149,12 @@ CREDITABLE_DIVIDEND_RATES: dict[int, dict[str, Decimal]] = {
 # The income kinds a state's dividend rate governs. The table's "Dividenden" are
 # distributions of Kapitalgesellschaften, so share dividends only; the US treaty puts a
 # RIC's distribution on the dividend rate too (Art. 10 Abs. 4 Satz 2). A payment in lieu
-# reaches these kinds as its instrument's own income on branch A ([GT-INVSTG-059]).
+# reaches these kinds as its instrument's own income on branch A ([GT-INVSTG-059]), but
+# the store establishes its treaty character as a dividend for the US only ([GT-CREDIT-028],
+# via Art. 10 Abs. 5 and US law). Assumed, not checked, that no payment in lieu carries
+# another state's tax: such a row would get that state's dividend rate with no basis in
+# the store. Measured 2026-09-23: 8 withholding rows on a payment in lieu in
+# Cash_Transactions-{2022..2025}, all "- US TAX" -- 0 non-US.
 _SHARE_DIVIDEND = frozenset({FinancialEventType.DIVIDEND_CASH})
 CREDITABLE_DIVIDEND_KINDS: dict[str, frozenset] = {
     "US": frozenset({FinancialEventType.DIVIDEND_CASH, FinancialEventType.DISTRIBUTION_FUND}),
