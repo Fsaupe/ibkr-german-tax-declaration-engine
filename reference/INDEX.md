@@ -46,7 +46,7 @@ premiums, [GT-ESTG20-070] in the EStG 20 reference.
 
 - [Anlage KAP -- Zeilen](tax-forms/anlage-kap-zeilen.md) -- KAP form line mappings (Z4/5, Z7, Z18-25, Z37-41), the *zusaetzlich* / *ausschliesslich* split, year-specific differences
 - [Anlage KAP-INV -- Zeilen](tax-forms/anlage-kap-inv-zeilen.md) -- KAP-INV form lines (Z4-55), gross reporting principle
-- [Anlage SO -- Zeilen](tax-forms/anlage-so-zeilen.md) -- SO form lines for private sales (Z48-55)
+- [Anlage SO -- Zeilen](tax-forms/anlage-so-zeilen.md) -- private-sales calculation, allocation and further-disposal lines, independently verified on official VZ 2023/2024/2025 sheets; taxpayer allocation Z54 / Z54 / Z58 [GT-FORM-020]
 
 ## BMF Guidance (Administrative Circulars)
 
