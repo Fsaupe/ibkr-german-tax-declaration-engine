@@ -66,6 +66,19 @@ oder einem Investmentvermoegen gezahlt werden, sind Absatz 2 Buchstabe b und Abs
 anzuwenden."* So a dividend from a US RIC is expressly put on the 15 % rate of Abs. 2 b; the RIC
 status of the payer neither raises nor lowers the rate for a private investor.
 
+**Art. 10 Abs. 4 Satz 3** (page 9 of the Bekanntmachung PDF, re-read 2026-09-23): *"Im Fall von
+Dividenden, die von einem REIT gezahlt werden, sind Absatz 2 Buchstabe b und Absatz 3 Buchstabe b
+nur anzuwenden, wenn a) der Nutzungsberechtigte der Dividenden eine natuerliche Person oder ein
+Pensionsfonds ist und die natuerliche Person oder der Pensionsfonds mit nicht mehr als 10 vom Hundert
+an dem REIT beteiligt ist; b) die Dividenden fuer eine boersengehandelte Aktiengattung gezahlt werden
+und der Nutzungsberechtigte der Dividenden eine Person ist, die einen Anteil von nicht mehr als 5 vom
+Hundert an einer Gattung des Aktienbestands des REIT haelt; c) der Nutzungsberechtigte der Dividenden
+eine Person ist, die mit nicht mehr als 10 vom Hundert an dem REIT beteiligt ist, und es sich um
+einen diversifizierten REIT handelt."* So a dividend from a US REIT is on the 15 % of Abs. 2 b **only
+if one of the three conditions holds**; for a natural person, Buchst. a is a holding of not more than
+10 % in the REIT. Where none holds, Satz 1 has already excluded Abs. 2 a, and Abs. 2 sets no ceiling
+on the US tax on that dividend.
+
 **Art. 10 Abs. 5** (Dividendenbegriff): *"Der in diesem Artikel verwendete Ausdruck ,Dividenden'
 bedeutet Einkuenfte aus Aktien ... sowie aus sonstigen Rechten stammende andere Einkuenfte, die nach
 dem Recht des Vertragsstaats, in dem die ausschuettende Gesellschaft ansaessig ist, den Einkuenften
@@ -76,9 +89,11 @@ therefore **defers to the source state's law** for whether a payment other than 
 dividend is a dividend for the treaty.
 
 **What the cited unit also contains** (Validation Protocol item 2): Abs. 3 (0 % for qualifying
-corporate holders and pension funds); Abs. 4 Saetze 3 ff. (REIT conditions); Abs. 6 (contingent
-interest re-characterised as interest); Abs. 7 ff. (permanent establishment, branch tax). None
-reaches a directly held private portfolio and none is relied on here.
+corporate holders and pension funds); Abs. 4 Saetze 4 ff. (when a REIT is *diversifiziert*, for
+Satz 3 Buchst. c); Abs. 6 (contingent interest re-characterised as interest); Abs. 7 ff. (permanent
+establishment, branch tax). None of these is relied on here. The REIT conditions of Abs. 4 Satz 3
+are quoted above because they do reach a directly held private portfolio: they decide whether a
+REIT dividend has a treaty ceiling at all.
 
 ### The source-state-law fact Abs. 5 points at (foreign law, cited for a fact only)
 
