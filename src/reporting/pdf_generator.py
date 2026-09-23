@@ -1565,7 +1565,6 @@ class PdfReportGenerator:
                     income_subject_to_wht = income_event.gross_amount_eur
             
             # Store individual transaction details including linking information
-            linking_confidence = wht_event.link_confidence_score if hasattr(wht_event, 'link_confidence_score') else None
             effective_tax_rate = wht_event.effective_tax_rate if hasattr(wht_event, 'effective_tax_rate') else None
             
             # Generate description of the taxed transaction
@@ -1589,7 +1588,6 @@ class PdfReportGenerator:
                 'applied_rate': applied_rate,
                 'is_interest': income_event is not None and income_event.event_type == FinancialEventType.INTEREST_RECEIVED,
                 'taxed_transaction': taxed_transaction_desc,
-                'confidence': linking_confidence,
                 'tax_rate': effective_tax_rate
             })
             
@@ -1626,7 +1624,7 @@ class PdfReportGenerator:
             # Add individual transactions table first
             if wht_transactions:
                 self.story.append(Paragraph("2.4.1 Einzelne Transaktionen", self.styles['H4']))
-                transaction_data = [["Datum", "Land", "Bruttoeinkünfte (EUR)", "Gezahlte QSt (EUR)", "Einbeh. Satz", "Anr. Satz", "Anrechenbar (EUR)", "Besteuerte Transaktion", "Konfidenz"]]
+                transaction_data = [["Datum", "Land", "Bruttoeinkünfte (EUR)", "Gezahlte QSt (EUR)", "Einbeh. Satz", "Anr. Satz", "Anrechenbar (EUR)", "Besteuerte Transaktion"]]
                 
                 for transaction in wht_transactions:
                     if transaction['income'] != Decimal('0.00') or transaction['tax'] != Decimal('0.00'):
@@ -1637,11 +1635,6 @@ class PdfReportGenerator:
                             # Format to 1 decimal place
                             tax_rate_str = f"{tax_rate_pct.quantize(Decimal('0.1'), rounding=ROUND_HALF_UP)}%"
                         
-                        # Format confidence
-                        confidence_str = ""
-                        if transaction['confidence'] is not None:
-                            confidence_str = f"{transaction['confidence']}%"
-                        
                         transaction_data.append([
                             format_date_german(transaction['date']),
                             transaction['country'],
@@ -1650,17 +1643,16 @@ class PdfReportGenerator:
                             tax_rate_str,
                             self._format_applied_rate(transaction),
                             self._format_creditable(transaction['creditable']),
-                            transaction['taxed_transaction'],
-                            confidence_str
+                            transaction['taxed_transaction']
                         ])
                 
                 if len(transaction_data) > 1:  # More than just header
-                    transaction_table = self._create_styled_table(transaction_data, col_widths=[1.8*cm, 1.0*cm, 2.4*cm, 1.9*cm, 1.4*cm, 1.4*cm, 2.0*cm, 3.0*cm, 1.6*cm])
+                    transaction_table = self._create_styled_table(transaction_data, col_widths=[1.8*cm, 1.0*cm, 2.4*cm, 1.9*cm, 1.4*cm, 1.4*cm, 2.0*cm, 4.6*cm])
                     self.story.append(transaction_table)
                     self.story.append(Paragraph("", self.styles['BodyText']))  # Add spacing
                     
                     # Add legend for linking information
-                    legend_text = "Einbeh. Satz: einbehaltene Steuer im Verhältnis zum Ertrag | Anr. Satz: der anrechenbare Satz, auf den die Zeile begrenzt ist (Herleitung unten) | Anrechenbar: der Betrag dieser Zeile auf Zeile 41 | Besteuerte Transaktion: Art und Details der zugrunde liegenden Einkommenstransaktion | Konfidenz: Sicherheit der Verknüpfung (0-100%)"
+                    legend_text = "Einbeh. Satz: einbehaltene Steuer im Verhältnis zum Ertrag | Anr. Satz: der anrechenbare Satz, auf den die Zeile begrenzt ist (Herleitung unten) | Anrechenbar: der Betrag dieser Zeile auf Zeile 41 | Besteuerte Transaktion: Art und Details der zugrunde liegenden Einkommenstransaktion"
                     self.story.append(Paragraph(legend_text, self.styles['SmallText']))
                     self._add_applied_rates(wht_transactions)
                     self.story.append(Paragraph("", self.styles['BodyText']))  # Add spacing
