@@ -177,7 +177,8 @@ class LossOffsettingEngine:
         """Surface every foreign withholding row the treaty-rate guard could not credit
         in full: one gap per (status, source state), listing the rows.
 
-        legal_basis: [GT-CREDIT-026] (Ermäßigungsanspruch), [GT-CREDIT-027] (US 15 %).
+        legal_basis: [GT-CREDIT-026] (Ermäßigungsanspruch), [GT-CREDIT-027] (US 15 %),
+        [GT-CREDIT-029] (other states' dividend rates), [GT-CREDIT-030] (Irish interest).
         Severity is WARNING throughout — cap-and-report (issue #78 decision): the figures
         stay complete and correct, and the report tells the taxpayer what to reclaim
         abroad or verify. An over-treaty-rate row has had Zeile 41 *reduced* to the
@@ -219,6 +220,14 @@ class LossOffsettingEngine:
                     f"in Deutschland NICHT anrechenbar und im Quellenstaat zu erstatten (für die "
                     f"USA über das IRS-Erstattungsverfahren). Nachweis der einbehaltenen Steuer und "
                     f"des anrechenbaren Satzes ist erforderlich (§ 90 Abs. 2 AO). Zeilen: {_rowlist(rows)}."
+                )
+            elif status is WithholdingStatus.RATE_NOT_VERIFIED and not state:
+                detail = (
+                    f"{len(rows)} Quellensteuerzeile(n) ohne Angabe des Quellenstaats: der Export "
+                    f"nennt keinen (bei Quellensteuer auf Habenzinsen: BROKER_ENTITY_COUNTRY in "
+                    f"src/config.py ist nicht gesetzt). Der Betrag auf Zeile 41 ist die EINBEHALTENE "
+                    f"Steuer, kein geprüfter anrechenbarer Betrag (der Betrag wurde nicht verändert). "
+                    f"Zeilen: {_rowlist(rows)}."
                 )
             elif status is WithholdingStatus.RATE_NOT_VERIFIED:
                 detail = (
@@ -418,6 +427,7 @@ class LossOffsettingEngine:
             # or below the treaty rate this equals what was withheld, so no figure
             # moves; measured 0 US rows above the rate VZ 2023–2025 (issue #78).
             foreign_tax_total = self.ctx.add(foreign_tax_total, assessment.creditable_eur)
+            result.creditable_foreign_wht_eur[event.event_id] = assessment.creditable_eur
             if assessment.status is not WithholdingStatus.OK:
                 treaty_flags[(assessment.status, assessment.source_state or "")].append((event, assessment))
         self._record_german_kest_gap(german_kest_count, german_kest_total)

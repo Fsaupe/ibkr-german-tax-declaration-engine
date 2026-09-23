@@ -1546,11 +1546,14 @@ class PdfReportGenerator:
         withholding_tax_events = [evt for evt in self.all_financial_events if isinstance(evt, WithholdingTaxEvent)]
 
         for wht_event in withholding_tax_events:
-            if not wht_event.source_country_code or wht_event.gross_amount_eur is None:
+            if wht_event.gross_amount_eur is None:
                 continue
-            
-            country = wht_event.source_country_code
+
+            # A row with no source state is listed, not dropped: its tax is on Zeile 41.
+            country = wht_event.source_country_code or "unbekannt"
             tax_amount = wht_event.gross_amount_eur
+            # None: not on Zeile 41 (German KESt, see the gap below the table).
+            creditable = self.loss_offsetting_result.creditable_foreign_wht_eur.get(wht_event.event_id)
             
             income_subject_to_wht = Decimal(0)
             if wht_event.taxed_income_event_id:
@@ -1578,16 +1581,19 @@ class PdfReportGenerator:
                 'country': country,
                 'income': income_subject_to_wht,
                 'tax': tax_amount,
+                'creditable': creditable,
                 'taxed_transaction': taxed_transaction_desc,
                 'confidence': linking_confidence,
                 'tax_rate': effective_tax_rate
             })
             
             if country not in wht_by_country_data:
-                wht_by_country_data[country] = {"income": Decimal(0), "tax": Decimal(0)}
-            
+                wht_by_country_data[country] = {"income": Decimal(0), "tax": Decimal(0), "creditable": None}
+
             wht_by_country_data[country]["income"] += income_subject_to_wht
             wht_by_country_data[country]["tax"] += tax_amount
+            if creditable is not None:
+                wht_by_country_data[country]["creditable"] = (wht_by_country_data[country]["creditable"] or Decimal(0)) + creditable
         
         self.prepared_wht_details_for_table = wht_by_country_data
         self.prepared_wht_individual_transactions = sorted(wht_individual_transactions, key=lambda x: x['date'])
@@ -1614,7 +1620,7 @@ class PdfReportGenerator:
             # Add individual transactions table first
             if wht_transactions:
                 self.story.append(Paragraph("2.4.1 Einzelne Transaktionen", self.styles['H4']))
-                transaction_data = [["Datum", "Land", "Bruttoeinkünfte (EUR)", "Gezahlte QSt (EUR)", "Besteuerte Transaktion", "Steuersatz", "Konfidenz"]]
+                transaction_data = [["Datum", "Land", "Bruttoeinkünfte (EUR)", "Gezahlte QSt (EUR)", "Anrechenbar (EUR)", "Besteuerte Transaktion", "Steuersatz", "Konfidenz"]]
                 
                 for transaction in wht_transactions:
                     if transaction['income'] != Decimal('0.00') or transaction['tax'] != Decimal('0.00'):
@@ -1635,37 +1641,59 @@ class PdfReportGenerator:
                             transaction['country'],
                             self._format_decimal(transaction['income']).replace('.',','),
                             self._format_decimal(transaction['tax']).replace('.',','),
+                            self._format_creditable(transaction['creditable']),
                             transaction['taxed_transaction'],
                             tax_rate_str,
                             confidence_str
                         ])
                 
                 if len(transaction_data) > 1:  # More than just header
-                    transaction_table = self._create_styled_table(transaction_data, col_widths=[2.2*cm, 1.2*cm, 2.5*cm, 2.2*cm, 3.5*cm, 1.3*cm, 1.3*cm])
+                    transaction_table = self._create_styled_table(transaction_data, col_widths=[2.0*cm, 1.6*cm, 2.3*cm, 2.0*cm, 2.0*cm, 3.2*cm, 1.3*cm, 1.3*cm])
                     self.story.append(transaction_table)
                     self.story.append(Paragraph("", self.styles['BodyText']))  # Add spacing
                     
                     # Add legend for linking information
-                    legend_text = "Besteuerte Transaktion: Art und Details der zugrunde liegenden Einkommenstransaktion | Konfidenz: Sicherheit der Verknüpfung (0-100%)"
+                    legend_text = "Anrechenbar: der Betrag dieser Zeile auf Zeile 41 (einbehaltene Steuer, gekürzt auf den anrechenbaren Satz; – = nicht auf Zeile 41) | Besteuerte Transaktion: Art und Details der zugrunde liegenden Einkommenstransaktion | Konfidenz: Sicherheit der Verknüpfung (0-100%)"
                     self.story.append(Paragraph(legend_text, self.styles['SmallText']))
                     self.story.append(Paragraph("", self.styles['BodyText']))  # Add spacing
             
             # Add country summary table
             self.story.append(Paragraph("2.4.2 Zusammenfassung nach Ländern", self.styles['H4']))
-            data = [["Quellenland", "Gesamte Bruttoeinkünfte unter QSt (EUR)", "Gezahlte QSt (EUR)"]]
+            data = [["Quellenland", "Bruttoeinkünfte unter QSt (EUR)", "Gezahlte QSt (EUR)", "Anrechenbar (EUR)"]]
             for country_code, amounts in sorted(wht_data_for_table.items()):
                  if amounts["income"] != Decimal('0.00') or amounts["tax"] != Decimal('0.00'):
                     data.append([
                         country_code, 
                         self._format_decimal(amounts["income"]).replace('.',','),
-                        self._format_decimal(amounts["tax"]).replace('.',',')
+                        self._format_decimal(amounts["tax"]).replace('.',','),
+                        self._format_creditable(amounts["creditable"])
                     ])
-            
-            data.append([Paragraph("Summe anrechenbare Quellensteuern (für KAP Z. 41):", self.styles['TableHeader']), "", Paragraph(self._format_decimal(total_anrechenbare_ausl_steuern).replace('.',','), self.styles['TableCellRight'])])
-            table = self._create_styled_table(data, col_widths=[4*cm, 7*cm, 4*cm])
+
+            data.append([Paragraph("Summe anrechenbare Quellensteuern (für KAP Z. 41):", self.styles['TableHeader']), "", "", Paragraph(self._format_decimal(total_anrechenbare_ausl_steuern).replace('.',','), self.styles['TableCellRight'])])
+            table = self._create_styled_table(data, col_widths=[4*cm, 4.5*cm, 3.25*cm, 3.25*cm])
             self.story.append(table)
+            self.story.append(Paragraph(
+                "Anrechenbar je Land auf Cent gerundet; die Summe ist der Wert von Zeile 41, aus den "
+                "ungerundeten Beträgen gebildet (Rundungsdifferenzen von einzelnen Cent möglich).",
+                self.styles['SmallText']))
         else:
             self.story.append(Paragraph("Keine anrechenbaren ausländischen Quellensteuern erfasst.", self.styles['BodyText']))
+        self._add_zeile_41_gaps()
+
+    def _format_creditable(self, amount: Optional[Decimal]) -> str:
+        return "–" if amount is None else self._format_decimal(amount).replace('.', ',')
+
+    def _add_zeile_41_gaps(self):
+        """Why a withholding row is credited below what was withheld, or not verified, or not
+        on Zeile 41 at all. The console printed these; the PDF, the record a taxpayer keeps,
+        showed a total without them."""
+        gaps = [g for g in self.data_gaps
+                if g.code.startswith("FOREIGN_WHT_") or g.code == "ANLAGE_KAP_GERMAN_KEST_NOT_DECLARABLE"]
+        if not gaps:
+            return
+        self.story.append(Paragraph("2.4.3 Hinweise zu Zeile 41", self.styles['H4']))
+        for gap in gaps:
+            self.story.append(Paragraph(f"• {gap.subject}: {gap.detail}", self.styles['BodyText']))
 
 
     def _add_corporate_actions_summary(self):

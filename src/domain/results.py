@@ -27,6 +27,10 @@ class LossOffsettingResult:
     raw_derivative_gains_gross: Decimal = Decimal('0')
     raw_derivative_losses_abs: Decimal = Decimal('0')
     raw_other_losses_abs: Decimal = Decimal('0')
+    # What each foreign withholding row contributes to Zeile 41, by the row's event id:
+    # the withheld tax reduced to its creditable amount ([GT-CREDIT-026]). German KESt
+    # rows are absent -- they are not on Zeile 41. For the report's per-row breakdown.
+    creditable_foreign_wht_eur: Dict[uuid.UUID, Decimal] = field(default_factory=dict)
 
 
 @dataclass
