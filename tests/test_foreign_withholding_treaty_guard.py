@@ -1,11 +1,12 @@
 # tests/test_foreign_withholding_treaty_guard.py
-"""Zeile 41 never carries more than the treaty-permitted foreign tax on a US row.
+"""Zeile 41 never carries more than the creditable foreign tax on a row.
 
 Issue #78, Group B. § 32d Abs. 5 Satz 1 credits the withheld tax reduced by the
 source state's Ermäßigungsanspruch ([GT-CREDIT-026]); for a US dividend or payment in
 lieu the source state keeps 15 % ([GT-CREDIT-027], DBA-USA Art. 10 Abs. 2 b / Abs. 4
 Satz 2). The guard caps the anrechenbare amount on Zeile 41 to the treaty rate and
-reports the excess as an IRS-refund matter (cap-and-report). It never defaults an
+reports the excess as reclaimable in the source state (cap-and-report). The other
+source states and Irish interest follow the same route ([GT-CREDIT-029], [GT-CREDIT-030]). It never defaults an
 unknown source state, and it compares in the row's own currency to the cent so a
 rounded 15 % on a sub-unit gross is not read as an over-withholding.
 
