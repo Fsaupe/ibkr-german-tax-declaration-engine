@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 from typing import List, Optional, Dict, Set, Tuple, Union
 
+from src.utils.account_utils import account_key
 from src.domain.events import (
     FinancialEvent, WithholdingTaxEvent, CashFlowEvent, 
     FinancialEventType
@@ -118,8 +119,13 @@ class WithholdingTaxLinker:
         """Find the best matching income event for a withholding tax event."""
         
         candidate_matches: List[LinkingCriteriaMatch] = []
-        
+
+        # Only the tax row's own account: another account's income is a different
+        # dividend, and the treaty rate is measured per dividend ([GT-CREDIT-027]).
+        wht_account = account_key(wht_event.account_id)
         for income_event in income_events:
+            if account_key(income_event.account_id) != wht_account:
+                continue
             # Try different matching strategies in order of confidence
             match = self._try_exact_match(wht_event, income_event)
             if not match:
