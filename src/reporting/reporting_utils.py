@@ -1,7 +1,7 @@
 # src/reporting/reporting_utils.py
 import logging
 from decimal import Decimal, ROUND_HALF_UP
-from typing import Optional, List, Any
+from typing import Optional, List, Any, Tuple
 from datetime import date
 
 from src.domain.enums import InvestmentFundType, TaxReportingCategory 
@@ -118,3 +118,75 @@ def get_kap_inv_category_for_reporting(
         if is_distribution: return TaxReportingCategory.ANLAGE_KAP_INV_SONSTIGE_FONDS_AUSSCHUETTUNG_GROSS
         if is_gain: return TaxReportingCategory.ANLAGE_KAP_INV_SONSTIGE_FONDS_GEWINN_GROSS
     return None
+
+
+def anlage_so_leistungen_line_label(tax_year: int) -> str:
+    """Label for the Anlage SO *Leistungen* entry line of a given assessment year.
+
+    The line number moves between years -- Zeile 12 in VZ 2023 and VZ 2024, Zeile 16 in
+    VZ 2025 -- so it is looked up in the tax-law registry ([GT-FORM-024] in
+    reference/tax-forms/anlage-so-zeilen.md) rather than written literally anywhere in the
+    reporting layer.
+
+    Below the earliest verified form year the registry raises, because backward projection
+    is exactly what Validation Protocol item 4 forbids and this form's numbering
+    demonstrably moves. A report is not the place for that to abort: the figure is
+    computed and correct either way, and only its destination is unknown. So the label
+    says the line is unverified and the amount is still printed. Assessment years before
+    2023 are outside the range this project treats as results at all.
+    """
+    zeile = anlage_so_leistungen_zeile(tax_year)
+    base = "Einnahmen aus Leistungen, §22 Nr. 3 EStG"
+    if zeile is None:
+        return f"Zeile (für VZ {tax_year} nicht verifiziert) ({base})"
+    return f"Zeile {zeile} ({base})"
+
+
+def anlage_so_leistungen_zeile(tax_year: int) -> Optional[int]:
+    """The Anlage SO *Leistungen* entry line, or None where no verified form says.
+
+    Separated from the label so a caller that needs the bare number (a section heading,
+    a total row) does not reimplement the fallback and drift from it.
+    """
+    from src.domain.exceptions import ProcessingError
+    from src.tax_law.registry import get_anlage_so_form_rules
+
+    try:
+        return get_anlage_so_form_rules(tax_year).leistungen_einnahmen_zeile
+    except ProcessingError:
+        return None
+
+
+def display_rounding_difference(rounded_parts: List[Decimal],
+                                rounded_total: Decimal) -> Optional[Tuple[Decimal, bool]]:
+    """`rounded_total - sum(rounded_parts)`, when a breakdown does not add up.
+
+    Every amount in this engine is carried at `INTERNAL_CALCULATION_PRECISION` and rounded
+    once, where it is displayed. A breakdown therefore rounds its parts and its total
+    independently, from the same exact figures, and the two need not agree: each rounded
+    term can be off by up to half a cent, so a table of n parts can miss its total by up
+    to (n + 1) / 2 cents. Both numbers are right. What is wrong is a table that does not
+    add up and does not say why — **a reader cannot tell that apart from a component the
+    engine forgot**, which is the only reason this matters.
+
+    Returns None when the parts do add up. Otherwise `(difference, is_rounding)`.
+
+    `is_rounding` exists because the label is a claim. A gap wider than the arithmetic
+    above can produce is *not* rounding: it is a component missing from the breakdown, and
+    presenting it as rounding would tell the reader the one thing that stops them looking.
+    """
+    difference = rounded_total - sum(rounded_parts, Decimal("0"))
+    if difference == 0:
+        return None
+    # Half a unit per rounded term, the parts and the total alike.
+    max_rounding = (Decimal(len(rounded_parts)) + 1) * config.OUTPUT_PRECISION_AMOUNTS / 2
+    return difference, abs(difference) <= max_rounding
+
+
+ROUNDING_DIFFERENCE_LABEL = "Rundungsdifferenz (Anzeige)"
+UNEXPLAINED_DIFFERENCE_LABEL = "NICHT ERKLÄRTE DIFFERENZ — Komponente fehlt"
+
+
+def rounding_difference_label(is_rounding: bool) -> str:
+    """The label for a `display_rounding_difference` row, honest in both cases."""
+    return ROUNDING_DIFFERENCE_LABEL if is_rounding else UNEXPLAINED_DIFFERENCE_LABEL

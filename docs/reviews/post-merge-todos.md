@@ -1,6 +1,6 @@
 # Post-merge TODOs
 
-Last updated: **2026-09-17**. This is the authoritative status list for accepted
+Last updated: **2026-09-23**. This is the authoritative status list for accepted
 follow-up work. Review, rebasing, correctness fixes and merge readiness belong in
 [pr-train.md](pr-train.md). The originating PR's merge does not complete these items.
 
@@ -16,7 +16,7 @@ same obligations, not additional TODOs.
 | PM-003 | #86 R3 | Explicit currency boundaries | Open | Unassigned / not yet scheduled | None |
 | PM-004 | #86 R4 | Behavioral boundary tests | Open | Unassigned / not yet scheduled | None |
 | PM-005 | #87 PR87-P1; brought into #88 by the maintainer | Account-scoped option linking and premium adjustments | Done | #88, implementation `b8b5b11` | Original reproduction: 3 passed; account-pooling mutations: 8 linker failures / 1 premium-book failure; VZ 2023–2025 parity |
-| PM-006 | #88 review; pre-existing behavior | Option premium tax treatment across assignment, historical replay and fund underlyings | Open | Separate figure-changing correction | Reference conflict recorded; correction and measured impact pending |
+| PM-006 | #88 review; pre-existing behavior | Option premium tax treatment across assignment, historical replay and fund underlyings | Done | #85, merged `00ba1a7` | Explicitly accepted differences; full suite and real-data verification; [completion record](issue85-option-premiums.md) |
 
 ## PM-001 — Account-scoped snapshot input
 
@@ -114,10 +114,20 @@ exercise the cross-account collision.
 
 ## PM-006 — Pre-existing option premium tax treatment
 
-**Origin:** discovered while verifying PM-005; [PR #88 review](pr-88-review.md).
-Status: **Open**. This is separate from the completed stock-link ownership repair.
+**2026-09-23 completed:** [Issue #85](issue85-option-premiums.md) is merged
+as `00ba1a7` and pushed; GitHub confirms CLOSED/COMPLETED at 10:40:07 UTC.
+The maintainer accepted the exact 6/6/3 declaration changes for VZ 2023/2024/2025
+and the residual-risk assessment, then authorised merge and closure.
+Accepted candidate `7b51ef9` equals the merged tree. Clean suite:
+1,599 passed/1 skipped; schemas: 10 passed; fresh focused checks: 103 passed.
+Final real-data repeat controls, numerical identity to the reviewed candidate,
+actual PDF warning pages and independent raw-input checks all pass.
+TradeDate remains accepted. PM-001–PM-004 remain open; PM-005 remains Done.
 
-**Exposure and consequence:** assignment premiums are folded into stock basis or
+**Origin:** discovered while verifying PM-005; [PR #88 review](pr-88-review.md).
+Status: **Done**. This is separate from the completed stock-link ownership repair.
+
+**Original exposure and consequence (resolved by #85):** assignment premiums are folded into stock basis or
 proceeds; historical replay and fund-underlying premium handling differ from the
 current stock channel. The assignment treatment conflicts with GT-ESTG20-004.
 The maintainer's exports contain option assignments; matching current results

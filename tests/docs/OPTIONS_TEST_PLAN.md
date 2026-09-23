@@ -19,13 +19,13 @@ The test plan has been validated against real IBKR data in `./data/trades.csv`:
 
 ### Independent Domain Review (2026-01-11)
 
-**Verdict: Test data is DOMAIN JUSTIFIED, not test-fitted to implementation.**
+**Historical review, corrected for issue #85 on 2026-09-22:** the writer-premium expectations were wrong. Current requirements are GT-ESTG20-004/070/075; the eight affected fixture expectations were corrected with maintainer approval.
 
 | Criterion | Assessment |
 |-----------|------------|
 | IBKR data format match | ✅ Notes/codes (`Ep`, `A`, `Ex`), prices, Open/Close all match real data |
-| German tax law compliance | ✅ Premium adjustments correct per §20 EStG |
-| Stillhalter income handling | ✅ Only flagged on short position expiration |
+| German tax law compliance | Corrected: holder costs enter the underlying; writer premiums remain separate |
+| Stillhalter income handling | Corrected: writer receipt at opening and negative income on buyback |
 | FIFO behavior | ✅ Multi-lot tests verify FIFO consumption correctly |
 | Independent verification | ✅ Expected values derivable from first principles |
 
@@ -66,7 +66,7 @@ From `src/domain/events.py`:
 
 From `src/domain/enums.py`:
 - `OPTION_EXPIRED_LONG` - Long option expired worthless (loss)
-- `OPTION_EXPIRED_SHORT` - Short option expired worthless (Stillhalter income)
+- `OPTION_PREMIUM_RECEIPT` - Writer premium income at opening; later short expiry adds no income
 - `OPTION_TRADE_CLOSE_LONG` - Sold option previously bought
 - `OPTION_TRADE_CLOSE_SHORT` - Bought back option previously sold short
 
@@ -76,13 +76,13 @@ From `src/domain/enums.py`:
 
 ### 2.1 Option Premium Adjustment Matrix
 
-When options are exercised or assigned, the premium must be incorporated into the resulting stock position's cost basis or sale proceeds:
+Physical delivery preserves paid holder costs. Writer premiums remain separate from the stock or fund unit (GT-ESTG20-004/070/075):
 
 | Scenario | Option Position | Action | Stock Action | Premium Treatment |
 |----------|-----------------|--------|--------------|-------------------|
 | Long Call Exercise | Long Call | Exercise | Buy Stock | Premium ADDS to stock cost |
-| Short Put Assignment | Short Put | Assigned | Buy Stock | Premium REDUCES stock cost |
-| Short Call Assignment | Short Call | Assigned | Sell Stock | Premium ADDS to stock proceeds |
+| Short Put Assignment | Short Put | Assigned | Buy Stock | Premium already recognised at opening; stock cost unchanged |
+| Short Call Assignment | Short Call | Assigned | Sell Stock | Premium already recognised at opening; stock proceeds unchanged |
 | Long Put Exercise | Long Put | Exercise | Sell Stock | Premium REDUCES stock proceeds |
 
 ### 2.2 Worthless Expiration
@@ -91,15 +91,15 @@ When options are exercised or assigned, the premium must be incorporated into th
 |----------|-----------------|---------|---------------|
 | Long Call Expires OTM | Long | Full premium = LOSS | Termingeschäft Loss (Z24) |
 | Long Put Expires OTM | Long | Full premium = LOSS | Termingeschäft Loss (Z24) |
-| Short Call Expires OTM | Short | Full premium = GAIN | Stillhalter Income (Z21) |
-| Short Put Expires OTM | Short | Full premium = GAIN | Stillhalter Income (Z21) |
+| Short Call Expires OTM | Short | No second recognition | Premium income belongs to opening |
+| Short Put Expires OTM | Short | No second recognition | Premium income belongs to opening |
 
 ### 2.3 Option Closing Trades (No Exercise/Assignment)
 
 | Scenario | Action | Treatment |
 |----------|--------|-----------|
 | Buy call, sell to close | Sell - Buy = G/L | Normal FIFO for options |
-| Sell put, buy to close | Original proceeds - cover cost = G/L | Short cover FIFO |
+| Sell put, buy to close | Opening premium income; separate negative closing income | Position FIFO retained; no lifecycle netting |
 
 ---
 
@@ -119,15 +119,15 @@ When options are exercised or assigned, the premium must be incorporated into th
 
 | ID | Description | Steps | Verification |
 |----|-------------|-------|--------------|
-| OPT_PUT_ASGN_001 | Basic short put assignment | 1. Sell 1 AAPL Jan50P @ $3<br>2. Assigned<br>3. Forced to buy 100 AAPL @ $50<br>4. Sell 100 AAPL @ $45 | Stock cost = $5000 - $300 = $4700<br>Stock proceeds = $4500<br>Loss = $200 |
-| OPT_PUT_ASGN_002 | Multi-lot put assignment | 1. Sell 2 puts @ $3 (lot A)<br>2. Sell 1 put @ $4 (lot B)<br>3. Assigned on 2 contracts | FIFO: consume lot A, premium $600 reduces stock cost |
+| OPT_PUT_ASGN_001 | Basic short put assignment | 1. Sell 1 AAPL Jan50P @ $3<br>2. Assigned<br>3. Forced to buy 100 AAPL @ $50<br>4. Sell 100 AAPL @ $45 | Stock cost = $5000<br>Stock proceeds = $4500<br>Stock loss = $500; separate opening premium = $300 |
+| OPT_PUT_ASGN_002 | Multi-lot put assignment | 1. Sell 2 puts @ $3 (lot A)<br>2. Sell 1 put @ $4 (lot B)<br>3. Assigned on 2 contracts | FIFO: consume lot A; stock cost unchanged by the separately recognised premium |
 
 **Subgroup C: Short Call Assignment (Covered Call)**
 
 | ID | Description | Steps | Verification |
 |----|-------------|-------|--------------|
-| OPT_CCALL_ASGN_001 | Covered call assignment | 1. Own 100 AAPL (cost $50/share)<br>2. Sell 1 AAPL Jan55C @ $2<br>3. Assigned, must sell stock @ $55 | Stock proceeds = $5500 + $200 = $5700<br>Cost = $5000<br>Gain = $700 |
-| OPT_CCALL_ASGN_002 | Naked call assignment | 1. Sell 1 AAPL Jan55C @ $2 (naked)<br>2. Assigned, short sell stock @ $55 | Short sale proceeds = $5500 + $200 = $5700 |
+| OPT_CCALL_ASGN_001 | Covered call assignment | 1. Own 100 AAPL (cost $50/share)<br>2. Sell 1 AAPL Jan55C @ $2<br>3. Assigned, must sell stock @ $55 | Stock proceeds = $5500<br>Cost = $5000<br>Stock gain = $500; separate opening premium = $200 |
+| OPT_CCALL_ASGN_002 | Naked call assignment | 1. Sell 1 AAPL Jan55C @ $2 (naked)<br>2. Assigned, short sell stock @ $55 | Short sale proceeds = $5500; premium $200 was separate income at opening |
 
 **Subgroup D: Long Put Exercise (Protective Put)**
 
@@ -142,8 +142,8 @@ When options are exercised or assigned, the premium must be incorporated into th
 |----|-------------|-------|--------------|
 | OPT_EXP_LONG_001 | Long call expires worthless | 1. Buy 1 AAPL Jan50C @ $5<br>2. Expires OTM | Loss = $500<br>RealizationType = OPTION_EXPIRED_LONG<br>TaxCat = ANLAGE_KAP_TERMIN_VERLUST |
 | OPT_EXP_LONG_002 | Long put expires worthless | 1. Buy 1 AAPL Jan45P @ $3<br>2. Expires OTM | Loss = $300<br>RealizationType = OPTION_EXPIRED_LONG |
-| OPT_EXP_SHORT_001 | Short call expires worthless (Stillhalter) | 1. Sell 1 AAPL Jan60C @ $2<br>2. Expires OTM | Gain = $200<br>RealizationType = OPTION_EXPIRED_SHORT<br>is_stillhalter_income = True |
-| OPT_EXP_SHORT_002 | Short put expires worthless (Stillhalter) | 1. Sell 1 AAPL Jan40P @ $1<br>2. Expires OTM | Gain = $100<br>is_stillhalter_income = True |
+| OPT_EXP_SHORT_001 | Short call expires worthless (Stillhalter) | 1. Sell 1 AAPL Jan60C @ $2<br>2. Expires OTM | Opening income = $200<br>RealizationType = OPTION_PREMIUM_RECEIPT<br>Expiry creates no second income |
+| OPT_EXP_SHORT_002 | Short put expires worthless (Stillhalter) | 1. Sell 1 AAPL Jan40P @ $1<br>2. Expires OTM | Opening income = $100<br>Expiry creates no second income |
 | OPT_EXP_MULTI_001 | Multiple contracts expire | 1. Buy 3 calls @ $5, $4, $3<br>2. All expire | Total loss = $1200 (3 RGLs, FIFO order) |
 
 **Subgroup F: Option Closing Trades**
@@ -537,7 +537,7 @@ Date: 2023-06-16, Symbol: TIO, Action: SELL, Qty: -5000, Price: $1, Code: A
 | ID | Description | Real Data Basis | Verification |
 |----|-------------|-----------------|--------------|
 | OPT_EUR_001 | EUR short put expiry | LEG 21APR23 54P | No FX conversion for premium (already EUR) |
-| OPT_EUR_002 | EUR short put assigned | LEG 17MAR23 69P | Stock cost adjusted by EUR premium |
+| OPT_EUR_002 | EUR short put assigned | LEG 17MAR23 69P | Stock cost unchanged by the separate EUR writer premium |
 | OPT_EUR_003 | EUR option with EUR stock | LEG options | Verify no spurious FX conversions |
 
 ### Group 8J: Strategy-Based Scenarios
@@ -546,7 +546,7 @@ Date: 2023-06-16, Symbol: TIO, Action: SELL, Qty: -5000, Price: $1, Code: A
 |----|-------------|-----------------|--------------|
 | OPT_CSP_001 | Cash-secured put full cycle | LEG pattern | Premium received, assigned, stock acquired |
 | OPT_CSP_002 | Cash-secured put expired | LEG pattern | Premium = Stillhalter income, no stock |
-| OPT_CC_001 | Covered call assigned | GME 30JUN23 21C | Stock called away, premium adds to proceeds |
+| OPT_CC_001 | Covered call assigned | GME 30JUN23 21C | Stock called away; writer premium stays separate |
 | OPT_WHEEL_001 | Wheel strategy: put assigned → call assigned | GME pattern | Full cost basis tracking |
 
 ### Group 8K: Large Position Scenarios
@@ -633,20 +633,19 @@ Example parsing:
 ## Appendix B: German Tax Treatment Reference
 
 **Termingeschäfte (§20 Abs. 2 Satz 1 Nr. 3 EStG)**
-- Options are classified as Termingeschäfte
-- Gains: Anlage KAP Zeile 21 (Gewinne aus Termingeschäften)
-- Losses: Anlage KAP Zeile 24 (Verluste aus Termingeschäften)
-- Loss cap: €20,000 per year on offsetting (since 2021)
+- Purchased-option results and writer cash-settlement losses follow the derivative rules.
+- Writer receipt and buyback are income/negative income under Nr. 11.
+- Use the year-specific forms and current loss rules in `reference/`; the former loss cap is repealed.
 
 **Stillhalterprämien (§20 Abs. 1 Nr. 11 EStG)**
 - Premium received from writing options is Stillhalter income
-- Taxable as "sonstige Kapitaleinkünfte" when option expires worthless
+- Recognised at opening; short expiry does not recognise the premium again
 - The `is_stillhalter_income` flag on RGL identifies this
 
 **Premium Adjustment on Exercise/Assignment**
-- When option is exercised/assigned, it doesn't generate a separate RGL
-- Instead, the premium adjusts the stock's cost basis or proceeds
-- This is economically correct: you paid/received premium as part of acquiring/disposing of stock
+- Holder exercise carries the paid option cost into the delivered asset.
+- Writer assignment carries zero adjustment; received premiums were already recognised separately.
+- These rules apply to stock/fund deliveries and historical/current-year processing.
 
 ---
 
@@ -842,7 +841,7 @@ Note: Same option, same time, different transaction IDs - these are partial fill
        rgls:
          - asset: TIO
            quantity: 5000
-           # proceeds = 5000 × $1 + (50 × 100 × $0.10) premium = $5500
+           # Stock proceeds use strike consideration only; the writer premium is separate income.
    ```
 
 2. **Add expiration test with many lots:**
@@ -863,7 +862,7 @@ exercises and assignments, reversed rows, different strikes, partial/aggregated
 deliveries, interleaved same-day openings/exercises, ambiguous contracts and
 single consumption of premiums. `test_event_chronology.py` rejects the old
 blanket lifecycle-before-trades rule. Tests preserve the distinction between
-correct ownership/allocation and the pre-existing premium-tax-treatment gaps.
+correct ownership/allocation and the writer/holder tax distinction. Issue #85 adds receipt, closing, historical and fund-underlying checks.
 
 ### 13.5 Optional: Commission Accuracy Enhancement
 

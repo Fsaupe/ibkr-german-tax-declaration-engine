@@ -297,6 +297,11 @@ class LossOffsettingEngine:
 
         p23_net_total = self.ctx.create_decimal(Decimal('0'))
 
+        # Anlage SO, Leistungen (22 Nr. 3 EStG). Deliberately its own accumulator and not
+        # one of the 20 EStG pools above: a different Einkunftsart, so it is outside
+        # 20 Abs. 6 offsetting and outside the Sparer-Pauschbetrag.
+        so_leistungen_einnahmen = self.ctx.create_decimal(Decimal('0'))
+
         for rgl in self.realized_gains_losses:
             gross_gl_eur = rgl.gross_gain_loss_eur if rgl.gross_gain_loss_eur is not None else self.ctx.create_decimal(Decimal('0'))
 
@@ -309,6 +314,10 @@ class LossOffsettingEngine:
             elif cat in [AssetCategory.OPTION, AssetCategory.CFD, AssetCategory.FUTURE]:
                 if gross_gl_eur > Decimal('0'):
                     derivative_gains_gross = self.ctx.add(derivative_gains_gross, gross_gl_eur)
+                elif rgl.is_stillhalter_income:
+                    # Negative Nr. 11 income is not a Termingeschaeft loss.
+                    # GT-ESTG20-004; in 2023/24 this reaches Z19/Z22, not Z24.
+                    kap_other_losses_abs = self.ctx.add(kap_other_losses_abs, gross_gl_eur.copy_abs())
                 else:
                     derivative_losses_abs = self.ctx.add(derivative_losses_abs, gross_gl_eur.copy_abs())
             elif cat in [AssetCategory.BOND, AssetCategory.SONSTIGE_KAPITALFORDERUNG]:
@@ -355,6 +364,15 @@ class LossOffsettingEngine:
             elif event.event_type == FinancialEventType.INTEREST_RECEIVED:
                  if event_gross_eur > Decimal('0'):
                     kap_other_income_positive = self.ctx.add(kap_other_income_positive, event_gross_eur)
+            elif event.event_type == FinancialEventType.SECURITIES_LENDING_FEE_RECEIVED:
+                # 22 Nr. 3 EStG, not 20 EStG: [GT-ESTG20-049], [GT-ESTG20-050]. It must not
+                # touch kap_other_income_positive, or it re-enters Zeile 19 and the 20 Abs. 6
+                # pools through the back door. Declared GROSS — 22 Nr. 3 Satz 2's 256 EUR
+                # Freigrenze and Satz 3's ring-fencing both operate on the taxpayer's total
+                # income of that kind from every source, which one broker export cannot
+                # establish; same position as GT-ESTG23-009 takes on the 23 EStG Freigrenze.
+                if event_gross_eur > Decimal('0'):
+                    so_leistungen_einnahmen = self.ctx.add(so_leistungen_einnahmen, event_gross_eur)
             elif event.event_type == FinancialEventType.INTEREST_PAID_STUECKZINSEN:
                  stueckzinsen_paid_sum = self.ctx.add(stueckzinsen_paid_sum, event_gross_eur.copy_abs())
                  # According to PRD Section 2.6, paid Stückzinsen reduce "Other Capital Income".
@@ -500,8 +518,13 @@ class LossOffsettingEngine:
         result.form_line_values[TaxReportingCategory.ANLAGE_KAP_AUSLAENDISCHE_KAPITALERTRAEGE_GESAMT] = zeile_19_amount.quantize(self.TWO_PLACES, context=self.ctx)
 
 
-        # Anlage SO
-        result.form_line_values["ANLAGE_SO_Z54_NET_GV"] = p23_net_total.quantize(self.TWO_PLACES, context=self.ctx)
+        # GT-FORM-020: the annual destination is resolved by the reporters.
+        result.form_line_values["ANLAGE_SO_NET_GV"] = p23_net_total.quantize(self.TWO_PLACES, context=self.ctx)
+        # Leistungen (22 Nr. 3), written unconditionally so an empty year reads as "nothing
+        # to declare" rather than "not computed". The Zeile is year-dependent and lives in
+        # the registry, not in this key: [GT-FORM-024].
+        result.form_line_values[TaxReportingCategory.ANLAGE_SO_LEISTUNGEN_EINNAHMEN] = (
+            so_leistungen_einnahmen.quantize(self.TWO_PLACES, context=self.ctx))
 
         # Anlage KAP-INV (Gross Figures)
         kap_inv_gross_dist_collector = defaultdict(lambda: self.ctx.create_decimal(Decimal('0')))

@@ -9,7 +9,7 @@ from collections import defaultdict
 from decimal import Decimal
 import logging
 
-from src.domain.assets import Option, Stock
+from src.domain.assets import Option, Stock, InvestmentFund
 from src.domain.events import OptionExerciseEvent, OptionAssignmentEvent, OptionDeliveryLink
 from src.domain.exceptions import DataIntegrityError
 from src.utils.account_utils import account_key
@@ -41,10 +41,10 @@ def perform_option_trade_linking(asset_resolver, candidate_option_lifecycle_even
         # Cash-settled options have a separate OptionEAE pairing and no stock leg.
         if not isinstance(asset, Option) or asset.underlying_asset_internal_id is None:
             continue
-        # PM-005 repairs the existing Stock premium channel. Fund/other underlying
-        # treatment is a separate pre-existing gap, not a new import rejection.
+        # GT-ESTG20-075: physical fund deliveries use the same holder-cost and
+        # writer-separation rules, with the existing account/quantity safeguards.
         underlying = asset_resolver.get_asset_by_id(asset.underlying_asset_internal_id)
-        if not isinstance(underlying, Stock):
+        if not isinstance(underlying, (Stock, InvestmentFund)):
             continue
         if asset.strike_price is None or asset.multiplier is None or asset.multiplier <= 0:
             errors.append(f'Option {event.ibkr_transaction_id}: missing strike/multiplier')
@@ -59,7 +59,7 @@ def perform_option_trade_linking(asset_resolver, candidate_option_lifecycle_even
     for trade in candidate_stock_trades_for_linking:
         asset = asset_resolver.get_asset_by_id(trade.asset_internal_id)
         action = _action(trade)
-        if not isinstance(asset, Stock) or action is None:
+        if not isinstance(asset, (Stock, InvestmentFund)) or action is None:
             continue
         key = (account_key(trade.account_id), trade.event_date, trade.asset_internal_id,
                action, trade.quantity > 0, trade.price_foreign_currency, trade.local_currency)

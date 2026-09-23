@@ -9,7 +9,7 @@ from src.domain.events import (
     OptionExerciseEvent, OptionAssignmentEvent, OptionExpirationWorthlessEvent,
     OptionCashSettlementEvent, FinancialEvent
 )
-from src.domain.assets import Option, Asset, Stock
+from src.domain.assets import Option, Asset, Stock, InvestmentFund
 from src.domain.enums import AssetCategory, FinancialEventType, TaxReportingCategory, RealizationType
 from src.domain.results import RealizedGainLoss
 from src.engine.fifo_manager import FifoLedger, ConsumedLotDetail
@@ -73,9 +73,10 @@ class OptionExerciseProcessor(EventProcessor):
             
             logger.debug(f"  Total premium paid (cost) for exercised option {option_asset.get_classification_key()}: {total_premium_paid_eur} EUR from {len(consumed_lot_details)} consumed lot details.")
 
-            if isinstance(asset_resolver.get_asset_by_id(option_asset.underlying_asset_internal_id), Stock):
+            if isinstance(asset_resolver.get_asset_by_id(option_asset.underlying_asset_internal_id),
+                          (Stock, InvestmentFund)):
                 pending_adjustments.record(event, option_asset, total_premium_paid_eur)
-                logger.info('Stored account-owned premium for exercise %s', event.event_id)
+                logger.info('Stored account-owned holder cost for exercise %s', event.event_id)
 
         except ValueError as e:
             logger.critical(f"Error consuming long option lots for exercise event {event.event_id}: {e}", exc_info=True)
@@ -120,18 +121,14 @@ class OptionAssignmentProcessor(EventProcessor):
         try:
             logger.info(f"Processing {event.event_type.name} for option {ledger.asset_internal_id} on {event.event_date} (ID: {event.event_id}). Qty Contracts: {event.quantity_contracts}")
             
-            consumed_lot_details: List[ConsumedLotDetail] = ledger.consume_short_option_get_proceeds(event.quantity_contracts)
+            ledger.consume_short_option_get_proceeds(event.quantity_contracts)
 
-            total_premium_received_eur = ledger.ctx.create_decimal(0)
-            for detail in consumed_lot_details:
-                proceeds_for_detail = ledger.ctx.multiply(detail.consumed_quantity, detail.value_per_unit_eur)
-                total_premium_received_eur = ledger.ctx.add(total_premium_received_eur, proceeds_for_detail)
-
-            logger.debug(f"  Total premium received (proceeds) for assigned option {option_asset.get_classification_key()}: {total_premium_received_eur} EUR from {len(consumed_lot_details)} consumed lot details.")
-
-            if isinstance(asset_resolver.get_asset_by_id(option_asset.underlying_asset_internal_id), Stock):
-                pending_adjustments.record(event, option_asset, total_premium_received_eur)
-                logger.info('Stored account-owned premium for assignment %s', event.event_id)
+            # GT-ESTG20-004: the premium was income at opening. Keep the
+            # account/quantity allocation but never adjust the delivered asset.
+            if isinstance(asset_resolver.get_asset_by_id(option_asset.underlying_asset_internal_id),
+                          (Stock, InvestmentFund)):
+                pending_adjustments.record(event, option_asset, Decimal('0'))
+                logger.info('Stored account-owned zero adjustment for assignment %s', event.event_id)
 
         except ValueError as e:
             logger.critical(f"Error consuming short option lots for assignment event {event.event_id}: {e}", exc_info=True)
@@ -180,6 +177,11 @@ class OptionExpirationWorthlessProcessor(EventProcessor):
                          f"Available Long Qty: {available_long_qty}, Available Short Qty: {available_short_qty}, Expiring Qty: {event.quantity_contracts}. No RGL created.")
             return []
 
+        if current_realization_type == RealizationType.OPTION_EXPIRED_SHORT:
+            # GT-ESTG20-004: expiry only releases the position. The writer's
+            # received premium has already been recognised, even in another year.
+            return []
+
         for detail in consumed_lot_details:
             acq_date_obj = parse_ibkr_date(detail.original_lot_date)
             real_date_obj = parse_ibkr_date(event.event_date)
@@ -195,9 +197,6 @@ class OptionExpirationWorthlessProcessor(EventProcessor):
             if current_realization_type == RealizationType.OPTION_EXPIRED_LONG: # Renamed
                 cost_basis_eur_per_unit_rgl = detail.value_per_unit_eur 
                 realization_value_eur_per_unit_rgl = ledger.ctx.create_decimal(0)
-            elif current_realization_type == RealizationType.OPTION_EXPIRED_SHORT: # Renamed
-                cost_basis_eur_per_unit_rgl = ledger.ctx.create_decimal(0)
-                realization_value_eur_per_unit_rgl = detail.value_per_unit_eur 
             else: 
                 logger.error(f"Unexpected realization type {current_realization_type} in worthless expiration logic.")
                 continue
@@ -211,8 +210,6 @@ class OptionExpirationWorthlessProcessor(EventProcessor):
 
             if gross_gain_loss_eur >= Decimal(0):
                 tax_cat = TaxReportingCategory.ANLAGE_KAP_TERMIN_GEWINN
-                if current_realization_type == RealizationType.OPTION_EXPIRED_SHORT: # Renamed
-                    is_stillhalter_income_flag = True # Renamed
             else:
                 tax_cat = TaxReportingCategory.ANLAGE_KAP_TERMIN_VERLUST
             
@@ -246,7 +243,9 @@ class OptionCashSettlementProcessor(EventProcessor):
     For cash-settled options, there is no stock delivery. Instead:
     1. The option position is closed (FIFO lots consumed for cost basis)
     2. The cash settlement proceeds represent the realization value
-    3. Gain/Loss = Cash Settlement Proceeds - Option Premium Cost Basis
+    3. Holder: settlement received less the purchased option cost.
+       Writer: settlement paid is a separate derivative loss; the received
+       premium was already income at opening (GT-ESTG20-004).
 
     The cash_settlement_proceeds sign convention:
     - Positive = money received (long option exercised ITM)
@@ -384,16 +383,11 @@ class OptionCashSettlementProcessor(EventProcessor):
                 gross_gl = ledger.ctx.subtract(total_realization, ledger.ctx.add(total_cost, commission_portion))
 
             else:
-                # Short option: cost basis = settlement paid (as positive), realization = premium received
-                realization_per_unit = premium_per_unit_eur
-                if total_premium_eur != Decimal("0"):
-                    lot_fraction = ledger.ctx.divide(
-                        ledger.ctx.multiply(detail.consumed_quantity, detail.value_per_unit_eur),
-                        total_premium_eur
-                    )
-                else:
-                    lot_fraction = ledger.ctx.divide(detail.consumed_quantity,
-                                                     sum(d.consumed_quantity for d in consumed_lot_details))
+                # GT-ESTG20-004, BMF Rn. 26/34: payment is a separate
+                # derivative loss, never netted with the earlier premium.
+                realization_per_unit = Decimal('0')
+                lot_fraction = ledger.ctx.divide(detail.consumed_quantity,
+                                                 sum(d.consumed_quantity for d in consumed_lot_details))
 
                 settlement_portion = ledger.ctx.multiply(settlement_eur, lot_fraction)
                 commission_portion = ledger.ctx.multiply(commission_abs_eur, lot_fraction)
@@ -410,8 +404,6 @@ class OptionCashSettlementProcessor(EventProcessor):
             is_stillhalter = False
             if gross_gl >= Decimal("0"):
                 tax_cat = TaxReportingCategory.ANLAGE_KAP_TERMIN_GEWINN
-                if current_realization_type == RealizationType.OPTION_CASH_SETTLED_SHORT:
-                    is_stillhalter = True
             else:
                 tax_cat = TaxReportingCategory.ANLAGE_KAP_TERMIN_VERLUST
 

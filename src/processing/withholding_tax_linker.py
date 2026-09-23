@@ -102,6 +102,12 @@ class WithholdingTaxLinker:
         if not isinstance(event, CashFlowEvent):
             return False
             
+        # SECURITIES_LENDING_FEE_RECEIVED is deliberately absent. Measured 2026-08-09
+        # across Cash_Transactions-2021.csv..-2025.csv: of 52 withholding rows, **0**
+        # relate to the securities-lending fee. Adding it here would build a matching path
+        # for a case that has never occurred; if one ever does, the withholding row stays
+        # unlinked and is reported as such rather than silently attached to the wrong
+        # income event.
         income_event_types = {
             FinancialEventType.DIVIDEND_CASH,
             FinancialEventType.DISTRIBUTION_FUND,

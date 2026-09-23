@@ -8,7 +8,7 @@
 # - Short put/call assignment
 # - Worthless expiration (long and short)
 # - Option closing trades (buy-to-close, sell-to-close)
-# - Premium adjustment on exercise/assignment
+# - Holder exercise costs; separate writer premiums (GT-ESTG20-004/070/075)
 #
 # Common assumptions:
 # - TAX_YEAR = 2023
@@ -126,16 +126,24 @@ tests:
           currency: EUR
     expected:
       # Stock sale RGL:
-      # cost = (100 * 50) + 1 stock_comm - (300 premium - 1 option_comm) = 5001 - 299 = 4702
+      # GT-ESTG20-004: writer premium 299 is separate; stock cost is 5001.
       # proceeds = (100 * 45) - 1 commission = 4499
-      # loss = 4499 - 4702 = -203
+      # stock loss = 4499 - 5001 = -502
       rgls:
+        - realization_type: OPTION_PREMIUM_RECEIPT
+          realization_date: "2023-01-05"
+          quantity: 1
+          total_cost_basis_eur: "0.00"
+          total_proceeds_eur: "299.00"
+          gain_loss_eur: "299.00"
+          tax_category: ANLAGE_KAP_TERMIN_GEWINN
+          is_stillhalter_income: true
         - asset: AAPL
           realization_type: LONG_POSITION_SALE
           quantity: 100
-          total_cost_basis_eur: "4702.00"
+          total_cost_basis_eur: "5001.00"
           total_proceeds_eur: "4499.00"
-          gain_loss_eur: "-203.00"
+          gain_loss_eur: "-502.00"
           tax_category: ANLAGE_KAP_AKTIEN_VERLUST
       option_eoy_quantity: 0
       stock_eoy_quantity: 0
@@ -189,15 +197,23 @@ tests:
           currency: EUR
     expected:
       # Stock sale RGL: cost = 5001 (from SOY)
-      # proceeds = (100 * 55) - 1 stock_comm + (200 premium - 1 option_comm) = 5499 + 199 = 5698
-      # gain = 5698 - 5001 = 697
+      # GT-ESTG20-004: stock proceeds 5499; premium income 199 is separate.
+      # stock gain = 5499 - 5001 = 498
       rgls:
+        - realization_type: OPTION_PREMIUM_RECEIPT
+          realization_date: "2023-01-10"
+          quantity: 1
+          total_cost_basis_eur: "0.00"
+          total_proceeds_eur: "199.00"
+          gain_loss_eur: "199.00"
+          tax_category: ANLAGE_KAP_TERMIN_GEWINN
+          is_stillhalter_income: true
         - asset: AAPL
           realization_type: LONG_POSITION_SALE
           quantity: 100
           total_cost_basis_eur: "5001.00"
-          total_proceeds_eur: "5698.00"
-          gain_loss_eur: "697.00"
+          total_proceeds_eur: "5499.00"
+          gain_loss_eur: "498.00"
           tax_category: ANLAGE_KAP_AKTIEN_GEWINN
       option_eoy_quantity: 0
       stock_eoy_quantity: 0
@@ -375,7 +391,8 @@ tests:
       # cost = 0 + 0 (expired) = 0
       # gain = 199 - 0 = 199
       rgls:
-        - realization_type: OPTION_EXPIRED_SHORT
+        - realization_type: OPTION_PREMIUM_RECEIPT
+          realization_date: "2023-01-05"
           quantity: 1
           total_cost_basis_eur: "0.00"
           total_proceeds_eur: "199.00"
@@ -412,7 +429,8 @@ tests:
           currency: EUR
     expected:
       rgls:
-        - realization_type: OPTION_EXPIRED_SHORT
+        - realization_type: OPTION_PREMIUM_RECEIPT
+          realization_date: "2023-01-05"
           quantity: 1
           total_cost_basis_eur: "0.00"
           total_proceeds_eur: "99.00"
@@ -529,14 +547,23 @@ tests:
     expected:
       # proceeds (from original short) = 300 - 1 = 299
       # cost (buy back) = 500 + 1 = 501
-      # loss = 299 - 501 = -202
+      # Separate income at opening and negative Nr. 11 income at buyback.
       rgls:
+        - realization_type: OPTION_PREMIUM_RECEIPT
+          realization_date: "2023-01-15"
+          quantity: 1
+          total_cost_basis_eur: "0.00"
+          total_proceeds_eur: "299.00"
+          gain_loss_eur: "299.00"
+          tax_category: ANLAGE_KAP_TERMIN_GEWINN
+          is_stillhalter_income: true
         - realization_type: OPTION_TRADE_CLOSE_SHORT
           quantity: 1
           total_cost_basis_eur: "501.00"
-          total_proceeds_eur: "299.00"
-          gain_loss_eur: "-202.00"
-          tax_category: ANLAGE_KAP_TERMIN_VERLUST
+          total_proceeds_eur: "0.00"
+          gain_loss_eur: "-501.00"
+          tax_category: ANLAGE_KAP_SONSTIGE_VERLUSTE
+          is_stillhalter_income: true
       option_eoy_quantity: 0
       errors: 0
 
@@ -567,14 +594,23 @@ tests:
     expected:
       # proceeds (from original short) = 400 - 1 = 399
       # cost (buy back) = 100 + 1 = 101
-      # gain = 399 - 101 = 298
+      # Separate income at opening and negative Nr. 11 income at buyback.
       rgls:
+        - realization_type: OPTION_PREMIUM_RECEIPT
+          realization_date: "2023-01-15"
+          quantity: 1
+          total_cost_basis_eur: "0.00"
+          total_proceeds_eur: "399.00"
+          gain_loss_eur: "399.00"
+          tax_category: ANLAGE_KAP_TERMIN_GEWINN
+          is_stillhalter_income: true
         - realization_type: OPTION_TRADE_CLOSE_SHORT
           quantity: 1
           total_cost_basis_eur: "101.00"
-          total_proceeds_eur: "399.00"
-          gain_loss_eur: "298.00"
-          tax_category: ANLAGE_KAP_TERMIN_GEWINN
+          total_proceeds_eur: "0.00"
+          gain_loss_eur: "-101.00"
+          tax_category: ANLAGE_KAP_SONSTIGE_VERLUSTE
+          is_stillhalter_income: true
       option_eoy_quantity: 0
       errors: 0
 
@@ -655,7 +691,8 @@ tests:
       # No FX conversion - already in EUR
       # proceeds = 175 - 1 = 174
       rgls:
-        - realization_type: OPTION_EXPIRED_SHORT
+        - realization_type: OPTION_PREMIUM_RECEIPT
+          realization_date: "2023-02-24"
           quantity: 1
           total_cost_basis_eur: "0.00"
           total_proceeds_eur: "174.00"

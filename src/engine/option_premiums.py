@@ -1,8 +1,8 @@
 """Single-use, account-owned premium allocations for linked stock deliveries.
 
 GT-ESTG20-013: another account cannot consume this account's option premium.
-The existing exercise/assignment treatment is applied by the trade processor;
-this boundary preserves identity, quantity and amount through partial legs.
+Holder exercise costs follow GT-ESTG20-070/075. Writer assignments carry zero
+adjustment (GT-ESTG20-004), preserving the same ownership/quantity checks.
 """
 from dataclasses import dataclass
 from decimal import Decimal, getcontext
@@ -72,3 +72,13 @@ class OptionPremiumBook:
     def require_empty(self):
         if self._pending:
             raise ProcessingError('Unconsumed option premium allocations remain after stock deliveries')
+
+    def adjust_delivery(self, trade):
+        """Apply holder costs once, identically in historical/current processing."""
+        if trade.net_proceeds_or_cost_basis_eur is None:
+            raise ProcessingError('Missing net underlying value for option delivery')
+        allocations = self.consume(trade)
+        adjustment = sum((amount if kind == 'C' else -amount
+                          for amount, kind in allocations), Decimal('0'))
+        trade.net_proceeds_or_cost_basis_eur = self.ctx.add(
+            trade.net_proceeds_or_cost_basis_eur, adjustment)

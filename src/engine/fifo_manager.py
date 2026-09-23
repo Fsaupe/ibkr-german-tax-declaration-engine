@@ -1205,6 +1205,10 @@ class FifoLedger:
             if not is_historical_simulation:
                 cost_basis_for_portion = self.ctx.multiply(quantity_covered_from_this_lot, cost_eur_per_unit_for_cover_event)
                 realization_value_for_portion = self.ctx.multiply(quantity_covered_from_this_lot, current_short_lot.unit_sale_proceeds_eur) # Renamed
+                if self.asset_category == AssetCategory.OPTION:
+                    # GT-ESTG20-004: only the closing payment is recognised now;
+                    # the opening premium already belonged to its receipt year.
+                    realization_value_for_portion = Decimal('0')
                 gross_gain_loss = self.ctx.subtract(realization_value_for_portion, cost_basis_for_portion) 
 
                 open_date_obj = parse_ibkr_date(current_short_lot.opening_date)
@@ -1228,10 +1232,12 @@ class FifoLedger:
                     # Both are 20 Abs. 2 Satz 1 Nr. 7 income and share Zeile 19 / Zeile 22.
                     # They stay distinct categories so the report can name them apart.
                     tax_cat = TaxReportingCategory.ANLAGE_KAP_SONSTIGE_KAPITALERTRAEGE if gross_gain_loss >= Decimal(0) else TaxReportingCategory.ANLAGE_KAP_SONSTIGE_VERLUSTE
-                elif self.asset_category in [AssetCategory.OPTION, AssetCategory.CFD, AssetCategory.FUTURE]:
+                elif self.asset_category == AssetCategory.OPTION:
+                    is_stillhalter_income_flag = True
+                    tax_cat = (TaxReportingCategory.ANLAGE_KAP_TERMIN_GEWINN
+                               if gross_gain_loss >= 0 else TaxReportingCategory.ANLAGE_KAP_SONSTIGE_VERLUSTE)
+                elif self.asset_category in [AssetCategory.CFD, AssetCategory.FUTURE]:
                     tax_cat = TaxReportingCategory.ANLAGE_KAP_TERMIN_GEWINN if gross_gain_loss >= Decimal(0) else TaxReportingCategory.ANLAGE_KAP_TERMIN_VERLUST
-                    if self.asset_category == AssetCategory.OPTION and gross_gain_loss >= Decimal(0):
-                        is_stillhalter_income_flag = True # Renamed
                 elif self.asset_category == AssetCategory.INVESTMENT_FUND:
                     rgl_fund_type = self.fund_type
                     if rgl_fund_type is None: 
@@ -1280,7 +1286,11 @@ class FifoLedger:
                     realization_type=realization_type_for_rgl,
                     quantity_realized=quantity_covered_from_this_lot, 
                     unit_cost_basis_eur=cost_eur_per_unit_for_cover_event, # Renamed kwarg
-                    unit_realization_value_eur=current_short_lot.unit_sale_proceeds_eur, # Renamed kwarg
+                    unit_realization_value_eur=(Decimal('0') if self.asset_category == AssetCategory.OPTION
+                                                else current_short_lot.unit_sale_proceeds_eur),
+                    short_opening_transaction_id=current_short_lot.source_transaction_id,
+                    short_cover_transaction_id=cover_event.ibkr_transaction_id,
+                    short_account_id=account_key(cover_event.account_id),
                     total_cost_basis_eur=cost_basis_for_portion, # Renamed kwarg
                     total_realization_value_eur=realization_value_for_portion,
                     gross_gain_loss_eur=gross_gain_loss, holding_period_days=holding_period_days,

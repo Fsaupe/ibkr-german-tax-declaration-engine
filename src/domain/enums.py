@@ -41,6 +41,14 @@ class FinancialEventType(Enum):
     DISTRIBUTION_FUND = auto() # For investment funds
     INTEREST_RECEIVED = auto()
     INTEREST_PAID_STUECKZINSEN = auto()
+    # The fee a private lender receives for lending securities (IBKR's Stock Yield
+    # Enhancement Program books it as "Broker Interest Received", which is also the type
+    # of ordinary credit interest -- the split is on the description, in
+    # domain_event_factory). NOT § 20 income: § 20 Abs. 3 is accessory and this fee is
+    # accessory to nothing, § 20 Abs. 1 Nr. 7's gate is a Kapitalforderung where a lender
+    # holds a Sachforderung, and § 22 Nr. 3 takes it by its own subsidiarity clause.
+    # legal_basis: [GT-ESTG20-049], [GT-ESTG20-050].
+    SECURITIES_LENDING_FEE_RECEIVED = auto()
     CORP_SPLIT_FORWARD = auto() # Renamed from CORP_ACTION_SPLIT_FORWARD
     CORP_MERGER_CASH = auto() # Renamed from CORP_ACTION_MERGER_CASH
     CORP_MERGER_STOCK = auto() # Renamed from CORP_ACTION_MERGER_STOCK
@@ -83,15 +91,16 @@ class RealizationType(Enum):
     LONG_POSITION_SALE = auto()          # Renamed from SALE_OF_LONG_INSTRUMENT
     SHORT_POSITION_COVER = auto()     # Renamed from COVERING_OF_SHORT_INSTRUMENT
     CASH_MERGER_PROCEEDS = auto()             # Renamed from CASH_MERGER_DISPOSAL
+    OPTION_PREMIUM_RECEIPT = auto()          # Writer income on opening, GT-ESTG20-004
     OPTION_EXPIRED_LONG = auto() # Renamed from OPTION_EXPIRATION_WORTHLESS_LONG
     OPTION_EXPIRED_SHORT = auto()# Renamed from OPTION_EXPIRATION_WORTHLESS_SHORT
     OPTION_CASH_SETTLED_LONG = auto()            # Long option exercised with cash settlement (index options)
     OPTION_CASH_SETTLED_SHORT = auto()           # Short option assigned with cash settlement (index options)
     OPTION_TRADE_CLOSE_LONG = auto()          # Selling an option contract that was previously bought (Kept as per PRD body text analysis)
     OPTION_TRADE_CLOSE_SHORT = auto()         # Buying back an option contract that was previously sold short (Kept as per PRD body text analysis)
-    # Note: Option exercises/assignments that result in stock delivery adjust the stock's
-    # cost basis/proceeds and do not typically create a separate RGL for the option itself,
-    # unless the option is traded out before exercise/assignment.
+    # Holder exercise transfers paid option costs into the underlying. Writer
+    # assignment has no premium adjustment or second recognition: its premium
+    # was already OPTION_PREMIUM_RECEIPT (GT-ESTG20-004/070/075).
 
     # Currency/FX realization types (Phase 1-4: Explicit FX trades)
     FX_CONVERSION_SALE = auto()              # Long currency sold via explicit FX conversion
@@ -145,6 +154,13 @@ class TaxReportingCategory(Enum):
     # "Gewinne aus der Veraeusserung von bestandsgeschuetzten Alt-Anteilen".
     # See reference/tax-forms/anlage-kap-inv-zeilen.md.
     ANLAGE_KAP_INV_VORABPAUSCHALE_ABZUG_Z53 = auto()
+
+    # Anlage SO, the *Leistungen* block: gross Einnahmen from a § 22 Nr. 3 Leistung, the
+    # securities-lending fee being the one this engine sees. The entry line moves between
+    # assessment years -- Zeile 12 in VZ 2023/2024, Zeile 16 in VZ 2025 -- so the number is
+    # deliberately NOT in the member name; it comes from the registry.
+    # legal_basis: [GT-FORM-024], [GT-ESTG20-049].
+    ANLAGE_SO_LEISTUNGEN_EINNAHMEN = auto()
 
     SECTION_23_ESTG_TAXABLE_GAIN = auto()
     SECTION_23_ESTG_TAXABLE_LOSS = auto()

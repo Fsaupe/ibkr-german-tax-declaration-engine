@@ -12,6 +12,16 @@ tagged on the headings here. See the Purity Rule in docs/knowledge-store.md.
 
 ## Tax Law (EStG)
 
+- [Physical option delivery and fund underlyings](tax-law/estg-20-option-underlyings.md)
+  -- paid holder costs enter the delivered asset; writer premiums remain separate,
+  including fund underlyings [GT-ESTG20-075]. Receipt and negative-income detail
+  is recorded at [GT-ESTG20-004].
+
+- [Securities short sales and disclosed assessment positions](tax-law/estg-20-leerverkaeufe.md) -- BMF 14.05.2025
+  Rn. 196: original disposal and later covering costs [GT-ESTG20-071]; the
+  withholding-only scope of the substitute basis [GT-ESTG20-072]; unresolved
+  provisional quantification of uncovered foreign-broker sales [GT-ESTG20-073], Q22.
+
 Physical exercise of a purchased put: the holder's acquisition costs enter the
 delivered asset's disposal result (BMF Rn. 28–29), distinguished from writer
 premiums, [GT-ESTG20-070] in the EStG 20 reference.
@@ -37,7 +47,7 @@ premiums, [GT-ESTG20-070] in the EStG 20 reference.
 
 - [Anlage KAP -- Zeilen](tax-forms/anlage-kap-zeilen.md) -- KAP form line mappings (Z4/5, Z7, Z18-25, Z37-41), the *zusaetzlich* / *ausschliesslich* split, year-specific differences
 - [Anlage KAP-INV -- Zeilen](tax-forms/anlage-kap-inv-zeilen.md) -- KAP-INV form lines (Z4-55), gross reporting principle
-- [Anlage SO -- Zeilen](tax-forms/anlage-so-zeilen.md) -- SO form lines for private sales (Z48-55)
+- [Anlage SO -- Zeilen](tax-forms/anlage-so-zeilen.md) -- Leistungen entry Z12 / Z12 / Z16 for VZ 2023/2024/2025 [GT-FORM-024]; private-sales calculation, allocation and further-disposal lines, independently verified on official VZ 2023/2024/2025 sheets; taxpayer allocation Z54 / Z54 / Z58 [GT-FORM-020]
 
 ## BMF Guidance (Administrative Circulars)
 
@@ -60,3 +70,5 @@ premiums, [GT-ESTG20-070] in the EStG 20 reference.
 - [Coverage Matrix](research/coverage-matrix.md) -- Event/asset vs. source mapping, completeness check
 - [Open Legal Questions](research/open-legal-questions.md) -- points no Tier 1/2 source settles: both readings and both authorities, for each
 - [Inlaendisch vs. Auslaendisch: relevance](research/inlaendisch-auslaendisch-relevance.md) -- why the 34d distinction has no expression on the declaration under Abgeltungsteuer
+
+- Anleitungen Anlage SO: [2023](Anltg_SO_23.md), [2024](Anltg_SO_24.md), [2025](Anltg_SO_25.md), with original PDFs alongside.

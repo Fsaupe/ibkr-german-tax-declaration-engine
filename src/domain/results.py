@@ -14,6 +14,33 @@ from src import config as global_config
 logger = logging.getLogger(__name__)
 
 
+@dataclass(frozen=True)
+class ShortSaleDisclosure:
+    """A reconciled lot portion, not an additional taxable realization.
+
+    An uncovered portion has no covering cost; its selected declaration
+    contribution is zero, not a claim that no sale receipts exist.
+    GT-ESTG20-074; the selected deviation is recorded in the implementation map.
+    """
+    account_id: str
+    asset_internal_id: uuid.UUID
+    opening_date: Optional[str]
+    source_transaction_id: str
+    quantity: Decimal
+    net_proceeds_eur: Optional[Decimal]
+    cover_date: Optional[str] = None
+    cover_cost_eur: Optional[Decimal] = None
+    cover_transaction_id: Optional[str] = None
+
+    @property
+    def declared_gain_eur(self) -> Optional[Decimal]:
+        if self.cover_date is None:
+            return Decimal(0)
+        if self.net_proceeds_eur is None or self.cover_cost_eur is None:
+            return None
+        return self.net_proceeds_eur - self.cover_cost_eur
+
+
 @dataclass
 class LossOffsettingResult:
     form_line_values: Dict[TaxReportingCategory | str, Decimal] = field(default_factory=lambda: defaultdict(Decimal))
@@ -79,6 +106,12 @@ class RealizedGainLoss:
     gain_after_vorabpauschale_eur: Optional[Decimal] = None
 
     is_stillhalter_income: bool = False
+    # Trace the actual FIFO portion into the cross-year disclosure. Kept here
+    # because a position-flip cover may be a synthetic event absent from the
+    # original input event list. These fields do not change the gain calculation.
+    short_opening_transaction_id: Optional[str] = None
+    short_cover_transaction_id: Optional[str] = None
+    short_account_id: Optional[str] = None
 
     def __post_init__(self):
         if not isinstance(self.asset_category_at_realization, AssetCategory):

@@ -10,8 +10,13 @@ are different kinds of statement, and merging them is how the second quietly bec
 
 An unresolved question recorded is ground truth. An unresolved question silently resolved is not.
 
+**Q22 is a research gap, not an established dispute or an authorized election.**
+The alternatives below are kept explicit so that incomplete research is not
+mistaken for a settled rule or permission to choose either amount.
+
 | # | Claim | Question | Documented in full |
 |---|-------|----------|--------------------|
+| Q22 | [GT-ESTG20-073] | What provisional amount is declared for a foreign-broker securities short sale still uncovered at assessment, with no German withholding? | this file and `../tax-law/estg-20-leerverkaeufe.md` |
 | Q1 | [GT-ESTG23-004] | Does § 108 Abs. 3 AO extend the § 23 Jahresfrist when the anniversary falls on a Saturday, Sunday or public holiday? | `../tax-law/estg-23-private-veraeusserung.md` |
 | Q2 | [GT-ESTG20-013] | Does the *"einzelnes Depot"* boundary of the Fifo rule transpose to a foreign broker's account and sub-account structure? | `../tax-law/estg-20-kapitalvermoegen.md` |
 | Q4 | [GT-ESTG20-004] | Does a Glattstellung cost fall in the year it was paid (§ 20 Abs. 1 Nr. 11 EStG and administrative practice) or in the year the Stillhalterpraemie was received (BFH VIII R 27/21, as a rueckwirkendes Ereignis)? | `../tax-law/estg-20-kapitalvermoegen.md` |
@@ -60,6 +65,41 @@ EStG at Tier 1 for the § 23 branch ([GT-ESTG23-013]), BMF 14.05.2025 Rz. 131 at
 wording cannot reach a currency balance.
 
 ---
+
+## Q22 -- Uncovered securities short sale through a foreign broker
+
+Scope: the covering purchase has **not occurred by the time of assessment**,
+and no German withholding was deducted. An outstanding position at 31 December
+alone does not establish that scope: a subsequent purchase may already have
+made the actual costs available. Original sale and later cost attribution are
+established separately by [GT-ESTG20-071].
+
+**Candidate A: a provisional base modelled on the withholding percentage.**
+Section 43a Abs. 2 Satz 7 and BMF 14.05.2025 Rn. 196 supply that percentage for
+withholding. Applying it as an estimate in a foreign-broker assessment would be
+an extension of that rule. No located Tier 1/2 source makes the extension
+automatic; § 32d Abs. 4 expressly concerns income that bore withholding.
+
+**Candidate B: assessment-specific quantification rather than a fixed
+withholding percentage.** Section 20 Abs. 4 Satz 1 requires proceeds less
+attributable costs; § 162 Abs. 1 Saetze 1–2 assigns unascertainable-base
+estimation to the tax authority, considering the relevant circumstances.
+Neither provision supplies the future covering price or makes a zero-cost
+assumption a generally applicable rule. Thus the alternative is not a sourced
+fixed 100% base either.
+
+**Disposition, 2026-09-22:** research gap, **not a demonstrated legal tie**.
+The two routes explain what remains unestablished; they are not equal-authority
+filing positions. A source establishing the specific provisional treatment,
+or an applicable tax-authority determination of the estimate, is still needed.
+Ordinary attribution of completed covering purchases is not in dispute here.
+Separately, a zero contribution pending covering may be submitted as an
+expressly disclosed contention, with complete facts and the contrary timing
+argument visible ([GT-ESTG20-074]). This procedural possibility does not resolve
+the substantive question or make the proposed amount a statutory election.
+The sources, pinpoint quotations, temporal scope and distinction from the
+procedural reopening of an assessment are in
+[`estg-20-leerverkaeufe.md`](../tax-law/estg-20-leerverkaeufe.md).
 
 ## Q1 -- § 108 Abs. 3 AO and the § 23 Jahresfrist
 

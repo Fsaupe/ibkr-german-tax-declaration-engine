@@ -1,6 +1,36 @@
 # Review and maintenance handoff
 
-Start here after context clearing. Last updated: 2026-09-22.
+Start here after context clearing. Last updated: 2026-09-23.
+
+**#76 merged and pushed as `f261bb2`; CLOSED/COMPLETED.** The maintainer
+accepted the reported result and authorized merge/closure. GitHub confirmed
+the exact verified candidate tree. Clean suite: **1,673 passed, 1 skipped**;
+VZ 2023–2025 reclassification and reports verified.
+[Implementation and completion](issue76-lending-fees.md). GT-ESTG20-063/067
+grant aggregation and other deferred work remain open.
+
+**#85 merged as `00ba1a7`, pushed, and CLOSED/COMPLETED.**
+The maintainer accepted the measured 6/6/3 declaration changes for VZ 2023–2025
+and the residual-risk assessment, then authorised merge and closure. Accepted
+candidate `7b51ef9` equals the merge tree. Clean suite: **1,599 passed/1 skipped**;
+export schemas: **10 passed**; fresh focused review: **103 passed**.
+Final real-data runs and repeat controls pass; actual PDF warnings are verified.
+Independent checks reconcile raw premiums, all ending short-option quantities
+and all 12 writer cash-settlement groups in 2025. **PM-006 is Done**.
+TradeDate remains accepted; unrelated follow-up and local issue #76 work remain
+separate. [Acceptance, verification and completion](issue85-option-premiums.md).
+
+**#11 merged as `5bc506a`, pushed, and CLOSED/COMPLETED.** The maintainer chose
+zero contribution until covering, with a conditional complete year-end inventory
+and explicit legal argument/counterargument. Final code `724a27d`, branch
+`fix/issue11-short-sale-timing`, base `93b2b0c`. Clean suite: **1,572 passed,
+1 skipped**; 14 focused checks; VZ 2023–2025 declared figures unchanged.
+All open quantities match raw snapshots; PDF annexes visually checked.
+[Authorization, implementation and verification](issue11-disclosed-position.md).
+The [legal explanation](https://github.com/uebber/ibkr-german-tax-declaration-engine/issues/11#issuecomment-5784403722)
+was published and verified; GitHub confirms closure on 2026-09-22 at 21:24:41 UTC.
+Q22 remains legally unresolved; the implementation record contains the completion
+checkpoint. Existing deferred work and the local issue #76 branch are preserved.
 
 **Current handoff: #92 accepted for the authorized merge.** Code/test revision
 `011e4ff` resolves the false verified-year warning; the Z22/Z24 reconciliation

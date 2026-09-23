@@ -68,6 +68,43 @@ from src.engine.event_processors.stock_award_processor import (
 
 logger = logging.getLogger(__name__)
 
+
+def _replay_security_with_option_costs(ledger, asset, event, tax_year, premiums, resolver):
+    """Preserve GT-ESTG20-004/070/075 through the historical delivery chain."""
+    if isinstance(event, (OptionExerciseEvent, OptionAssignmentEvent)):
+        if isinstance(asset, Option) and asset.underlying_asset_internal_id is not None:
+            processor = (OptionExerciseProcessor() if isinstance(event, OptionExerciseEvent)
+                         else OptionAssignmentProcessor())
+            processor.process(event, ledger, {'asset_resolver': resolver, 'option_premiums': premiums})
+            return
+    if isinstance(event, TradeEvent) and event.option_delivery_links:
+        premiums.adjust_delivery(event)
+    ledger.apply_historical_event(asset, event, tax_year)
+
+
+def _warn_option_premiums_near_year_end(events, resolver, tax_year, collector):
+    """Five calendar days is a review window, not an assumed settlement lag."""
+    affected = [event for event in events
+                if isinstance(event, TradeEvent)
+                and (event.event_type in (FinancialEventType.TRADE_SELL_SHORT_OPEN,
+                                         FinancialEventType.TRADE_BUY_SHORT_COVER)
+                     or event.is_position_flip)
+                and isinstance(resolver.get_asset_by_id(event.asset_internal_id), Option)
+                and event.event_date[:4] in (str(tax_year - 1), str(tax_year))
+                and event.event_date[5:] >= '12-27']
+    if not affected:
+        return
+    detail = (f'{len(affected)} Optionsprämien-Transaktion(en) vom 27.–31. Dezember: '
+              'Die Berechnung verwendet wie bisher Handelsdatum und dessen EUR-Kurs. '
+              'Bitte prüfen, ob die Prämiengutschrift/-zahlung tatsächlich im Folgejahr liegt. '
+              'Die Warnung ändert keine Beträge oder Zuordnung.')
+    if collector is not None:
+        collector.record(code='OPTION_PREMIUM_YEAR_BOUNDARY',
+                         subject=f'Optionsprämien, VZ {tax_year}', detail=detail,
+                         severity=GapSeverity.WARNING)
+    else:
+        logger.warning(detail)
+
 # Numerical balance tolerance shared by opening and closing reconciliation.
 # This is not a tax exemption or a threshold for discarding broker observations.
 CURRENCY_RECONCILIATION_TOLERANCE = Decimal("0.01")
@@ -616,6 +653,7 @@ def run_main_calculations(
     # years missing from a supplied one (a hole). Drive `_require_a_complete_grants_window`.
     grants_file_supplied: bool = False,
     grants_missing_years: str = "",
+    short_sale_disclosures: Optional[List] = None,
 ) -> Tuple[List[RealizedGainLoss], List[VorabpauschaleData], List[FinancialEvent], int]:
     """
     Runs the main calculation logic:
@@ -658,6 +696,7 @@ def run_main_calculations(
 
     option_premiums = OptionPremiumBook(ctx)
     financial_events = order_financial_events(financial_events, asset_resolver)
+    _warn_option_premiums_near_year_end(financial_events, asset_resolver, tax_year, data_gap_collector)
 
     tax_year_start_date_str = f"{tax_year}-01-01"
     tax_year_end_date_str = f"{tax_year}-12-31"
@@ -910,7 +949,8 @@ def run_main_calculations(
                     _defer(
                         Phase.LEDGER_EVENTS, hist_key,
                         (lambda l=ledger, a=asset_obj, e=hist_event:
-                            l.apply_historical_event(a, e, tax_year)),
+                            _replay_security_with_option_costs(
+                                l, a, e, tax_year, option_premiums, asset_resolver)),
                         label=f"sec:{asset_obj.get_classification_key()}",
                     )
 
@@ -1235,6 +1275,7 @@ def run_main_calculations(
         logger.info("Interval %d/%d (through %s): %d stream item(s).",
                     index + 1, len(interval_ends), interval_end, len(stream))
         stream.run()
+        option_premiums.require_empty()
 
         # The interval has been replayed AND reconciled, so the ledgers now describe
         # the holding at the close of this calendar year — the count Rz. 18.4
@@ -1506,6 +1547,7 @@ def run_main_calculations(
             if event.event_type in [
                 FinancialEventType.DIVIDEND_CASH, FinancialEventType.DISTRIBUTION_FUND,
                 FinancialEventType.INTEREST_RECEIVED, FinancialEventType.INTEREST_PAID_STUECKZINSEN,
+                FinancialEventType.SECURITIES_LENDING_FEE_RECEIVED,
                 FinancialEventType.WITHHOLDING_TAX, FinancialEventType.FEE_TRANSACTION
             ]:
                 logger.debug(f"Event {event.event_id} ({event.event_type.name}) for {asset_object.get_classification_key()} has no security ledger, but processing currency impact.")
@@ -1580,6 +1622,7 @@ def run_main_calculations(
             if event.event_type not in [
                 FinancialEventType.DIVIDEND_CASH, FinancialEventType.CAPITAL_REPAYMENT, FinancialEventType.DISTRIBUTION_FUND,
                 FinancialEventType.INTEREST_RECEIVED, FinancialEventType.INTEREST_PAID_STUECKZINSEN,
+                FinancialEventType.SECURITIES_LENDING_FEE_RECEIVED,
                 FinancialEventType.WITHHOLDING_TAX, FinancialEventType.FEE_TRANSACTION
             ]:
                 logger.warning(f"No processor mapped and no ledger interaction expected for event type: {event.event_type.name} (ID: {event.event_id}).")
@@ -1844,6 +1887,11 @@ def run_main_calculations(
         unattributed_fund_years, realized_gains_losses, tax_year, data_gap_collector)
 
     processed_income_events_for_output: List[FinancialEvent] = list(current_year_events)
+
+    if short_sale_disclosures is not None:
+        from src.engine.short_sale_disclosure import build_short_sale_disclosures
+        short_sale_disclosures.extend(build_short_sale_disclosures(
+            fifo_ledgers, realized_gains_losses, tax_year))
 
     logger.info(f"Calculation engine finished. Produced {len(realized_gains_losses)} RealizedGainLoss records.")
     logger.info(f"Calculation engine produced {len(vorabpauschale_data_items)} VorabpauschaleData records.")
@@ -2974,6 +3022,10 @@ def _process_cashflow_currency_impact(
         FinancialEventType.DIVIDEND_CASH,
         FinancialEventType.DISTRIBUTION_FUND,
         FinancialEventType.INTEREST_RECEIVED,
+        # The securities-lending fee is a cash inflow like any other. Its Einkunftsart is
+        # 22 Nr. 3 rather than 20 EStG ([GT-ESTG20-049]), which changes the form line and
+        # nothing about the currency ledger.
+        FinancialEventType.SECURITIES_LENDING_FEE_RECEIVED,
         FinancialEventType.CAPITAL_REPAYMENT,
     ]:
         # INCOME: You receive foreign currency
@@ -3055,6 +3107,7 @@ _CURRENCY_MOVING_CASHFLOW_TYPES = (
     FinancialEventType.DIVIDEND_CASH,
     FinancialEventType.DISTRIBUTION_FUND,
     FinancialEventType.INTEREST_RECEIVED,
+    FinancialEventType.SECURITIES_LENDING_FEE_RECEIVED,
     FinancialEventType.INTEREST_PAID_STUECKZINSEN,
     FinancialEventType.WITHHOLDING_TAX,
     FinancialEventType.FEE_TRANSACTION,
@@ -3345,6 +3398,7 @@ def _apply_historical_currency_event(
                 if (isinstance(event, FeeEvent) and event.is_refund) or event.event_type in [
                     FinancialEventType.DIVIDEND_CASH, FinancialEventType.DISTRIBUTION_FUND,
                     FinancialEventType.INTEREST_RECEIVED, FinancialEventType.CAPITAL_REPAYMENT,
+                    FinancialEventType.SECURITIES_LENDING_FEE_RECEIVED,
                 ]:
                     # Income: receive currency
                     _create_lot_historical(

@@ -45,6 +45,7 @@ The conditions routed through this channel, as of 2026-09-19:
     KAP_INV_Z53_VORABPAUSCHALE_NOT_ATTRIBUTABLE        WARNING
     KAP_INV_Z53_VORABPAUSCHALE_NOT_DECLARED            WARNING
     MULTI_ACCOUNT_LIMITATIONS                          WARNING
+    OPTION_PREMIUM_YEAR_BOUNDARY                       WARNING
     REPLAY_MARK_UNCONFIRMED_START                      WARNING
     STOCK_AWARD_RECEIPT_NOT_DECLARED                   WARNING
     STOCK_GRANT_TAX_POSITION                          WARNING

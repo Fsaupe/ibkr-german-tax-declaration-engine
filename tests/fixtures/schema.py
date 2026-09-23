@@ -24,7 +24,7 @@ class TaxPot(Enum):
     TERMINGESCHAEFTE = "TERM"   # Derivatives (Anlage KAP Zeilen 21, 24)
     SONSTIGE = "SONST"          # Other capital income (Anlage KAP Zeilen 19, 22)
     FONDS = "FUND"              # Investment funds (Anlage KAP-INV)
-    PARAGRAPH_23 = "P23"        # Private sales (Anlage SO Zeile 54)
+    PARAGRAPH_23 = "P23"        # Private sales (annual Anlage SO allocation line)
 
 
 # =============================================================================
@@ -70,7 +70,7 @@ class ExpectedReportingFigures:
     form_kap_z24_derivate_v: Decimal             # Gross derivative losses (absolute, un-capped)
 
     # Anlage SO form line
-    form_so_z54_p23_net_gv: Decimal              # Net §23 EStG G/L
+    form_so_p23_net_gv: Decimal              # Net §23 EStG G/L
 
     # Conceptual summaries (for user information)
     conceptual_net_other_income: Decimal         # sonst_g - sonst_v

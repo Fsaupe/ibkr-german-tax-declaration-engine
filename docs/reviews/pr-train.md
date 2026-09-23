@@ -1,6 +1,42 @@
 # PR review and merge train
 
-Last updated: **2026-09-22**. Repository:
+**#76 merged and pushed as `f261bb2`; CLOSED/COMPLETED.**
+The maintainer accepted the reported SYEP fee correction and authorized merge
+and closure. GitHub confirmed exact tree equality with candidate `37f4a4d` and
+closure at 2026-09-23 11:22:07 UTC. Clean suite: **1,673 passed, 1 skipped**;
+VZ 2023–2025 fee reclassification and PDF output verified.
+[Implementation and completion](issue76-lending-fees.md). Grant aggregation
+under GT-ESTG20-063/067 and other deferred work remain open.
+
+**#79 merged and pushed as `8686b05`; CLOSED/COMPLETED.**
+Official forms establish SO allocation Z54/Z54/Z58 for VZ 2023/2024/2025.
+Clean suite: **1,633 passed/1 skipped**. Real-data amounts unchanged;
+2023/2024 reports identical, 2025 changes only three line labels.
+The maintainer authorized merge and closure; GitHub confirmed the exact accepted
+candidate tree and closure at 2026-09-23 11:00:42 UTC. No new deferred work.
+[Implementation, verification and completion](issue79-so-form-lines.md).
+
+**#85 merged as `00ba1a7`, pushed, and CLOSED/COMPLETED.**
+The maintainer accepted the measured 6/6/3 declaration changes for VZ 2023–2025
+and the residual-risk assessment, then authorised merge and closure. Accepted
+candidate `7b51ef9` equals the merge tree. Clean suite: **1,599 passed/1 skipped**;
+export schemas: **10 passed**; fresh focused review: **103 passed**.
+Final real-data runs and repeat controls pass; actual PDF warnings are verified.
+Independent checks reconcile raw premiums, all ending short-option quantities
+and all 12 writer cash-settlement groups in 2025. **PM-006 is Done**.
+TradeDate remains accepted; unrelated follow-up and local issue #76 work remain
+separate. [Acceptance, verification and completion](issue85-option-premiums.md).
+
+**2026-09-22 — #11 disclosed short-sale position merged and issue closed.**
+Merge `5bc506a`, accepted candidate `4318415` (verified code `724a27d`).
+The maintainer authorised merge, the legal explanation and closure after the
+§ 43a/§ 44 withholding-versus-assessment clarification. GitHub's merge tree
+matches the candidate exactly; #11 is CLOSED/COMPLETED and the explanation is
+published. Clean suite: 1,572 passed/1 skipped; VZ 2023–2025 figures unchanged.
+[Decision, limits and completion](issue11-disclosed-position.md).
+Q22 remains legally unresolved. No other deferred item was closed.
+
+Last updated: **2026-09-23**. Repository:
 [`uebber/ibkr-german-tax-declaration-engine`](https://github.com/uebber/ibkr-german-tax-declaration-engine).
 
 This document tracks work needed to review and merge the train. Accepted follow-up
@@ -9,7 +45,7 @@ Apply [review-criteria.md](review-criteria.md) to every PR.
 
 ## Resume here
 
-**Current task: publish and merge accepted #92 with maintainer authorization.**
+**Historical #92 acceptance checkpoint (superseded by subsequent merges):**
 Code/test revision `011e4ff` resolves the false 2022/2023 verification warning
 without moving figures or changing existing tests. The Z22/Z24 issue is fixed;
 the Z19 objection remains withdrawn. Clean suite **1,527 passed/1 skipped**;

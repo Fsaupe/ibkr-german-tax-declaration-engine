@@ -378,8 +378,8 @@ to it in either direction**, and no other source in this library does.
 
 | Situation | Form | Line |
 |-----------|------|------|
-| Gain within the Jahresfrist | Anlage SO | Zeile 54 |
-| Loss within the Jahresfrist | Anlage SO | Zeile 54 (negative) |
+| Gain within the Jahresfrist | Anlage SO | Taxpayer allocation: Zeile 54 (VZ 2023/2024), Zeile 58 (VZ 2025) |
+| Loss within the Jahresfrist | Anlage SO | Same annual allocation line, negative |
 | Disposal after the Jahresfrist | not reported | outside 23 Abs. 1 Satz 1 Nr. 2 |
 
 Line detail: [`../tax-forms/anlage-so-zeilen.md`](../tax-forms/anlage-so-zeilen.md),

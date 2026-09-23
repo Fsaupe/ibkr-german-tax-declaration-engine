@@ -227,29 +227,52 @@ replay. It preserves option-ledger chronology and currency-affecting transaction
 order, adds validated option-to-stock dependencies and coordinates transfer sides.
 An exercise cannot be moved ahead of its opening purchase by event-type priority.
 
-**Existing premium treatment (not a legal acceptance statement):** The formulas
-below describe the retained implementation. Assignment premium netting conflicts
-with GT-ESTG20-004; historical and fund-underlying premium handling also remain
-separate pre-existing gaps. See the legal implementation map and PR #88 review.
-PM-005 corrects identity, ownership and allocation, without choosing new treatment.
+**Option premium treatment:** GT-ESTG20-004 separates writer income from
+the underlying. GT-ESTG20-070/075 carries paid holder costs into physical
+delivery, for both stocks and funds and in current/historical processing.
+PM-005's account ownership, chronology and exact allocation safeguards apply.
 
 - **When the Stock Trade is a Purchase (event types `TRADE_BUY_LONG` or `TRADE_BUY_SHORT_COVER`):**
   - **If due to Long Call Exercise:** The premium *paid* for the call option effectively increases the cost basis of the stock purchased (or increases the cost to cover an existing short stock position).
     - `Adjusted Stock Cost (EUR) = Original Stock Cost (EUR) + Option Premium Paid (EUR)`
-  - **If due to Short Put Assignment:** The premium *received* for the put option effectively decreases the cost basis of the stock purchased (or decreases the cost to cover an existing short stock position).
-    - `Adjusted Stock Cost (EUR) = Original Stock Cost (EUR) - Option Premium Received (EUR)`
+  - **If due to Short Put Assignment:** The stock cost is unchanged by the
+    received premium, which was separate income when the option was opened.
 
 - **When the Stock Trade is a Sale (event types `TRADE_SELL_LONG` or `TRADE_SELL_SHORT_OPEN`):**
-  - **If due to Short Call Assignment:** The premium *received* for the call option effectively increases the proceeds from the stock sold (or increases the proceeds recognized from opening a new short stock position).
-    - `Adjusted Stock Proceeds (EUR) = Original Stock Proceeds (EUR) + Option Premium Received (EUR)`
+  - **If due to Short Call Assignment:** Stock proceeds are unchanged by the
+    received premium, which was separate income when the option was opened.
   - **If due to Long Put Exercise:** The premium *paid* for the put option effectively decreases the proceeds from the stock sold (or decreases the proceeds recognized from opening a new short stock position).
     - `Adjusted Stock Proceeds (EUR) = Original Stock Proceeds (EUR) - Option Premium Paid (EUR)`
 
 The `net_proceeds_or_cost_basis_eur` field of the stock `TradeEvent` shall be updated to reflect this adjusted economic value. The original (unadjusted) value is derived from the stock trade's price and quantity, plus commissions. The adjustment then modifies this net value. The temporary storage for the premium is cleared after use.
 
-It must realize gains/losses on worthless option expirations (`FinancialEventType.OPTION_EXPIRATION_WORTHLESS`). The `RealizedGainLoss` object will have `RealizationType.OPTION_EXPIRED_LONG` or `RealizationType.OPTION_EXPIRED_SHORT`. These G/L contribute to `derivative_gains_gross` or `derivative_losses_abs` (Sec 2.7).
+Written option openings create `OPTION_PREMIUM_RECEIPT` for the net premium.
+The existing trade-date and per-leg EUR conversion convention is retained by
+maintainer instruction. Writer transactions in the last five calendar days of
+the current or preceding year produce a non-blocking receipt-year warning;
+the warning changes no date or figure.
+
+Short expiry only closes the lot: its premium is not recognised a second time.
+Long expiry creates `OPTION_EXPIRED_LONG` and the derivative loss. Writer
+buybacks create negative Nr. 11 income (`OPTION_TRADE_CLOSE_SHORT`) independently
+of the earlier premium; they enter the other-loss component. Writer cash
+settlement is instead a separate derivative loss. The year-specific form
+rules determine the destination of these distinct components.
 
 Correctly calculate gains/losses from covering short stock positions (`FinancialEventType.TRADE_BUY_SHORT_COVER`) using FIFO principles, reported in Anlage KAP (with `RealizationType.SHORT_POSITION_COVER`). These G/L contribute to `stock_gains_gross` or `stock_losses_abs` (Sec 2.7).
+
+**Selected cross-year filing position (2026-09-22):** this cover-year timing is
+an expressly disclosed deviation, not certified original-year compliance.
+GT-ESTG20-071–074 records the authorities and limits; the implementation map
+records the maintainer's instruction. The engine passes an immutable account/lot
+inventory to both reporters after reconciliation. Open quantities contribute zero;
+partial covers retain their actual result. The conditional annex lists every
+remaining securities-short lot and relevant current-year covers (prior-year
+openings or portions of a remaining lot), with account, instrument, source/date,
+quantity, allocated net proceeds and cover costs. It states both the selected
+argument and the contrary attribution. Same-year round trips alone do not trigger
+it; option/future/CFD and currency short exposure is excluded. This annual
+inventory does not replace disclosure of later facts known at filing.
 
 For assets classified as `AssetCategory.PRIVATE_SALE_ASSET`, it must check the holding period (calculated from acquisition and realization dates of FIFO lots). Gains/losses are only taxable under §23 EStG if the holding period is <= 1 year (realization type `RealizationType.LONG_POSITION_SALE`).
 
@@ -310,7 +333,13 @@ The system must distinguish between taxable dividends and tax-free capital repay
 - Stückzinsen *paid* (`FinancialEventType.INTEREST_PAID_STUECKZINSEN`, with `event_date` in current tax year) are negative income.
 - The net sum of Stückzinsen (`stueckzinsen_net = stueckzinsen_received - stueckzinsen_paid`, considering only current tax year events) is calculated. If `stueckzinsen_net > 0`, it contributes to `kap_other_income_positive`. If `stueckzinsen_net < 0`, its absolute value contributes to `kap_other_losses_abs`.
 
-**Option Premiums:** Realized premiums from short option positions (e.g., from `FinancialEventType.OPTION_EXPIRATION_WORTHLESS` resulting in `RealizationType.OPTION_EXPIRED_SHORT`, or closing short option trades resulting in `RealizationType.OPTION_TRADE_CLOSE_SHORT`, all with `event_date` in current tax year) are gains from Termingeschäfte. Stored in `RealizedGainLoss` with the `is_stillhalter_income` flag set to `True`. These contribute to `derivative_gains_gross`. Losses from closing long option positions or worthless long expirations (with `event_date` in current tax year) contribute to `derivative_losses_abs`.
+**Option Premiums:** Writer openings create `OPTION_PREMIUM_RECEIPT`; buybacks
+create negative income in `OPTION_TRADE_CLOSE_SHORT`. Both set
+`is_stillhalter_income=True`. Positive premium income shares the Z21 reporting
+component with derivative gains where that line exists; negative premium
+income enters `kap_other_losses_abs`, not `derivative_losses_abs`.
+Short expiry creates no additional income. Purchased-option losses and writer
+cash-settlement losses remain derivative losses (GT-ESTG20-004).
 
 ### 2.7. Aggregation into Declaration-Specific Categories (Tax Form Line Items for 2023 - NO ALT-ANTEILE)
 
@@ -392,9 +421,19 @@ Assuming Zeile 18 (Inländische Kapitalerträge) = 0:
 - **Zeile 23:** Auslands-Immobilienfonds (`TaxReportingCategory.ANLAGE_KAP_INV_AUSLANDS_IMMOBILIENFONDS_GEWINN_GROSS`).
 - **Zeile 26:** Sonstige Investmentfonds (`TaxReportingCategory.ANLAGE_KAP_INV_SONSTIGE_FONDS_GEWINN_GROSS`).
 
-#### Anlage SO (Sonstige Einkünfte - §23 EStG Private Sales Transactions) - 2023 Form Structure
+#### Anlage SO (Sonstige Einkünfte) - 2023 Form Structure
 
-Applies to `AssetCategory.PRIVATE_SALE_ASSET` if sold within 1 year (holding period check), with `realization_date` in 2023.
+Two separate blocks of the form, from two different provisions.
+
+**Leistungen (§22 Nr. 3 EStG).** Gross Einnahmen from a Leistung, which for this engine means the
+fee received for lending securities out (`FinancialEventType.SECURITIES_LENDING_FEE_RECEIVED` →
+`TaxReportingCategory.ANLAGE_SO_LEISTUNGEN_EINNAHMEN`). A different Einkunftsart from §20, so it
+takes no part in the §20 Abs. 6 offsetting and none of the Anlage KAP lines. The entry line is
+year-specific and comes from `get_anlage_so_form_rules(tax_year)`; the §22 Nr. 3 Satz 2 Freigrenze
+is deliberately not applied, because it is a threshold on income from every source.
+
+**Private Veräußerungsgeschäfte (§23 EStG).** Applies to `AssetCategory.PRIVATE_SALE_ASSET` if sold
+within 1 year (holding period check), with `realization_date` in 2023.
 
 *For each taxable transaction (from `RealizedGainLoss` with `realization_date` in 2023 and `TaxReportingCategory.SECTION_23_ESTG_TAXABLE_GAIN` or `_LOSS`):*
 - **Zeile 42 / 48 (Bezeichnung / Art des Wirtschaftsguts):** `Asset.description`.
@@ -443,7 +482,7 @@ Does not calculate *creditable* WHT.
 Figures for **direct entry onto current tax year forms**.
 - Anlage KAP: Values for Zeile 19, 20, 21, 22, 23, 24 as calculated per Section 2.7.
 - Anlage KAP-INV: GROSS amounts for Zeilen 4-8 and 14, 17, 20, 23, 26.
-- Anlage SO: Net G/L for Zeile 54.
+- Anlage SO: Gross lending-fee Einnahmen aus Leistungen (GT-FORM-024), and net G/L for the annual allocation line (GT-FORM-020): Zeile 54 in VZ 2023/2024, Zeile 58 in VZ 2025.
 
 Values will be quantized to `OUTPUT_PRECISION_AMOUNTS` for display.
 
@@ -636,17 +675,20 @@ Summed net income/G/L per tax pot after local calculations and Finanzamt-style o
       - For `BOND` and `SONSTIGE_KAPITALFORDERUNG` sales/covers, G/L contributes to `kap_other_income_positive` or `kap_other_losses_abs`.
       - For `INVESTMENT_FUND` sales, calculate Teilfreistellung on G/L. The `net_gain_loss_after_teilfreistellung_eur` contributes to `fund_income_net_taxable` (for internal calculations only, not included in Anlage KAP Zeile 19).
       - For `PRIVATE_SALE_ASSET`, check holding period for taxability and G/L contributes to Anlage SO.
-      - Stock trades linked to option events will have their economics adjusted by the option premium before FIFO processing (using the `option_delivery_links` link).
+      - Stock/fund deliveries carry paid holder costs before FIFO processing;
+        writer assignment allocations carry zero premium adjustment.
     - **`CashFlowEvent`:** Record gross income.
       - For fund distributions, calculate Teilfreistellung; the net taxable amount contributes to `fund_income_net_taxable` (for internal calculations only, not included in Anlage KAP Zeile 19).
       - For non-fund dividends, interest, Stückzinsen, these contribute to `kap_other_income_positive` or `kap_other_losses_abs` (after netting for Stückzinsen).
     - **`OptionLifecycleEvent` subtypes:** Process these events.
       - For exercises/assignments, this involves:
         1. Consuming the option lots from the option's FIFO ledger.
-        2. Calculating the total EUR premium of the consumed option leg.
-        3. Storing this premium in a temporary context (e.g., `OptionPremiumBook`) associated with the option event's ID, for later use by the linked stock `TradeEvent`.
-        4. The linked stock `TradeEvent` (processed separately via `TradeProcessor`) will then retrieve this premium to adjust its own economic basis/proceeds (as detailed in Section 2.4).
-      - For expirations or closing option trades not resulting in stock delivery, generate `RealizedGainLoss` for option premiums with the correct `RealizationType`. These G/L contribute to `derivative_gains_gross` or `derivative_losses_abs`.
+        2. Calculating the consumed holder cost; writer assignment carries zero adjustment.
+        3. Recording the amount and delivery quantity in the account-owned `OptionPremiumBook`.
+        4. Applying each allocation once to the linked stock/fund trade, identically
+           in current-year processing and historical replay.
+      - Premium receipt, negative closing income, long expiry and cash settlement
+        follow the separate event and reporting rules in Section 2.4.
     - Calculate gross and net Vorabpauschale (€0 for current tax year), creating `VorabpauschaleData`. The net Vorabpauschale contributes to `fund_income_net_taxable` (as €0).
 
 14. Perform EOY Quantity Validation (as per Section 2.4): Compare calculated EOY quantities in FIFO ledgers against the closing snapshot (from `POSITIONS_END_FILE_PATH`, read through `person_snapshot()`) using a small numerical tolerance. Report any errors.
@@ -664,7 +706,7 @@ Summed net income/G/L per tax pot after local calculations and Finanzamt-style o
 Figures for **direct entry onto current tax year forms**.
 - Anlage KAP: Values for Zeile 19 (Ausländische Kapitalerträge nach Saldierung), Zeile 20 (Gewinne Aktien), Zeile 21 (Gewinne Termingeschäfte), Zeile 22 (Sonstige Verluste), Zeile 23 (Verluste Aktien), Zeile 24 (Verluste Termingeschäfte) as calculated per Section 2.7.
 - Anlage KAP-INV: GROSS amounts for lines 4-8 (Distributions) and 14, 17, 20, 23, 26 (Gains/Losses).
-- Anlage SO: Net G/L for Zeile 54.
+- Anlage SO: Gross lending-fee Einnahmen aus Leistungen (GT-FORM-024), and net G/L for the annual allocation line (GT-FORM-020): Zeile 54 in VZ 2023/2024, Zeile 58 in VZ 2025.
 
 Values will be `Decimal` formatted and quantized to 2 decimal places (e.g., using `OUTPUT_PRECISION_AMOUNTS`).
 

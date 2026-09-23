@@ -23,8 +23,8 @@ None of the three declares anything by itself. An award and a return are not dis
 The award -- not the vesting -- is the § 22 Nr. 3 receipt ([GT-ESTG20-063]): under that
 programme's terms Zufluss falls on the booking ([GT-ESTG20-064]), so the vesting is inert.
 A return after Zufluss is a negative Einnahme of the year it is made, in the amount
-originally brought to account ([GT-ESTG20-067]). Both belong on Anlage SO, a category the
-reporting layer does not have (issue #76), so both are handed to the reader with amount,
+originally brought to account ([GT-ESTG20-067]). Both belong on Anlage SO. Automatic Leistungen aggregation currently covers lending
+fees only, so awards and returns are handed to the reader with amount,
 year and destination. The value at the award is the Anschaffungskosten of the lot
 ([GT-ESTG20-065]), and that reaches a declared figure through the disposal, not through
 this processor.
@@ -104,8 +104,8 @@ class StockAwardProcessor(EventProcessor):
         **The gap exists because the omission is otherwise invisible and points one way.**
         The engine takes the award value as the lot's Anschaffungskosten, which LOWERS
         the declared gain on a later disposal, and omits the matching § 22 Nr. 3 receipt
-        ([GT-ESTG20-063]) because the reporting layer has no Anlage SO *Einkuenfte aus
-        Leistungen* category -- issue #76. Taking the half that reduces a figure and
+        ([GT-ESTG20-063]) because awards are not yet connected to the Anlage SO *Einkuenfte aus
+        Leistungen* aggregation. Taking the half that reduces a figure and
         dropping the half that adds one is understatement, and a run that did it in
         silence would produce a complete-looking declaration that is not complete.
 
@@ -135,7 +135,7 @@ class StockAwardProcessor(EventProcessor):
             f"into the account on {event.event_date}, which is where Zufluss falls "
             f"([GT-ESTG20-064]). That receipt is a Leistung under § 22 Nr. 3 EStG "
             f"([GT-ESTG20-063]) and belongs on Anlage SO for {event.event_date[:4]}; this "
-            f"engine has no line for it and has NOT declared it (issue #76). Its value at "
+            f"engine has NOT declared it; the automatic Leistungen line covers lending fees only. Its value at "
             f"Zufluss is "
             f"{'EUR ' + str(gross) if gross is not None else 'not computable here'}, "
             f"which is also the acquisition cost the engine has used for these units "
@@ -163,7 +163,7 @@ class StockAwardProcessor(EventProcessor):
 
         WARNING and not FAIL_FAST, for the reason `_record_undeclared_receipt` gives: the
         Kapitalertrag figures are complete and correct; what is missing is an Anlage SO
-        line the engine has never had (issue #76), and the reader is given what to enter.
+        line that currently aggregates lending fees only; the reader is given what to enter.
         This fires only for a return dated inside the processed year. One dated earlier is
         applied by the historical replay, and its negative Einnahme belonged to that year.
         """
@@ -182,7 +182,7 @@ class StockAwardProcessor(EventProcessor):
             f"negative Einnahme under § 22 Nr. 3 EStG of {event.event_date[:4]}, the year of "
             f"the return, in the amount originally brought to account for them: "
             f"EUR {amount} ([GT-ESTG20-067]). It belongs on Anlage SO; this engine has no "
-            f"line for it and has NOT declared it (issue #76). Enter it yourself, or the "
+            f"automatic aggregation for this return and has NOT declared it. Enter it yourself, or the "
             f"return overstates. The Kapitalertrag side is complete: the returned units left "
             f"the holding at that same cost, nothing was realised, and a later disposal is "
             f"measured only against the shares retained.",
