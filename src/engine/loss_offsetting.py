@@ -229,6 +229,15 @@ class LossOffsettingEngine:
                     f"einschlägige DBA zu prüfen (der Betrag wurde nicht verändert). "
                     f"Zeilen: {_rowlist(rows)}."
                 )
+            elif status is WithholdingStatus.RATE_YEAR_NOT_RESEARCHED:
+                detail = (
+                    f"{len(rows)} Quellensteuerzeile(n) aus {state_label}: für das Steuerjahr "
+                    f"{self.tax_year} sind im Referenzbestand keine anrechenbaren Sätze "
+                    f"recherchiert (BZSt-Übersicht Stand 1. Januar {self.tax_year} nicht "
+                    f"eingelesen). Sätze anderer Jahre werden NICHT übernommen. Der Betrag auf "
+                    f"Zeile 41 ist die EINBEHALTENE Steuer, kein geprüfter anrechenbarer Betrag "
+                    f"(der Betrag wurde nicht verändert). Zeilen: {_rowlist(rows)}."
+                )
             else:  # UNLINKED
                 detail = (
                     f"{len(rows)} Quellensteuerzeile(n) konnten keinem Ertrag zugeordnet werden, "
@@ -400,7 +409,7 @@ class LossOffsettingEngine:
                 rows_by_income[income_event.event_id if income_event else id(event)].append(event)
         assessments: Dict[int, WithholdingAssessment] = {}
         for rows in rows_by_income.values():
-            for row, assessment in zip(rows, assess_withholdings(rows, income_by_id.get(rows[0].taxed_income_event_id))):
+            for row, assessment in zip(rows, assess_withholdings(rows, income_by_id.get(rows[0].taxed_income_event_id), self.tax_year)):
                 assessments[id(row)] = assessment
         for event in foreign_rows:
             assessment = assessments[id(event)]

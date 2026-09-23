@@ -18,6 +18,7 @@ Sources of truth mirrored here (machine-readable side of `reference/`):
 - Teilfreistellung: reference/investment-tax-law/invstg-20-teilfreistellung.md
 - Form structure:   reference/tax-law/estg-20-abs6-verlustverrechnung.md,
                     reference/tax-forms/anlage-kap-zeilen.md
+- Creditable foreign dividend withholding: reference/bmf-guidance/bzst-anrechenbare-quellensteuer.md
 `tests/test_tax_law_registry.py` pins registry <-> reference consistency.
 """
 import logging
@@ -25,7 +26,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 from typing import Optional
 
-from src.domain.enums import InvestmentFundType
+from src.domain.enums import FinancialEventType, InvestmentFundType
 from src.domain.exceptions import ProcessingError
 
 logger = logging.getLogger(__name__)
@@ -108,6 +109,66 @@ def teilfreistellung_rate(fund_type: Optional[InvestmentFundType]) -> Decimal:
     if fund_type is None:
         return Decimal("0.00")
     return TEILFREISTELLUNG_RATES.get(fund_type, Decimal("0.00"))
+
+
+# =============================================================================
+# Creditable foreign withholding on dividends (§32d Abs. 5 EStG) — BZSt column C
+# =============================================================================
+# [GT-CREDIT-029]: the BZSt table "Anrechenbarkeit der Quellensteuer auf Dividenden
+# und Zinsen", one edition per year, each stating the law at 1 January. A year's rates
+# come from THAT year's edition only. A year with no entry has no rates — nothing is
+# carried from a neighbouring year, even where the editions agree; research the
+# edition and add the year. Fractions, not percent.
+#
+# US ([GT-CREDIT-027]): assumed, not checked, that the dividend is not an exempt RIC
+# dividend. The 15 % holds "falls keine Befreiung"; where the exemption applies
+# nothing is creditable, and this table would still let 15 % through. Nothing in the
+# export marks a RIC exemption. Measured 2026-09-22: of the 28 US-suffixed withholding
+# rows VZ 2023-2025, 0 are paired to income described as exempt.
+
+CREDITABLE_DIVIDEND_RATES: dict[int, dict[str, Decimal]] = {
+    2023: {"US": Decimal("0.15"), "FR": Decimal("0.128"), "JP": Decimal("0.15"),
+           "CA": Decimal("0.15"), "KR": Decimal("0.15"), "NL": Decimal("0.15"),
+           "TW": Decimal("0.10")},
+    2024: {"US": Decimal("0.15"), "FR": Decimal("0.128"), "JP": Decimal("0.15"),
+           "CA": Decimal("0.15"), "KR": Decimal("0.15"), "NL": Decimal("0.15"),
+           "TW": Decimal("0.10")},
+    2025: {"US": Decimal("0.15"), "FR": Decimal("0.128"), "JP": Decimal("0.15"),
+           "CA": Decimal("0.15"), "KR": Decimal("0.15"), "NL": Decimal("0.15"),
+           "TW": Decimal("0.10")},
+    2026: {"US": Decimal("0.15"), "FR": Decimal("0.128"), "JP": Decimal("0.15"),
+           "CA": Decimal("0.15"), "KR": Decimal("0.15"), "NL": Decimal("0.15"),
+           "TW": Decimal("0.10")},
+}
+
+# The income kinds a state's dividend rate governs. The table's "Dividenden" are
+# distributions of Kapitalgesellschaften, so share dividends only; the US treaty puts a
+# RIC's distribution on the dividend rate too (Art. 10 Abs. 4 Satz 2). A payment in lieu
+# reaches these kinds as its instrument's own income on branch A ([GT-INVSTG-059]).
+_SHARE_DIVIDEND = frozenset({FinancialEventType.DIVIDEND_CASH})
+CREDITABLE_DIVIDEND_KINDS: dict[str, frozenset] = {
+    "US": frozenset({FinancialEventType.DIVIDEND_CASH, FinancialEventType.DISTRIBUTION_FUND}),
+    "FR": _SHARE_DIVIDEND, "JP": _SHARE_DIVIDEND, "CA": _SHARE_DIVIDEND,
+    "KR": _SHARE_DIVIDEND, "NL": _SHARE_DIVIDEND, "TW": _SHARE_DIVIDEND,
+}
+
+
+def creditable_dividend_rates_researched(tax_year: int) -> bool:
+    """Whether the BZSt edition for `tax_year` has been read into the table."""
+    return tax_year in CREDITABLE_DIVIDEND_RATES
+
+
+def creditable_dividend_rate(tax_year: int, source_state: Optional[str],
+                             income_kind: FinancialEventType) -> Optional[Decimal]:
+    """The creditable rate for a state and income kind in `tax_year`, or None where the
+    year's edition, the state or the kind is not in the table. Never another year's."""
+    if not source_state:
+        return None
+    state = source_state.strip().upper()
+    rate = CREDITABLE_DIVIDEND_RATES.get(tax_year, {}).get(state)
+    if rate is None or income_kind not in CREDITABLE_DIVIDEND_KINDS.get(state, frozenset()):
+        return None
+    return rate
 
 
 # =============================================================================

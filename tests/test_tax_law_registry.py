@@ -14,7 +14,7 @@ import pytest
 from decimal import Decimal
 from pathlib import Path
 
-from src.domain.enums import InvestmentFundType
+from src.domain.enums import FinancialEventType, InvestmentFundType
 from src.domain.exceptions import ProcessingError
 from src.tax_law import registry
 
@@ -187,3 +187,47 @@ class TestBasiszinsReferenceConsistency:
             f"missing year(s) between {years[0]} and {years[-1]}: a gap silently "
             "skips that year's Vorabpauschale"
         )
+
+
+class TestCreditableDividendRatesReferenceConsistency:
+    """The per-year creditable dividend rates must equal the per-edition columns of the
+    BZSt table in the knowledge store, year for year and state for state. Parsed from the
+    document, so a year added to one side only is caught.
+    Source: reference/bmf-guidance/bzst-anrechenbare-quellensteuer.md [GT-CREDIT-029]."""
+
+    REFERENCE_DOC = (Path(__file__).resolve().parent.parent
+                     / "reference" / "bmf-guidance" / "bzst-anrechenbare-quellensteuer.md")
+
+    @staticmethod
+    def _parse(text: str) -> dict[int, dict[str, Decimal]]:
+        """| Frankreich | FR | 12,8 | 15 | 12,8 | 12,8 | 12,8 | 12,8 | pages |, under a
+        header naming the editions as 'C 2023 | C 2024 | ...'."""
+        years: list[int] = []
+        rates: dict[int, dict[str, Decimal]] = {}
+        for line in text.splitlines():
+            if line.startswith("| Source state | Code |"):
+                years = [int(y) for y in re.findall(r"C (\d{4})", line)]
+                continue
+            m = re.match(r"^\|[^|]+\|\s*([A-Z]{2})\s*\|[^|]+\|[^|]+\|(.*)$", line)
+            if years and m:
+                cells = [c.strip() for c in m.group(2).split("|")][:len(years)]
+                for year, cell in zip(years, cells):
+                    rates.setdefault(year, {})[m.group(1)] = (
+                        Decimal(cell.replace(",", ".")) / 100)
+        return rates
+
+    def test_parser_finds_the_table(self):
+        parsed = self._parse(self.REFERENCE_DOC.read_text(encoding="utf-8"))
+        assert len(parsed) >= 4 and all(len(v) >= 7 for v in parsed.values()), parsed
+
+    def test_registry_matches_the_reference_document(self):
+        parsed = self._parse(self.REFERENCE_DOC.read_text(encoding="utf-8"))
+        assert registry.CREDITABLE_DIVIDEND_RATES == parsed, (
+            "src/tax_law/registry.py and reference/bmf-guidance/"
+            "bzst-anrechenbare-quellensteuer.md disagree; the reference is authoritative")
+
+    def test_an_unresearched_year_has_no_rate(self):
+        year = max(registry.CREDITABLE_DIVIDEND_RATES) + 1
+        assert not registry.creditable_dividend_rates_researched(year)
+        assert registry.creditable_dividend_rate(
+            year, "US", FinancialEventType.DIVIDEND_CASH) is None

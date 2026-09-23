@@ -319,3 +319,30 @@ def test_b9_a_french_fund_distribution_is_not_given_the_share_dividend_rate(tmp_
     form, gaps = _run([inc, _wht(fund, "250", country="FR", linked_to=inc)], resolver)
     assert form.form_line_values[Z41] == Decimal("225.00")
     assert "FOREIGN_WHT_RATE_NOT_VERIFIED" in _codes(gaps)
+
+
+# --------------------------------------------------------------------------- #
+# B10 — the rates are per assessment year; an unresearched year gets none
+# --------------------------------------------------------------------------- #
+# [GT-CREDIT-029]: each year's rates come from that year's BZSt edition only. A year
+# whose edition has not been read is never given a neighbouring year's rate.
+
+@pytest.mark.parametrize("tax_year", [2022, 2027])
+def test_b10_a_year_without_a_researched_edition_is_not_given_another_year_s_rate(tmp_path, tax_year):
+    resolver = _resolver(tmp_path)
+    stock = _stock(resolver)
+    inc = _income(stock, "1000")
+    form, gaps = _run([inc, _wht(stock, "300", linked_to=inc)], resolver, tax_year=tax_year)
+    assert form.form_line_values[Z41] == Decimal("270.00"), "as withheld, not capped to 135"
+    g = [x for x in gaps.gaps if x.code == "FOREIGN_WHT_RATE_YEAR_NOT_RESEARCHED"]
+    assert len(g) == 1 and g[0].severity is GapSeverity.WARNING and str(tax_year) in g[0].detail
+    assert "FOREIGN_WHT_ABOVE_TREATY_RATE" not in _codes(gaps)
+
+
+@pytest.mark.parametrize("tax_year", [2023, 2024, 2025, 2026])
+def test_b10_each_researched_year_caps_with_its_own_rate(tmp_path, tax_year):
+    resolver = _resolver(tmp_path)
+    stock = _stock(resolver)
+    inc = _income(stock, "1000")
+    form, _ = _run([inc, _wht(stock, "300", linked_to=inc)], resolver, tax_year=tax_year)
+    assert form.form_line_values[Z41] == Decimal("135.00")

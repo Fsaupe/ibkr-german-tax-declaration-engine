@@ -17,10 +17,12 @@ store are checked, and a row it cannot verify keeps the amount that was actually
 withheld while telling the caller to flag it. The caller (loss_offsetting) routes the
 flags through the data-gap channel and never past it.
 
-Scope (issue #78): dividends only. The US rate comes from the treaty and covers a US
-fund's distribution too; the rates for FR, JP, CA, KR, NL and TW come from the BZSt table
-([GT-CREDIT-029]) and cover share dividends only -- the table's "Dividenden" are
-distributions of Kapitalgesellschaften. Measured 2026-09-22: 28 dividend/PIL withholding
+Scope (issue #78): dividends only. The rates are per assessment year, from that year's
+BZSt edition ([GT-CREDIT-029]), held in `src/tax_law/registry.py`; a year whose edition
+has not been read has no rates and every row is reported, never given another year's
+rate. The US rate covers a US fund's distribution too (the treaty covers RICs); the
+others cover share dividends only -- the table's "Dividenden" are distributions of
+Kapitalgesellschaften. Measured 2026-09-22: 28 dividend/PIL withholding
 rows VZ 2023-2025 carry the "- US TAX" suffix, 0 of them above 15 % + 1 cent of their
 paired income. The source state is read from `source_country_code` (IssuerCountryCode),
 which is blank on 11 dividend/PIL withholding rows, all VZ 2023 (7 US, 3 CA, 1 FR by
@@ -34,35 +36,8 @@ from decimal import Decimal, ROUND_HALF_UP
 from enum import Enum
 from typing import List, Optional
 
-from src.domain.enums import FinancialEventType
 from src.domain.events import CashFlowEvent, WithholdingTaxEvent
-
-_SHARE_DIVIDEND = frozenset({FinancialEventType.DIVIDEND_CASH})
-
-# The creditable dividend rate per source state, and the income kinds it governs. A
-# payment in lieu reaches these kinds as its instrument's own income on branch A
-# ([GT-INVSTG-059]): DISTRIBUTION_FUND for a fund, DIVIDEND_CASH for a share.
-_TREATY_DIVIDEND_RATES = {
-    # [GT-CREDIT-027] DBA D-USA Art. 10 Abs. 2 Buchst. b, and Abs. 4 Satz 2 for a RIC
-    # (fund): 15 % of the gross. The BZSt gives US interest 0 anrechenbar, but interest
-    # is not carried here (reported rate-not-verified instead).
-    #
-    # Assumed, not checked: the dividend is not an exempt RIC dividend. The 15 % holds
-    # *falls keine Befreiung*; where the exemption applies nothing is creditable, and
-    # this table would still let 15 % through. Nothing in the export marks a RIC
-    # exemption. Measured 2026-09-22: of the 28 US-suffixed withholding rows VZ
-    # 2023-2025, 0 are paired to income described as exempt.
-    "US": (Decimal("0.15"), frozenset({FinancialEventType.DIVIDEND_CASH,
-                                       FinancialEventType.DISTRIBUTION_FUND})),
-    # [GT-CREDIT-029] BZSt column C, Stand 1.1.2023 to 1.1.2026, share dividends.
-    # France's 12,8 is its national rate, below the DBA's 15.
-    "FR": (Decimal("0.128"), _SHARE_DIVIDEND),
-    "JP": (Decimal("0.15"), _SHARE_DIVIDEND),
-    "CA": (Decimal("0.15"), _SHARE_DIVIDEND),
-    "KR": (Decimal("0.15"), _SHARE_DIVIDEND),
-    "NL": (Decimal("0.15"), _SHARE_DIVIDEND),
-    "TW": (Decimal("0.10"), _SHARE_DIVIDEND),
-}
+from src.tax_law.registry import creditable_dividend_rate, creditable_dividend_rates_researched
 
 _CENT = Decimal("0.01")
 
@@ -71,6 +46,7 @@ class WithholdingStatus(Enum):
     OK = "OK"                              # at or below the treaty rate; credit in full
     ABOVE_TREATY_RATE = "ABOVE_TREATY_RATE"  # over-withheld; credit capped, excess reclaimable in the source state
     RATE_NOT_VERIFIED = "RATE_NOT_VERIFIED"  # no creditable rate in the store for this row
+    RATE_YEAR_NOT_RESEARCHED = "RATE_YEAR_NOT_RESEARCHED"  # no rates read for this tax year at all
     UNLINKED = "UNLINKED"                  # no income row to measure the rate against
 
 
@@ -87,19 +63,9 @@ class WithholdingAssessment:
         return (self.withheld_eur - self.creditable_eur).quantize(_CENT, rounding=ROUND_HALF_UP)
 
 
-def treaty_dividend_rate(source_state: Optional[str],
-                         income_kind: FinancialEventType) -> Optional[Decimal]:
-    """The creditable rate for a source state and income kind, or None if the store has none."""
-    if not source_state:
-        return None
-    entry = _TREATY_DIVIDEND_RATES.get(source_state.strip().upper())
-    if entry is None or income_kind not in entry[1]:
-        return None
-    return entry[0]
-
-
 def assess_withholdings(whts: List[WithholdingTaxEvent],
-                        income_event: Optional[CashFlowEvent]) -> List[WithholdingAssessment]:
+                        income_event: Optional[CashFlowEvent],
+                        tax_year: int) -> List[WithholdingAssessment]:
     """Decide the creditable amount of every foreign (non-German-KESt) withholding row
     linked to one income, one assessment per row in the order given.
 
@@ -123,8 +89,10 @@ def assess_withholdings(whts: List[WithholdingTaxEvent],
 
     if income_event is None:
         return _each(WithholdingStatus.UNLINKED)
+    if not creditable_dividend_rates_researched(tax_year):
+        return _each(WithholdingStatus.RATE_YEAR_NOT_RESEARCHED)
 
-    rates = {treaty_dividend_rate(state, income_event.event_type) for state in states}
+    rates = {creditable_dividend_rate(tax_year, state, income_event.event_type) for state in states}
     rate = rates.pop() if len(rates) == 1 else None
     if rate is None:
         # No treaty rate in the store for this (state, income kind), or rows naming

@@ -37,6 +37,7 @@ The conditions routed through this channel, as of 2026-09-19:
     EOY_QTY_MISMATCH                                   WARNING
     FOREIGN_WHT_ABOVE_TREATY_RATE                      WARNING
     FOREIGN_WHT_RATE_NOT_VERIFIED                      WARNING
+    FOREIGN_WHT_RATE_YEAR_NOT_RESEARCHED               WARNING
     FOREIGN_WHT_UNLINKED                               WARNING
     KAP_INV_Z53_VORABPAUSCHALE_DECLARATION_UNKNOWN     WARNING
     KAP_INV_Z53_VORABPAUSCHALE_NOT_ATTRIBUTABLE        WARNING
