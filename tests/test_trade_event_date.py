@@ -212,7 +212,7 @@ class TestACashFlowIsStillBookedOnItsZufluss:
         factory = DomainEventFactory(
             asset_resolver=AssetResolver(
                 asset_classifier=AssetClassifier(cache_file_path="dummy_cache.json")))
-        monkey = def_mod.DomainEventFactory._zufluss_date
+        monkey = def_mod.DomainEventFactory.__dict__["_zufluss_date"]  # the staticmethod object itself
         def_mod.DomainEventFactory._zufluss_date = staticmethod(spy)
         try:
             events = factory.create_events_from_cash_transactions([rct])
