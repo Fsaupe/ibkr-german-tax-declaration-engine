@@ -30,7 +30,8 @@ https://www.bundesfinanzministerium.de/Content/DE/Downloads/BMF_Schreiben/Intern
 29.08.1989 and the protocol of 01.06.2006 (Neufassung bekannt gemacht 04.06.2008, BGBl. 2008 II
 S. 611/851), and nothing later; Part II.1 (*Kuenftige Abkommen und laufende Verhandlungen*, income
 taxes) has no entry for the Vereinigte Staaten -- the only US entry in Part II is under
-*Amtshilfe und Informationsaustausch*. The rates are not year-parameterised within the window.
+*Amtshilfe und Informationsaustausch*. The BZSt table confirms the creditable 15 % for each
+assessment year separately, edition by edition ([GT-CREDIT-029]).
 
 ---
 

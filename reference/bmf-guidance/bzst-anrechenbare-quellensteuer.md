@@ -20,12 +20,19 @@ year. All four were retrieved 2026-09-23 and read with `pdftotext -layout`:
 
 The 2026 edition is the one [GT-CREDIT-026] and [GT-CREDIT-027] already quote (there as `v=2`).
 
-**Applicable tax years.** Each edition gives *"die Rechtslage zum 1. Januar"* of its year (2025
-edition, Erlaeuterungen, page 1). The rows quoted below carry the same values in all four
-editions, so they hold for VZ 2023, VZ 2024 and VZ 2025 without a change inside the window. The
-Erlaeuterungen add that paying agents need not apply a change against the previous year's edition
-before 1 July (Rn. 208a of the BMF-Schreiben vom 14.05.2025); that is a Nichtbeanstandung for the
-Steuerabzug, not for the Veranlagung, and no quoted value changed in any case.
+**Applicable tax years: one edition per assessment year, never carried.** Each edition gives
+*"die Rechtslage zum 1. Januar"* of its year (2025 edition, Erlaeuterungen, page 1). A rate
+stated here holds for the assessment year of the edition it was read from, and for no other
+year: a year whose edition has not been read has no rate in this store, even where the
+neighbouring editions agree. Editions read: **2023, 2024, 2025, 2026**.
+
+A change taking effect during a year shows only in the next year's edition. For VZ 2023, 2024
+and 2025 the following edition has been read too and shows the same value for every row below,
+so no such change occurred. For VZ 2026 no later edition exists yet (as of 2026-09-23).
+
+The Erlaeuterungen add that paying agents need not apply a change against the previous year's
+edition before 1 July (Rn. 208a of the BMF-Schreiben vom 14.05.2025); that is a
+Nichtbeanstandung for the Steuerabzug, not for the Veranlagung.
 
 ---
 
@@ -46,18 +53,26 @@ Kapitalgesellschaften an ihre Anteilseigner"*. A distribution by an investment f
 that definition as the table uses it; for a US fund, the treaty itself puts RIC dividends on the
 dividend rate ([GT-CREDIT-027], Art. 10 Abs. 4 Satz 2).
 
-**The rows** (dividends; column A a) national rate, A b) DBA ceiling, C creditable). Identical in
-the 2023, 2024, 2025 and 2026 editions; page numbers 2023 / 2024 / 2025 / 2026:
+**The rows, per edition.** Column C (creditable dividend rate, in %), read from each edition
+separately; the edition's year is the assessment year it governs. Column A a) (national rate)
+and A b) (DBA ceiling) are the same in all four editions and are given once.
 
-| Source state | A a) national | A b) DBA | **C anrechenbar** | Pages |
-|---|---|---|---|---|
-| Frankreich | 12,8 | 15 | **12,8** | 8 / 8 / 7 / 8 |
-| Japan | 15 / 20 | 15 | **15** | 10 / 10 / 10 / 11 |
-| Kanada | 25 | 15 | **15** | 10 / 10 / 10 / 11 |
-| Korea, Republik | 20 | 15 | **15** | 12 / 12 / 11 / 13 |
-| Niederlande | 15 | 15 | **15** | 16 / 16 / 15 / 18 |
-| Taiwan | 21 | 10 | **10** | 22 / 22 / 21 / 25 |
-| Vereinigte Staaten | 0 / 30 | 15 | **15** *falls keine Befreiung* | quoted at [GT-CREDIT-027] |
+| Source state | Code | A a) national | A b) DBA | C 2023 | C 2024 | C 2025 | C 2026 | Pages 2023 / 2024 / 2025 / 2026 |
+|---|---|---|---|---|---|---|---|---|
+| Frankreich | FR | 12,8 | 15 | 12,8 | 12,8 | 12,8 | 12,8 | 8 / 8 / 7 / 8 |
+| Japan | JP | 15 / 20 | 15 | 15 | 15 | 15 | 15 | 10 / 10 / 10 / 11 |
+| Kanada | CA | 25 | 15 | 15 | 15 | 15 | 15 | 10 / 10 / 10 / 11 |
+| Korea, Republik | KR | 20 | 15 | 15 | 15 | 15 | 15 | 12 / 12 / 11 / 13 |
+| Niederlande | NL | 15 | 15 | 15 | 15 | 15 | 15 | 16 / 16 / 15 / 18 |
+| Taiwan | TW | 21 | 10 | 10 | 10 | 10 | 10 | 22 / 22 / 21 / 25 |
+| Vereinigte Staaten | US | 0 / 30 | 15 | 15 | 15 | 15 | 15 | 25 / 25 / 24 / 29 |
+
+For the Vereinigte Staaten every edition prints C as *"15, falls keine Befreiung"*, with column E
+*"Dividenden: Steuerbefreiung fuer bestimmte Dividenden von regulierten
+Kapitalanlagegesellschaften"*; the treaty basis, and the exemption's consequence, are
+[GT-CREDIT-027]. The US row applies to a US fund's distribution as well as a share dividend,
+because the treaty itself puts RIC dividends on the dividend rate (Art. 10 Abs. 4 Satz 2); for
+the other rows only share dividends are within the table's *Dividenden*.
 
 Where the national rate is below the DBA ceiling (Frankreich), the national rate is what is
 creditable: the source state's own law already grants the reduction down to it. Where it is above
