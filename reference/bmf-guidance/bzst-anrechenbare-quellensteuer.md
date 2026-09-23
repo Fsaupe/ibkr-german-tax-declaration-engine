@@ -99,13 +99,37 @@ against 15, so 15.
 - Column E, national special rules. For the states above: Japan, *"15 % auf qualifizierte
   Dividenden aus boersennotierten Gesellschaften"* (the 15 of A a)); Kanada and Korea, interest
   exemptions only.
-- Column F, DBA special rules: for Frankreich, *"volles Besteuerungsrecht des Quellenstaats auf
-  Einkuenfte aus Rechten oder Anteilen mit Gewinnbeteiligung, wenn diese bei der Ermittlung des
-  Gewinns des Schuldners abzugsfaehig sind (Art. 9 Abs. 9 DBA)"*; for Taiwan, under *"Zinsen:"*, a
-  15 % rate on distributions of a Real Estate Investment Trust or Real Estate Asset Trust
-  (Art. 11 Abs. 4 DBA). Japan, Kanada, Korea and Niederlande carry none. Neither note reaches an
-  ordinary share dividend. (In the text extraction, column-F text printed next to Niederlande and
-  after Taiwan belongs to Nordmazedonien and Thailand, the neighbouring rows.)
+- Column F, DBA special rules. Read per edition by the column's page coordinates, not from the
+  flowed text (re-read 2026-09-23; a cell spans several printed lines and the flowed text puts
+  parts of it beside the neighbouring rows):
+  - Frankreich, all four editions: *"volles Besteuerungsrecht des Quellenstaats auf Einkuenfte aus
+    Rechten oder Anteilen mit Gewinnbeteiligung, wenn diese bei der Ermittlung des Gewinns des
+    Schuldners abzugsfaehig sind (Art. 9 Abs. 9 DBA)"*.
+  - Kanada, all four editions: *"volles Besteuerungsrecht des Quellenstaats auf Einkuenfte aus
+    Rechten oder Forderungen mit Gewinnbeteiligung, wenn diese bei der Ermittlung des Gewinns des
+    Schuldners abzugsfaehig sind (Protokoll zum DBA, Ziff. 3 zu Artikel 10)"*.
+  - Korea, all four editions: *"Besteuerungsrecht des Quellenstaats auf Einkuenfte aus Rechten
+    oder Forderungen mit Gewinnbeteiligung bis maximal 25 % des Bruttobetrags der Einkuenfte, wenn
+    diese bei der Ermittlung des Gewinns des Schuldners abzugsfaehig sind (Art. 10 Abs. 4 DBA)"*.
+  - Niederlande, 2026 edition only: *"volles Besteuerungsrecht des Quellenstaats auf Einkuenfte
+    aus Rechten oder Forderungen mit Gewinnbeteiligung, wenn diese bei der Ermittlung der Gewinne
+    des Schuldners der Einkuenfte abzugsfaehig sind (Protokoll zum DBA, Ziff. IX zu den Artikeln
+    10 und 11)"*. The 2023 to 2025 editions carry none for Niederlande; the text printed beside it
+    there belongs to Neuseeland (*"Ziff. 4b"*) and Nordmazedonien.
+  - Taiwan, all four editions: the same profit-participation rule (*"Protokoll zum DBA, Ziff. 3
+    zu den Artikeln 10 und 11"*), and under *"Zinsen:"* a 15 % rate on distributions of a Real
+    Estate Investment Trust or Real Estate Asset Trust (Art. 11 Abs. 4 DBA).
+  - Japan: none, in any edition.
+
+  **Scope of these notes.** Each profit-participation note (FR, CA, KR, NL 2026, TW) concerns
+  income from rights, shares or claims carrying a profit participation *whose payment the payer
+  deducts in computing its profit*. A dividend on an ordinary share of a Kapitalgesellschaft is a
+  distribution of profit, not deductible by the company, so it is outside every one of them, and
+  column C applies to it. Income within a note is not on the column-C rate: the source state keeps
+  its full national tax (FR, CA, NL, TW) or up to 25 % (KR), and this table states no creditable
+  rate for it. The TW REIT/REAT rule is likewise outside column C: it applies to a trust's
+  distribution, not to a share dividend. Whether a given payment falls under a note is a fact
+  about the instrument, not something the table decides.
 - The *fiktive* Quellensteuer of columns A/B c): none for the states above.
 - Every other source state in the table.
 
